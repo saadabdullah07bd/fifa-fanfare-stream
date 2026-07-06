@@ -3,18 +3,16 @@ import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Home from "@/pages/Home";
 import Fixtures from "@/pages/Fixtures";
-import Groups from "@/pages/Groups";
 import Teams from "@/pages/Teams";
 import Scorers from "@/pages/Scorers";
-import Venues from "@/pages/Venues";
-import VenueDetail from "@/pages/VenueDetail";
 import News from "@/pages/News";
 import Highlights from "@/pages/Highlights";
 import LiveTV from "@/pages/LiveTV";
 import Predictions from "@/pages/Predictions";
-import Favorites from "@/pages/Favorites";
 import Settings from "@/pages/Settings";
 import Auth from "@/pages/Auth";
+import MatchDetail from "@/pages/MatchDetail";
+import TeamDetail from "@/pages/TeamDetail";
 import NotFound from "@/pages/NotFound";
 
 function useSession() {
@@ -40,9 +38,9 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 function Nav() {
   const items = [
-    ["/", "Home"], ["/fixtures", "Fixtures"], ["/groups", "Groups"], ["/teams", "Teams"],
-    ["/scorers", "Scorers"], ["/venues", "Venues"], ["/predictions", "Predict"],
-    ["/favorites", "Favorites"], ["/news", "News"], ["/highlights", "Highlights"], ["/live-tv", "Live TV"],
+    ["/", "Home"], ["/fixtures", "Fixtures"], ["/teams", "Teams"],
+    ["/scorers", "Scorers"], ["/predictions", "Predict"],
+    ["/news", "News"], ["/highlights", "Highlights"], ["/live-tv", "Live TV"],
   ] as const;
   return (
     <>
@@ -82,16 +80,14 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/fixtures" element={<Fixtures />} />
-          <Route path="/groups" element={<Groups />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/scorers" element={<Scorers />} />
-          <Route path="/venues" element={<Venues />} />
-          <Route path="/venues/:id" element={<VenueDetail />} />
           <Route path="/news" element={<News />} />
           <Route path="/highlights" element={<Highlights />} />
           <Route path="/live-tv" element={<RequireAuth><LiveTV /></RequireAuth>} />
           <Route path="/predictions" element={<Predictions />} />
-          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/match/:id" element={<MatchDetail />} />
+          <Route path="/team/:name" element={<TeamDetail />} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
           <Route path="/auth" element={<Auth />} />
           <Route path="*" element={<NotFound />} />
