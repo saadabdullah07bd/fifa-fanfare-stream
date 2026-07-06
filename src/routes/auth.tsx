@@ -1,46 +1,23 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({ meta: [{ title: "Sign in — Pitch26" }] }),
   component: Auth,
 });
 
 function Auth() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/settings" });
+      if (data.session) navigate({ to: "/" });
     });
   }, [navigate]);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
-        if (error) throw error;
-        toast.success("Account created — check your email if confirmation is required.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate({ to: "/settings" });
-      }
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function google() {
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
@@ -48,32 +25,29 @@ function Auth() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
+    <div className="mx-auto max-w-md px-4 py-24">
       <Link to="/" className="text-xs uppercase tracking-wider text-muted-foreground hover:text-primary">← back</Link>
-      <h1 className="display mt-4 text-4xl">{mode === "signin" ? "Sign in" : "Create account"}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Needed to connect your Xtream server and save channels.</p>
+      <h1 className="display mt-4 text-5xl">Sign in</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Sign in with Google to save favorite teams, submit predictions, and stream live matches.
+      </p>
 
-      <button onClick={google} className="mt-6 w-full rounded-md border border-border bg-secondary px-4 py-3 text-sm font-semibold">
+      <button
+        onClick={google}
+        className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90"
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+          <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.46c-.28 1.48-1.13 2.74-2.4 3.58v2.98h3.87c2.26-2.09 3.56-5.17 3.56-8.8z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-2.98c-1.07.72-2.44 1.16-4.06 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.28 14.31c-.24-.72-.38-1.49-.38-2.31s.14-1.59.38-2.31V6.6H1.29A11.996 11.996 0 000 12c0 1.94.46 3.78 1.29 5.4l3.99-3.09z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.6l3.99 3.09C6.23 6.86 8.88 4.75 12 4.75z"/>
+        </svg>
         Continue with Google
       </button>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" />
-      </div>
-
-      <form onSubmit={submit} className="space-y-3">
-        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email" className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm" />
-        <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password" className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm" />
-        <button disabled={loading} className="w-full rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50">
-          {loading ? "…" : mode === "signin" ? "Sign in" : "Sign up"}
-        </button>
-      </form>
-      <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-        className="mt-4 w-full text-center text-xs uppercase tracking-wider text-muted-foreground hover:text-primary">
-        {mode === "signin" ? "Need an account? Sign up" : "Have an account? Sign in"}
-      </button>
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        We only use your Google account for sign-in.
+      </p>
     </div>
   );
 }
