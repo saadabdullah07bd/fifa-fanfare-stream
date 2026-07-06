@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { format } from "date-fns";
+import { bdTime } from "@/lib/flags";
 
 export type LiveMatch = {
   id: number;
@@ -102,7 +102,7 @@ function MiniList({ title, items, showTime }: { title: string; items: LiveMatch[
           <li key={m.id} className="py-2 text-sm">
             <Link to={`/match/${m.id}`} className="flex items-center gap-3 hover:text-primary">
               <span className="w-20 text-xs uppercase tracking-wider text-muted-foreground">
-                {showTime ? format(new Date(m.utc_date), "HH:mm") : "FT"}
+                {showTime ? bdTime(m.utc_date) : "FT"}
               </span>
               <span className="flex-1 truncate">{m.home.name}</span>
               <span className="display text-primary tabular-nums">
