@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
   }
   const m: any = await res.json();
 
-  const out = {
+  const out: any = {
     id: m.id,
     competition: m.competition?.name,
     status: m.status,
@@ -67,6 +67,48 @@ Deno.serve(async (req) => {
     })),
     substitutions: (m.substitutions ?? []).length,
   };
+
+  // Enrich with real-time data from API-Football (live minute, live score, HT flag)
+  const afKey = Deno.env.get("API_FOOTBALL_KEY");
+  if (afKey && ["IN_PLAY", "PAUSED", "LIVE", "SCHEDULED", "TIMED"].includes(out.status)) {
+    try {
+      const norm = (s: string) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const dayISO = out.utc_date?.slice(0, 10);
+      const searchUrl = dayISO
+        ? `https://v3.football.api-sports.io/fixtures?date=${dayISO}`
+        : `https://v3.football.api-sports.io/fixtures?live=all`;
+      const r = await fetch(searchUrl, { headers: { "x-apisports-key": afKey } });
+      if (r.ok) {
+        const j: any = await r.json();
+        const fixtures: any[] = j?.response ?? [];
+        const hn = norm(out.home.name);
+        const an = norm(out.away.name);
+        const f = fixtures.find((x) => {
+          const h = norm(x.teams?.home?.name);
+          const a = norm(x.teams?.away?.name);
+          return (h.includes(hn.slice(0, 5)) || hn.includes(h.slice(0, 5))) &&
+                 (a.includes(an.slice(0, 5)) || an.includes(a.slice(0, 5)));
+        });
+        if (f) {
+          const shortStatus = f.fixture?.status?.short;
+          const statusMap: Record<string, string> = {
+            "1H": "IN_PLAY", "2H": "IN_PLAY", "ET": "IN_PLAY", "P": "IN_PLAY",
+            "HT": "PAUSED", "BT": "PAUSED",
+            "FT": "FINISHED", "AET": "FINISHED", "PEN": "FINISHED",
+          };
+          out.status = statusMap[shortStatus] ?? out.status;
+          out.minute = f.fixture?.status?.elapsed ?? out.minute;
+          out.injury_time = f.fixture?.status?.extra ?? out.injury_time;
+          out.status_short = shortStatus;
+          out.status_long = f.fixture?.status?.long;
+          if (f.goals?.home != null) out.score.full.home = f.goals.home;
+          if (f.goals?.away != null) out.score.full.away = f.goals.away;
+          out.live_source = "api-football";
+          out.af_fixture_id = f.fixture?.id;
+        }
+      }
+    } catch (_) { /* optional */ }
+  }
 
   return new Response(JSON.stringify(out), {
     headers: { ...cors, "Content-Type": "application/json" },
