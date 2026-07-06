@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const XtreamConfigSchema = z.object({
@@ -8,14 +10,41 @@ const XtreamConfigSchema = z.object({
   password: z.string().min(1),
 });
 
-// Save the user's Xtream Codes server credentials.
+async function assertAdmin(context: { supabase: ReturnType<typeof createClient<Database>>; userId: string }) {
+  const { data, error } = await context.supabase.rpc("has_role", {
+    _user_id: context.userId,
+    _role: "admin",
+  });
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Forbidden: admin only");
+}
+
+function admin() {
+  const { createClient } = require("@supabase/supabase-js") as typeof import("@supabase/supabase-js");
+  return createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+  });
+}
+
+export const isAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    return { admin: !!data };
+  });
+
+// Admin: save shared Xtream config (single row)
 export const saveXtreamConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => XtreamConfigSchema.parse(d))
   .handler(async ({ data, context }) => {
+    await assertAdmin(context);
     const host = data.host.replace(/\/$/, "");
     const { error } = await context.supabase.from("xtream_config").upsert({
-      user_id: context.userId,
+      id: 1,
       host,
       username: data.username,
       password: data.password,
@@ -25,26 +54,26 @@ export const saveXtreamConfig = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Anyone signed in can see host/username (not password) — used by settings page
 export const getXtreamConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data } = await context.supabase
+  .handler(async () => {
+    const sb = admin();
+    const { data } = await sb
       .from("xtream_config")
       .select("host, username, updated_at")
-      .eq("user_id", context.userId)
+      .eq("id", 1)
       .maybeSingle();
     return data;
   });
 
-// Refresh: fetch categories + streams from Xtream, keep only WC 2026 & Cricket
+// Admin: refresh channel cache from Xtream server
 export const refreshChannels = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: cfg } = await context.supabase
-      .from("xtream_config")
-      .select("*")
-      .eq("user_id", context.userId)
-      .maybeSingle();
+    await assertAdmin(context);
+    const sb = admin();
+    const { data: cfg } = await sb.from("xtream_config").select("*").eq("id", 1).maybeSingle();
     if (!cfg) throw new Error("No Xtream config saved");
 
     const base = `${cfg.host}/player_api.php?username=${encodeURIComponent(cfg.username)}&password=${encodeURIComponent(cfg.password)}`;
@@ -66,8 +95,7 @@ export const refreshChannels = createServerFn({ method: "POST" })
       }))
       .filter((c) => c.category !== null);
 
-    // Clear existing cached channels for this user
-    await context.supabase.from("channels").delete().eq("user_id", context.userId);
+    await sb.from("channels").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
     let total = 0;
     for (const cat of wanted) {
@@ -80,7 +108,6 @@ export const refreshChannels = createServerFn({ method: "POST" })
         epg_channel_id?: string;
       }>;
       const rows = streams.map((s) => ({
-        user_id: context.userId,
         category: cat.category!,
         stream_id: String(s.stream_id),
         name: s.name,
@@ -88,36 +115,33 @@ export const refreshChannels = createServerFn({ method: "POST" })
         epg_channel_id: s.epg_channel_id ?? null,
       }));
       if (rows.length) {
-        await context.supabase.from("channels").insert(rows);
+        await sb.from("channels").upsert(rows, { onConflict: "category,stream_id" });
         total += rows.length;
       }
     }
     return { ok: true, categories: wanted.length, channels: total };
   });
 
+// Any signed-in user: list channels
 export const getChannels = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("channels")
       .select("*")
-      .eq("user_id", context.userId)
       .order("category")
       .order("name");
     return data ?? [];
   });
 
+// Any signed-in user: get playable HLS URL for a stream
 export const getStreamUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ streamId: z.string() }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { data: cfg } = await context.supabase
-      .from("xtream_config")
-      .select("*")
-      .eq("user_id", context.userId)
-      .maybeSingle();
+  .handler(async ({ data }) => {
+    const sb = admin();
+    const { data: cfg } = await sb.from("xtream_config").select("*").eq("id", 1).maybeSingle();
     if (!cfg) throw new Error("No Xtream config");
-    // HLS m3u8 endpoint standard to Xtream Codes
     const url = `${cfg.host}/live/${encodeURIComponent(cfg.username)}/${encodeURIComponent(cfg.password)}/${data.streamId}.m3u8`;
     return { url };
   });

@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getChannels, getStreamUrl, refreshChannels } from "@/lib/xtream.functions";
+import { getChannels, getStreamUrl } from "@/lib/xtream.functions";
 import { supabase } from "@/integrations/supabase/client";
 import Hls from "hls.js";
 import { toast } from "sonner";
@@ -45,19 +45,13 @@ function LiveTV() {
 
 function LiveTVAuthed() {
   const chFn = useServerFn(getChannels);
-  const refreshFn = useServerFn(refreshChannels);
   const streamFn = useServerFn(getStreamUrl);
-  const { data: channels = [], refetch } = useQuery({ queryKey: ["channels"], queryFn: () => chFn() as Promise<Channel[]> });
+  const { data: channels = [] } = useQuery({ queryKey: ["channels"], queryFn: () => chFn() as Promise<Channel[]> });
 
   const [tab, setTab] = useState<"wc2026" | "cricket">("wc2026");
   const [active, setActive] = useState<Channel | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const refresh = useMutation({
-    mutationFn: () => refreshFn(),
-    onSuccess: async (r) => { toast.success(`${r.channels} channels loaded`); await refetch(); },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
   useEffect(() => {
     if (!active || !videoRef.current) return;
@@ -83,13 +77,9 @@ function LiveTVAuthed() {
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="display text-5xl">Live TV</h1>
-        <div className="flex gap-2">
-          <Link to="/settings" className="rounded-md border border-border bg-secondary px-3 py-2 text-xs font-semibold uppercase tracking-wider">Server</Link>
-          <button onClick={() => refresh.mutate()} disabled={refresh.isPending}
-            className="rounded-md bg-primary px-3 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50">
-            {refresh.isPending ? "…" : "Refresh"}
-          </button>
-        </div>
+        <Link to="/settings" className="rounded-md border border-border bg-secondary px-3 py-2 text-xs font-semibold uppercase tracking-wider">
+          Account
+        </Link>
       </div>
 
       {active && (
@@ -113,7 +103,7 @@ function LiveTVAuthed() {
 
       {channels.length === 0 && (
         <p className="mt-8 rounded-lg border border-border bg-card/40 p-6 text-sm text-muted-foreground">
-          No channels yet. Go to <Link to="/settings" className="text-primary">Settings</Link> to connect your Xtream server, then hit Refresh.
+          No channels yet. The site admin needs to connect the Xtream server from Settings.
         </p>
       )}
 
