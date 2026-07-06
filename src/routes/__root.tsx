@@ -105,13 +105,15 @@ function RootComponent() {
               <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground display text-xl">26</span>
               <span className="display text-2xl tracking-wider text-foreground">PITCH<span className="text-primary">26</span></span>
             </Link>
-            <nav className="hidden items-center gap-1 md:flex">
+            <nav className="hidden items-center gap-1 lg:flex">
               <NavLink to="/">Home</NavLink>
               <NavLink to="/fixtures">Fixtures</NavLink>
               <NavLink to="/groups">Groups</NavLink>
               <NavLink to="/teams">Teams</NavLink>
               <NavLink to="/scorers">Scorers</NavLink>
               <NavLink to="/venues">Venues</NavLink>
+              <NavLink to="/predictions">Predict</NavLink>
+              <NavLink to="/favorites">Favorites</NavLink>
               <NavLink to="/news">News</NavLink>
               <NavLink to="/live-tv">Live TV</NavLink>
             </nav>
@@ -119,13 +121,15 @@ function RootComponent() {
               <span className="live-dot mr-2 align-middle" />Watch
             </Link>
           </div>
-          <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 md:hidden">
+          <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 lg:hidden">
             <NavLink to="/">Home</NavLink>
             <NavLink to="/fixtures">Fixtures</NavLink>
             <NavLink to="/groups">Groups</NavLink>
             <NavLink to="/teams">Teams</NavLink>
             <NavLink to="/scorers">Scorers</NavLink>
             <NavLink to="/venues">Venues</NavLink>
+            <NavLink to="/predictions">Predict</NavLink>
+            <NavLink to="/favorites">Favorites</NavLink>
             <NavLink to="/news">News</NavLink>
             <NavLink to="/live-tv">Live TV</NavLink>
           </nav>
