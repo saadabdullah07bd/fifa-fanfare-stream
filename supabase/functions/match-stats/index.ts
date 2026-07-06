@@ -1,104 +1,157 @@
-// Live match statistics via SofaScore's public JSON API. No key required.
-// We search by team names + date, then pull /statistics for that event.
+// Live match statistics via API-Football (v3.football.api-sports.io).
+// Searches fixtures by team names near the given date, then pulls statistics + events.
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
 };
 
-const UA = "Mozilla/5.0 (compatible; Pitch26/1.0)";
+const AF = "https://v3.football.api-sports.io";
 const cache = new Map<string, { at: number; body: unknown }>();
 
-async function sofaSearch(q: string): Promise<any[]> {
-  const r = await fetch(
-    `https://api.sofascore.com/api/v1/search/events/${encodeURIComponent(q)}`,
-    { headers: { "User-Agent": UA, Accept: "application/json" } },
-  );
-  if (!r.ok) return [];
-  const j = await r.json().catch(() => ({}));
-  return j?.results?.map((x: any) => x.entity).filter(Boolean) ?? [];
+function norm(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+}
+function tokens(s: string) {
+  return new Set(norm(s).split(/\s+/).filter((t) => t.length > 2));
+}
+function score(a: string, b: string) {
+  const ta = tokens(a), tb = tokens(b);
+  let hit = 0;
+  for (const t of ta) if (tb.has(t)) hit++;
+  return hit;
+}
+
+async function afFetch(path: string, params: Record<string, string>, key: string) {
+  const qs = new URLSearchParams(params).toString();
+  const r = await fetch(`${AF}${path}?${qs}`, {
+    headers: { "x-apisports-key": key, Accept: "application/json" },
+  });
+  if (!r.ok) return null;
+  return await r.json().catch(() => null);
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
+  const apiKey = Deno.env.get("API_FOOTBALL_KEY");
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "API_FOOTBALL_KEY missing" }), {
+      status: 500, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
   const url = new URL(req.url);
   const home = url.searchParams.get("home") ?? "";
   const away = url.searchParams.get("away") ?? "";
-  const date = url.searchParams.get("date") ?? ""; // ISO date optional
+  const dateParam = url.searchParams.get("date") ?? "";
   if (!home || !away) {
     return new Response(JSON.stringify({ error: "home and away required" }), {
       status: 400, headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
-  const key = `${home}|${away}|${date}`;
-  const hit = cache.get(key);
-  if (hit && Date.now() - hit.at < 45_000) {
+  const cacheKey = `${home}|${away}|${dateParam}`;
+  const hit = cache.get(cacheKey);
+  if (hit && Date.now() - hit.at < 30_000) {
     return new Response(JSON.stringify(hit.body), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
   try {
-    // Try increasingly loose queries
-    let results: any[] = [];
-    for (const q of [`${home} ${away}`, home, away]) {
-      results = await sofaSearch(q);
-      if (results.length) break;
+    const targetTs = dateParam ? new Date(dateParam).getTime() : Date.now();
+    const dates = new Set<string>();
+    for (const offset of [-1, 0, 1]) {
+      const d = new Date(targetTs + offset * 86400_000);
+      dates.add(d.toISOString().slice(0, 10));
     }
 
-    // Match event where both team names appear
-    const target = new Date(date || Date.now()).getTime();
-    const hl = home.toLowerCase();
-    const al = away.toLowerCase();
-    const event = results
-      .filter((e) => {
-        const h = (e.homeTeam?.name ?? "").toLowerCase();
-        const a = (e.awayTeam?.name ?? "").toLowerCase();
-        return (h.includes(hl.split(" ")[0]) || hl.includes(h.split(" ")[0])) &&
-               (a.includes(al.split(" ")[0]) || al.includes(a.split(" ")[0]));
-      })
-      .sort((a, b) => Math.abs((a.startTimestamp ?? 0) * 1000 - target) - Math.abs((b.startTimestamp ?? 0) * 1000 - target))[0];
+    // Pull fixtures for each date window
+    let candidates: any[] = [];
+    for (const d of dates) {
+      const j = await afFetch("/fixtures", { date: d }, apiKey);
+      if (j?.response) candidates = candidates.concat(j.response);
+    }
 
-    if (!event) {
-      const body = { available: false, reason: "no matching event", stats: [], status: null };
-      cache.set(key, { at: Date.now(), body });
+    // Also try live for currently in-play matches
+    const live = await afFetch("/fixtures", { live: "all" }, apiKey);
+    if (live?.response) candidates = candidates.concat(live.response);
+
+    // Score matches by team-name overlap
+    let best: any = null;
+    let bestScore = 0;
+    for (const f of candidates) {
+      const h = f.teams?.home?.name ?? "";
+      const a = f.teams?.away?.name ?? "";
+      const s = score(home, h) + score(away, a);
+      const timeDiff = Math.abs(new Date(f.fixture?.date ?? 0).getTime() - targetTs);
+      const withinDay = timeDiff < 36 * 3600_000;
+      if (s > bestScore && withinDay) {
+        bestScore = s;
+        best = f;
+      }
+    }
+
+    if (!best || bestScore < 1) {
+      const body = { available: false, reason: "no matching fixture", stats: [], status: null };
+      cache.set(cacheKey, { at: Date.now(), body });
       return new Response(JSON.stringify(body), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
-    const [statsRes, eventRes] = await Promise.all([
-      fetch(`https://api.sofascore.com/api/v1/event/${event.id}/statistics`, { headers: { "User-Agent": UA } }),
-      fetch(`https://api.sofascore.com/api/v1/event/${event.id}`, { headers: { "User-Agent": UA } }),
+    const fixtureId = best.fixture.id;
+    const [statsJ, eventsJ] = await Promise.all([
+      afFetch("/fixtures/statistics", { fixture: String(fixtureId) }, apiKey),
+      afFetch("/fixtures/events", { fixture: String(fixtureId) }, apiKey),
     ]);
-    const statsJson = statsRes.ok ? await statsRes.json() : null;
-    const eventJson = eventRes.ok ? await eventRes.json() : null;
 
-    const period = statsJson?.statistics?.find((p: any) => p.period === "ALL") ?? statsJson?.statistics?.[0];
-    const groups = period?.groups?.flatMap((g: any) => g.statisticsItems ?? []) ?? [];
-    const stats = groups.map((s: any) => ({
-      name: s.name,
-      home: s.home,
-      away: s.away,
-      compareCode: s.compareCode ?? null,
+    // Map AF stats into { name, home, away }
+    const statsArr: any[] = statsJ?.response ?? [];
+    const homeTeamId = best.teams.home.id;
+    const awayTeamId = best.teams.away.id;
+    const homeStats = statsArr.find((s) => s.team?.id === homeTeamId)?.statistics ?? [];
+    const awayStats = statsArr.find((s) => s.team?.id === awayTeamId)?.statistics ?? [];
+    const statNames = new Set<string>([
+      ...homeStats.map((s: any) => s.type),
+      ...awayStats.map((s: any) => s.type),
+    ]);
+    const stats = Array.from(statNames).map((name) => ({
+      name,
+      home: homeStats.find((s: any) => s.type === name)?.value ?? null,
+      away: awayStats.find((s: any) => s.type === name)?.value ?? null,
     }));
 
-    const ev = eventJson?.event;
+    const events = (eventsJ?.response ?? []).map((e: any) => ({
+      minute: e.time?.elapsed ?? null,
+      extra: e.time?.extra ?? null,
+      type: e.type,
+      detail: e.detail,
+      team: e.team?.name,
+      team_id: e.team?.id,
+      player: e.player?.name,
+      assist: e.assist?.name ?? null,
+    }));
+
+    const status = best.fixture.status;
     const body = {
       available: stats.length > 0,
-      source: "sofascore",
-      event_id: event.id,
-      slug: event.slug,
-      status: ev?.status?.description ?? null,
-      status_type: ev?.status?.type ?? null,
-      minute: ev?.time?.currentPeriodStartTimestamp ? null : null,
-      home_score: ev?.homeScore?.current ?? null,
-      away_score: ev?.awayScore?.current ?? null,
+      source: "api-football",
+      fixture_id: fixtureId,
+      status: status?.long ?? null,
+      status_short: status?.short ?? null,
+      minute: status?.elapsed ?? null,
+      home_score: best.goals?.home ?? null,
+      away_score: best.goals?.away ?? null,
+      home_name: best.teams?.home?.name,
+      away_name: best.teams?.away?.name,
+      venue: best.fixture?.venue?.name ?? null,
+      league: best.league?.name ?? null,
       stats,
+      events,
     };
-    cache.set(key, { at: Date.now(), body });
+    cache.set(cacheKey, { at: Date.now(), body });
     return new Response(JSON.stringify(body), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
