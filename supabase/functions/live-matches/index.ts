@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
   }
 
   const raw = await res.json() as { matches: Array<Record<string, unknown>> };
-  const matches = (raw.matches ?? []).map((m: any) => ({
+  let matches = (raw.matches ?? []).map((m: any) => ({
     id: m.id,
     competition: m.competition?.name,
     competition_code: m.competition?.code,
@@ -61,6 +61,52 @@ Deno.serve(async (req) => {
       half: m.score?.halfTime ?? { home: null, away: null },
     },
   }));
+
+  // Enrich live/in-play matches with real-time minute + score from API-Football
+  const afKey = Deno.env.get("API_FOOTBALL_KEY");
+  if (afKey) {
+    try {
+      const liveRes = await fetch("https://v3.football.api-sports.io/fixtures?live=all", {
+        headers: { "x-apisports-key": afKey },
+      });
+      if (liveRes.ok) {
+        const liveJson: any = await liveRes.json();
+        const liveFixtures: any[] = liveJson?.response ?? [];
+        const norm = (s: string) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        matches = matches.map((m: any) => {
+          const hn = norm(m.home.name);
+          const an = norm(m.away.name);
+          const f = liveFixtures.find((x) => {
+            const h = norm(x.teams?.home?.name);
+            const a = norm(x.teams?.away?.name);
+            return (h.includes(hn.slice(0, 5)) || hn.includes(h.slice(0, 5))) &&
+                   (a.includes(an.slice(0, 5)) || an.includes(a.slice(0, 5)));
+          });
+          if (!f) return m;
+          const status = f.fixture?.status?.short;
+          const statusMap: Record<string, string> = {
+            "1H": "IN_PLAY", "2H": "IN_PLAY", "ET": "IN_PLAY", "P": "IN_PLAY",
+            "HT": "PAUSED", "BT": "PAUSED",
+            "FT": "FINISHED", "AET": "FINISHED", "PEN": "FINISHED",
+          };
+          return {
+            ...m,
+            status: statusMap[status] ?? m.status,
+            minute: f.fixture?.status?.elapsed ?? m.minute,
+            injury_time: f.fixture?.status?.extra ?? m.injury_time,
+            score: {
+              ...m.score,
+              full: {
+                home: f.goals?.home ?? m.score.full.home,
+                away: f.goals?.away ?? m.score.full.away,
+              },
+            },
+            live_source: "api-football",
+          };
+        });
+      }
+    } catch (_) { /* enrichment optional */ }
+  }
 
   // Sort: live first, then scheduled today, then finished
   const rank = (s: string) => (["IN_PLAY", "PAUSED", "LIVE"].includes(s) ? 0 : s === "SCHEDULED" || s === "TIMED" ? 1 : 2);
