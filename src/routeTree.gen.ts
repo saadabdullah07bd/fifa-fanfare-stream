@@ -9,38 +9,242 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VenuesRouteImport } from './routes/venues'
+import { Route as TeamsRouteImport } from './routes/teams'
+import { Route as ScorersRouteImport } from './routes/scorers'
+import { Route as NewsRouteImport } from './routes/news'
+import { Route as LiveTvRouteImport } from './routes/live-tv'
+import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as FixturesRouteImport } from './routes/fixtures'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as ApiPublicCronRefreshAllRouteImport } from './routes/api/public/cron/refresh-all'
 
+const VenuesRoute = VenuesRouteImport.update({
+  id: '/venues',
+  path: '/venues',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamsRoute = TeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScorersRoute = ScorersRouteImport.update({
+  id: '/scorers',
+  path: '/scorers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveTvRoute = LiveTvRouteImport.update({
+  id: '/live-tv',
+  path: '/live-tv',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsRoute = GroupsRouteImport.update({
+  id: '/groups',
+  path: '/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FixturesRoute = FixturesRouteImport.update({
+  id: '/fixtures',
+  path: '/fixtures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicCronRefreshAllRoute = ApiPublicCronRefreshAllRouteImport.update({
+  id: '/api/public/cron/refresh-all',
+  path: '/api/public/cron/refresh-all',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/fixtures': typeof FixturesRoute
+  '/groups': typeof GroupsRoute
+  '/live-tv': typeof LiveTvRoute
+  '/news': typeof NewsRoute
+  '/scorers': typeof ScorersRoute
+  '/teams': typeof TeamsRoute
+  '/venues': typeof VenuesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/cron/refresh-all': typeof ApiPublicCronRefreshAllRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/fixtures': typeof FixturesRoute
+  '/groups': typeof GroupsRoute
+  '/live-tv': typeof LiveTvRoute
+  '/news': typeof NewsRoute
+  '/scorers': typeof ScorersRoute
+  '/teams': typeof TeamsRoute
+  '/venues': typeof VenuesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/cron/refresh-all': typeof ApiPublicCronRefreshAllRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/fixtures': typeof FixturesRoute
+  '/groups': typeof GroupsRoute
+  '/live-tv': typeof LiveTvRoute
+  '/news': typeof NewsRoute
+  '/scorers': typeof ScorersRoute
+  '/teams': typeof TeamsRoute
+  '/venues': typeof VenuesRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/cron/refresh-all': typeof ApiPublicCronRefreshAllRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/fixtures'
+    | '/groups'
+    | '/live-tv'
+    | '/news'
+    | '/scorers'
+    | '/teams'
+    | '/venues'
+    | '/settings'
+    | '/api/public/cron/refresh-all'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/fixtures'
+    | '/groups'
+    | '/live-tv'
+    | '/news'
+    | '/scorers'
+    | '/teams'
+    | '/venues'
+    | '/settings'
+    | '/api/public/cron/refresh-all'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/fixtures'
+    | '/groups'
+    | '/live-tv'
+    | '/news'
+    | '/scorers'
+    | '/teams'
+    | '/venues'
+    | '/_authenticated/settings'
+    | '/api/public/cron/refresh-all'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  FixturesRoute: typeof FixturesRoute
+  GroupsRoute: typeof GroupsRoute
+  LiveTvRoute: typeof LiveTvRoute
+  NewsRoute: typeof NewsRoute
+  ScorersRoute: typeof ScorersRoute
+  TeamsRoute: typeof TeamsRoute
+  VenuesRoute: typeof VenuesRoute
+  ApiPublicCronRefreshAllRoute: typeof ApiPublicCronRefreshAllRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/venues': {
+      id: '/venues'
+      path: '/venues'
+      fullPath: '/venues'
+      preLoaderRoute: typeof VenuesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teams': {
+      id: '/teams'
+      path: '/teams'
+      fullPath: '/teams'
+      preLoaderRoute: typeof TeamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scorers': {
+      id: '/scorers'
+      path: '/scorers'
+      fullPath: '/scorers'
+      preLoaderRoute: typeof ScorersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live-tv': {
+      id: '/live-tv'
+      path: '/live-tv'
+      fullPath: '/live-tv'
+      preLoaderRoute: typeof LiveTvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups': {
+      id: '/groups'
+      path: '/groups'
+      fullPath: '/groups'
+      preLoaderRoute: typeof GroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fixtures': {
+      id: '/fixtures'
+      path: '/fixtures'
+      fullPath: '/fixtures'
+      preLoaderRoute: typeof FixturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +252,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/cron/refresh-all': {
+      id: '/api/public/cron/refresh-all'
+      path: '/api/public/cron/refresh-all'
+      fullPath: '/api/public/cron/refresh-all'
+      preLoaderRoute: typeof ApiPublicCronRefreshAllRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  FixturesRoute: FixturesRoute,
+  GroupsRoute: GroupsRoute,
+  LiveTvRoute: LiveTvRoute,
+  NewsRoute: NewsRoute,
+  ScorersRoute: ScorersRoute,
+  TeamsRoute: TeamsRoute,
+  VenuesRoute: VenuesRoute,
+  ApiPublicCronRefreshAllRoute: ApiPublicCronRefreshAllRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
