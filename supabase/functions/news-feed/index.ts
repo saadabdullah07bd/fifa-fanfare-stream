@@ -86,9 +86,11 @@ Deno.serve(async (req) => {
 
   let articles = (await fromNewsApi(q)) ?? [];
   let source: "newsapi" | "google" = "newsapi";
+  console.log("news-feed", { q, newsapi_count: articles.length, has_key: !!Deno.env.get("NEWSAPI_KEY") });
   if (articles.length === 0) {
     articles = await fromGoogleRss(q);
     source = "google";
+    console.log("news-feed fallback google", { count: articles.length });
   }
 
   const body = { articles, source, updated_at: new Date().toISOString() };
