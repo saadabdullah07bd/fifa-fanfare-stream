@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
+import LiveTicker from "@/components/LiveTicker";
 import heroImg from "@/assets/hero-stadium.jpg";
 import { format } from "date-fns";
 
@@ -61,6 +62,8 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      <LiveTicker />
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 md:grid-cols-3">
         <div className="md:col-span-2">
