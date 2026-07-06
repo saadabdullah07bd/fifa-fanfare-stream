@@ -57,7 +57,7 @@ export default function Fixtures() {
           return (
             <article
               key={m.id}
-              ref={(el) => (cardRefs.current[i] = el)}
+              ref={(el) => { cardRefs.current[i] = el; }}
               className="flex h-full min-h-full snap-start flex-col justify-center p-6"
               style={{ height: "calc(100vh - 220px)" }}
             >
@@ -78,10 +78,7 @@ export default function Fixtures() {
                   <TeamSide code={m.away_team_code} align="left" />
                 </div>
 
-                {m.venue && (
-                  <p className="mt-8 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">{m.venue}</p>
-                )}
-                <p className="mt-6 text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+                <p className="mt-8 text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
                   Match {i + 1} of {sorted.length} · scroll ↑ ↓
                 </p>
               </div>
