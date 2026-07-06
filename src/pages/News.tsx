@@ -28,7 +28,7 @@ export default function News() {
     <div className="mx-auto max-w-6xl px-4 py-12 font-serif">
       <Seo title="News — Pitch26" description="Latest World Cup 2026 and football headlines, live." />
       <h1 className="font-serif text-5xl font-black tracking-tight">The Daily Pitch</h1>
-      <p className="mt-2 font-sans text-sm uppercase tracking-[0.2em] text-muted-foreground">Live headlines · refreshed every 2 minutes</p>
+      <p className="mt-2 font-sans text-sm uppercase tracking-[0.2em] text-muted-foreground">Live headlines</p>
       <div className="mt-6 h-px w-full bg-border" />
 
       {isLoading && <p className="mt-8 font-sans text-sm text-muted-foreground">Loading headlines…</p>}

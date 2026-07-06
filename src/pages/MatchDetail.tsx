@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Seo } from "@/lib/seo";
 import { bdTime, bdDate } from "@/lib/flags";
@@ -73,6 +74,7 @@ export default function MatchDetail() {
   }
 
   const { label: statusText, live: isLive } = statusLabel(m.status, m.minute, m.injury_time, m.utc_date);
+  const isPlaying = ["IN_PLAY", "LIVE"].includes(m.status);
   const timeline = [
     ...m.goals.map((g) => ({ kind: "goal" as const, minute: g.minute, injury: g.injury_time, data: g })),
     ...m.bookings.map((b) => ({ kind: "card" as const, minute: b.minute, injury: null, data: b })),
@@ -104,11 +106,15 @@ export default function MatchDetail() {
         <div className="relative flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
           <span className="font-bold text-primary">
             {isLive && <span className="live-dot mr-2 align-middle" />}
-            <AnimatePresence mode="wait">
-              <motion.span key={statusText} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}>
-                {statusText}
-              </motion.span>
-            </AnimatePresence>
+            {isPlaying ? (
+              <LiveClock minute={m.minute ?? 0} injury={m.injury_time} />
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.span key={statusText} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}>
+                  {statusText}
+                </motion.span>
+              </AnimatePresence>
+            )}
           </span>
           <span>{m.competition}</span>
         </div>
@@ -227,5 +233,30 @@ export default function MatchDetail() {
         </ol>
       </section>
     </motion.div>
+  );
+}
+
+// Live minute:seconds ticker. Anchors on the fetched `minute` and ticks forward
+// in real time so users see the clock move between refetches.
+function LiveClock({ minute, injury }: { minute: number; injury: number | null }) {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    setSeconds(0);
+    const t = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [minute, injury]);
+
+  const totalSec = seconds;
+  const extraMin = Math.floor(totalSec / 60);
+  const s = String(totalSec % 60).padStart(2, "0");
+  const shown = minute + extraMin;
+  return (
+    <motion.span
+      key={`${minute}-${extraMin}-${s}`}
+      initial={{ opacity: 0.6 }} animate={{ opacity: 1 }}
+      className="tabular-nums"
+    >
+      {shown}{injury ? `+${injury}` : ""}:{s}'
+    </motion.span>
   );
 }

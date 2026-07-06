@@ -3,10 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Home from "@/pages/Home";
 import Fixtures from "@/pages/Fixtures";
-import Teams from "@/pages/Teams";
-import Scorers from "@/pages/Scorers";
 import News from "@/pages/News";
-import Highlights from "@/pages/Highlights";
 import LiveTV from "@/pages/LiveTV";
 import Predictions from "@/pages/Predictions";
 import Settings from "@/pages/Settings";
@@ -38,9 +35,9 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 function Nav() {
   const items = [
-    ["/", "Home"], ["/fixtures", "Fixtures"], ["/teams", "Teams"],
+    ["/", "Home"], ["/fixtures", "Fixtures"],
     ["/predictions", "Predict"],
-    ["/news", "News"], ["/highlights", "Highlights"], ["/live-tv", "Live TV"],
+    ["/news", "News"], ["/live-tv", "Live TV"],
   ] as const;
   return (
     <>
@@ -80,10 +77,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/fixtures" element={<Fixtures />} />
-          <Route path="/teams" element={<Teams />} />
-          <Route path="/scorers" element={<Scorers />} />
           <Route path="/news" element={<News />} />
-          <Route path="/highlights" element={<Highlights />} />
           <Route path="/live-tv" element={<RequireAuth><LiveTV /></RequireAuth>} />
           <Route path="/predictions" element={<Predictions />} />
           <Route path="/match/:id" element={<MatchDetail />} />
