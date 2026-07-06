@@ -136,8 +136,11 @@ function PredictRow({ matchId, date, home, away, homeStart, awayStart, disabled,
 
 function Score({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   return (
-    <input type="number" min={0} max={20} value={value}
+    <input
+      type="number" min={0} max={20} value={value}
+      onWheel={(e) => (e.target as HTMLInputElement).blur()}
       onChange={(e) => onChange(Math.max(0, Math.min(20, Number(e.target.value) || 0)))}
-      className="w-12 rounded-md border border-border bg-input px-2 py-2 text-center text-sm" />
+      className="w-12 rounded-md border border-border bg-input px-2 py-2 text-center text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+    />
   );
 }

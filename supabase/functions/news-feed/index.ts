@@ -1,5 +1,4 @@
-// Live news feed via Google News RSS — no API key, works from anywhere,
-// always fresh. Cached 5 minutes in-memory to avoid hammering.
+// Live news feed via Google News RSS with best-effort og:image enrichment.
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,9 +12,30 @@ function pick(xml: string, tag: string): string {
   if (!m) return "";
   return m[1].replace(/^<!\[CDATA\[|\]\]>$/g, "").trim();
 }
-
 function stripHtml(s: string): string {
   return s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+}
+
+async function fetchOgImage(url: string): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 3500);
+    const r = await fetch(url, {
+      redirect: "follow",
+      signal: ctrl.signal,
+      headers: { "User-Agent": "Mozilla/5.0 Pitch26Bot" },
+    });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    const html = (await r.text()).slice(0, 200_000);
+    const m =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -39,26 +59,28 @@ Deno.serve(async (req) => {
   }
   const xml = await res.text();
 
-  const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 40).map((m, i) => {
+  const rawItems = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 24).map((m, i) => {
     const it = m[1];
-    const title = stripHtml(pick(it, "title"));
-    const link = pick(it, "link");
-    const pubDate = pick(it, "pubDate");
-    const source = pick(it, "source");
     const descHtml = pick(it, "description");
-    const imgMatch = descHtml.match(/<img[^>]+src="([^"]+)"/i);
     return {
-      id: `${i}-${link}`,
-      title,
-      url: link,
-      source: source || "Google News",
+      id: `${i}`,
+      title: stripHtml(pick(it, "title")),
+      url: pick(it, "link"),
+      source: pick(it, "source") || "Google News",
       summary: stripHtml(descHtml).slice(0, 240),
-      image_url: imgMatch ? imgMatch[1] : null,
-      published_at: pubDate ? new Date(pubDate).toISOString() : null,
+      image_url: (descHtml.match(/<img[^>]+src="([^"]+)"/i)?.[1]) ?? null,
+      published_at: pick(it, "pubDate") ? new Date(pick(it, "pubDate")).toISOString() : null,
     };
   });
 
-  const body = { articles: items, updated_at: new Date().toISOString() };
+  // Enrich missing images in parallel (best-effort).
+  const enriched = await Promise.all(rawItems.map(async (a) => {
+    if (a.image_url) return a;
+    const img = await fetchOgImage(a.url);
+    return { ...a, image_url: img };
+  }));
+
+  const body = { articles: enriched, updated_at: new Date().toISOString() };
   cache = { at: Date.now(), body };
   return new Response(JSON.stringify(body), {
     headers: { ...cors, "Content-Type": "application/json" },
