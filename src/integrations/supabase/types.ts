@@ -14,16 +14,450 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      channels: {
+        Row: {
+          category: string
+          epg_channel_id: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          stream_id: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          epg_channel_id?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          stream_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          epg_channel_id?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          stream_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          team_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          team_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          team_code?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_team_code_fkey"
+            columns: ["team_code"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          away_score: number | null
+          away_team_code: string | null
+          date_utc: string
+          external_id: string | null
+          group: string | null
+          home_score: number | null
+          home_team_code: string | null
+          id: string
+          minute: string | null
+          stage: string
+          status: string
+          updated_at: string
+          venue_id: string | null
+        }
+        Insert: {
+          away_score?: number | null
+          away_team_code?: string | null
+          date_utc: string
+          external_id?: string | null
+          group?: string | null
+          home_score?: number | null
+          home_team_code?: string | null
+          id?: string
+          minute?: string | null
+          stage: string
+          status?: string
+          updated_at?: string
+          venue_id?: string | null
+        }
+        Update: {
+          away_score?: number | null
+          away_team_code?: string | null
+          date_utc?: string
+          external_id?: string | null
+          group?: string | null
+          home_score?: number | null
+          home_team_code?: string | null
+          id?: string
+          minute?: string | null
+          stage?: string
+          status?: string
+          updated_at?: string
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_away_team_code_fkey"
+            columns: ["away_team_code"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "matches_home_team_code_fkey"
+            columns: ["home_team_code"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "matches_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          published_at: string | null
+          source: string | null
+          summary: string | null
+          title: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          source?: string | null
+          summary?: string | null
+          title: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          source?: string | null
+          summary?: string | null
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      predictions: {
+        Row: {
+          away_score: number
+          created_at: string
+          home_score: number
+          id: string
+          match_id: string
+          points: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          away_score: number
+          created_at?: string
+          home_score: number
+          id?: string
+          match_id: string
+          points?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          away_score?: number
+          created_at?: string
+          home_score?: number
+          id?: string
+          match_id?: string
+          points?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictions_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      scorers: {
+        Row: {
+          assists: number | null
+          goals: number | null
+          id: string
+          player: string
+          team_code: string | null
+        }
+        Insert: {
+          assists?: number | null
+          goals?: number | null
+          id?: string
+          player: string
+          team_code?: string | null
+        }
+        Update: {
+          assists?: number | null
+          goals?: number | null
+          id?: string
+          player?: string
+          team_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scorers_team_code_fkey"
+            columns: ["team_code"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      scrape_runs: {
+        Row: {
+          detail: string | null
+          last_run_at: string
+          source: string
+          status: string | null
+        }
+        Insert: {
+          detail?: string | null
+          last_run_at?: string
+          source: string
+          status?: string | null
+        }
+        Update: {
+          detail?: string | null
+          last_run_at?: string
+          source?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      standings: {
+        Row: {
+          d: number | null
+          ga: number | null
+          gd: number | null
+          gf: number | null
+          group: string
+          id: string
+          l: number | null
+          played: number | null
+          pts: number | null
+          team_code: string
+          w: number | null
+        }
+        Insert: {
+          d?: number | null
+          ga?: number | null
+          gd?: number | null
+          gf?: number | null
+          group: string
+          id?: string
+          l?: number | null
+          played?: number | null
+          pts?: number | null
+          team_code: string
+          w?: number | null
+        }
+        Update: {
+          d?: number | null
+          ga?: number | null
+          gd?: number | null
+          gf?: number | null
+          group?: string
+          id?: string
+          l?: number | null
+          played?: number | null
+          pts?: number | null
+          team_code?: string
+          w?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standings_team_code_fkey"
+            columns: ["team_code"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          code: string
+          confederation: string | null
+          created_at: string
+          flag_url: string | null
+          group: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          confederation?: string | null
+          created_at?: string
+          flag_url?: string | null
+          group?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          confederation?: string | null
+          created_at?: string
+          flag_url?: string | null
+          group?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      venues: {
+        Row: {
+          capacity: number | null
+          city: string
+          country: string
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+        }
+        Insert: {
+          capacity?: number | null
+          city: string
+          country: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+        }
+        Update: {
+          capacity?: number | null
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      xtream_config: {
+        Row: {
+          host: string
+          id: number
+          password: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          host: string
+          id?: number
+          password: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          host?: string
+          id?: number
+          password?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +584,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
