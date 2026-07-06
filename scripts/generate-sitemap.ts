@@ -6,7 +6,7 @@ import { resolve } from "path";
 import { createClient } from "@supabase/supabase-js";
 
 // TODO: replace with your project URL once a custom domain is set on Hostinger.
-const BASE_URL = "";
+const BASE_URL = "https://pitch26.muhammadsaadabdullah.com";
 
 interface SitemapEntry {
   path: string;
