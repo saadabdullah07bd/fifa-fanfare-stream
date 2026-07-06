@@ -20,7 +20,6 @@ async function assertAdmin(context: { supabase: ReturnType<typeof createClient<D
 }
 
 function admin() {
-  const { createClient } = require("@supabase/supabase-js") as typeof import("@supabase/supabase-js");
   return createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
   });
