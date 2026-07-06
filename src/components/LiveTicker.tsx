@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { format } from "date-fns";
+import { bdTime } from "@/lib/flags";
 
 export type LiveMatch = {
   id: number;
@@ -62,9 +62,12 @@ export default function LiveTicker() {
 }
 
 function LiveCard({ m }: { m: LiveMatch }) {
-  const min = m.minute ? `${m.minute}${m.injury_time ? `+${m.injury_time}` : ""}'` : m.status === "PAUSED" ? "HT" : "LIVE";
+  const min =
+    m.status === "PAUSED" ? "HT"
+    : m.minute ? `${m.minute}${m.injury_time ? `+${m.injury_time}` : ""}'`
+    : "LIVE";
   return (
-    <Link to={`/match/${m.id}`} className="live-shimmer block rounded-xl border border-primary/40 bg-card/70 p-4 shadow-lg transition hover:border-primary">
+    <Link to={`/match/${m.id}`} className="live-shimmer block rounded-xl border border-primary/40 bg-card/70 p-4 shadow-lg transition hover:-translate-y-0.5 hover:border-primary">
       <div className="flex items-center justify-between text-xs uppercase tracking-wider">
         <span className="text-primary font-bold">
           <span className="live-dot mr-2 align-middle" />{min}
@@ -99,7 +102,7 @@ function MiniList({ title, items, showTime }: { title: string; items: LiveMatch[
           <li key={m.id} className="py-2 text-sm">
             <Link to={`/match/${m.id}`} className="flex items-center gap-3 hover:text-primary">
               <span className="w-20 text-xs uppercase tracking-wider text-muted-foreground">
-                {showTime ? format(new Date(m.utc_date), "HH:mm") : "FT"}
+                {showTime ? bdTime(m.utc_date) : "FT"}
               </span>
               <span className="flex-1 truncate">{m.home.name}</span>
               <span className="display text-primary tabular-nums">

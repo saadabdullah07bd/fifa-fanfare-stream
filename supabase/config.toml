@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.match-detail]
 verify_jwt = false
+
+[functions.match-stats]
+verify_jwt = false
