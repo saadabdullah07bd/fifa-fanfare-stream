@@ -1,41 +1,35 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+import { Seo } from "@/lib/seo";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/auth")({
-  ssr: false,
-  head: () => ({ meta: [{ title: "Sign in — Pitch26" }] }),
-  component: Auth,
-});
-
-function Auth() {
+export default function Auth() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
-    });
+    supabase.auth.getSession().then(({ data }) => { if (data.session) navigate("/"); });
   }, [navigate]);
 
   async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) toast.error(result.error.message);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) toast.error(error.message);
   }
 
   return (
     <div className="mx-auto max-w-md px-4 py-24">
+      <Seo title="Sign in — Pitch26" />
       <Link to="/" className="text-xs uppercase tracking-wider text-muted-foreground hover:text-primary">← back</Link>
       <h1 className="display mt-4 text-5xl">Sign in</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Sign in with Google to save favorite teams, submit predictions, and stream live matches.
       </p>
 
-      <button
-        onClick={google}
-        className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90"
-      >
+      <button onClick={google}
+        className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90">
         <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
           <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.46c-.28 1.48-1.13 2.74-2.4 3.58v2.98h3.87c2.26-2.09 3.56-5.17 3.56-8.8z"/>
           <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-2.98c-1.07.72-2.44 1.16-4.06 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/>
@@ -45,9 +39,7 @@ function Auth() {
         Continue with Google
       </button>
 
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        We only use your Google account for sign-in.
-      </p>
+      <p className="mt-6 text-center text-xs text-muted-foreground">We only use your Google account for sign-in.</p>
     </div>
   );
 }

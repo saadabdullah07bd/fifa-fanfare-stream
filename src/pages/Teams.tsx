@@ -1,32 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getTeams } from "@/lib/data.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { Seo } from "@/lib/seo";
 
-export const Route = createFileRoute("/teams")({
-  head: () => ({
-    meta: [
-      { title: "Teams — Pitch26" },
-      { name: "description", content: "All qualified nations for the 2026 FIFA World Cup." },
-      { property: "og:title", content: "World Cup 2026 teams" },
-      { property: "og:description", content: "48 nations, six confederations." },
-    ],
-  }),
-  component: Teams,
-});
-
-function Teams() {
-  const fn = useServerFn(getTeams);
-  const { data = [] } = useQuery({ queryKey: ["teams"], queryFn: () => fn() });
-
+export default function Teams() {
+  const { data = [] } = useQuery({
+    queryKey: ["teams"],
+    queryFn: async () => (await supabase.from("teams").select("*").order("name")).data ?? [],
+  });
   const byConf = data.reduce<Record<string, typeof data>>((a, t) => {
     const k = t.confederation ?? "Other";
     (a[k] ||= []).push(t);
     return a;
   }, {});
-
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
+      <Seo title="Teams — Pitch26" description="All qualified nations for the 2026 FIFA World Cup." />
       <h1 className="display text-5xl">Teams</h1>
       <p className="mt-2 text-muted-foreground">{data.length} nations qualified.</p>
       <div className="mt-8 space-y-8">

@@ -1,24 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getAllMatches } from "@/lib/data.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { Seo } from "@/lib/seo";
 import { format } from "date-fns";
 
-export const Route = createFileRoute("/fixtures")({
-  head: () => ({
-    meta: [
-      { title: "Fixtures — Pitch26" },
-      { name: "description", content: "Complete schedule for the 2026 FIFA World Cup." },
-      { property: "og:title", content: "World Cup 2026 fixtures" },
-      { property: "og:description", content: "Every kick-off across the 48-team tournament." },
-    ],
-  }),
-  component: Fixtures,
-});
-
-function Fixtures() {
-  const fn = useServerFn(getAllMatches);
-  const { data = [] } = useQuery({ queryKey: ["matches"], queryFn: () => fn(), refetchInterval: 60_000 });
+export default function Fixtures() {
+  const { data = [] } = useQuery({
+    queryKey: ["matches"],
+    refetchInterval: 60_000,
+    queryFn: async () => (await supabase.from("matches").select("*").order("date_utc")).data ?? [],
+  });
 
   const grouped = data.reduce<Record<string, typeof data>>((acc, m) => {
     const d = format(new Date(m.date_utc), "EEEE d MMMM yyyy");
@@ -28,11 +18,12 @@ function Fixtures() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
+      <Seo title="Fixtures — Pitch26" description="Complete schedule for the 2026 FIFA World Cup." />
       <h1 className="display text-5xl">Fixtures</h1>
       <p className="mt-2 text-muted-foreground">{data.length} matches. Times shown in your local timezone.</p>
       {data.length === 0 && (
         <p className="mt-8 rounded-lg border border-border bg-card/40 p-6 text-sm text-muted-foreground">
-          Schedule not loaded yet. From the home page, click "Refresh now" to pull the latest fixtures.
+          Schedule not loaded yet. Data auto-refreshes hourly.
         </p>
       )}
       <div className="mt-8 space-y-8">
