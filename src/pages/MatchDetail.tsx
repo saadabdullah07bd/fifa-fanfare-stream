@@ -235,3 +235,28 @@ export default function MatchDetail() {
     </motion.div>
   );
 }
+
+// Live minute:seconds ticker. Anchors on the fetched `minute` and ticks forward
+// in real time so users see the clock move between refetches.
+function LiveClock({ minute, injury }: { minute: number; injury: number | null }) {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    setSeconds(0);
+    const t = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [minute, injury]);
+
+  const totalSec = seconds;
+  const extraMin = Math.floor(totalSec / 60);
+  const s = String(totalSec % 60).padStart(2, "0");
+  const shown = minute + extraMin;
+  return (
+    <motion.span
+      key={`${minute}-${extraMin}-${s}`}
+      initial={{ opacity: 0.6 }} animate={{ opacity: 1 }}
+      className="tabular-nums"
+    >
+      {shown}{injury ? `+${injury}` : ""}:{s}'
+    </motion.span>
+  );
+}
