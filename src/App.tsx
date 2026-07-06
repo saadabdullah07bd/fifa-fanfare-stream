@@ -39,7 +39,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
 function Nav() {
   const items = [
     ["/", "Home"], ["/fixtures", "Fixtures"], ["/teams", "Teams"],
-    ["/scorers", "Scorers"], ["/predictions", "Predict"],
+    ["/predictions", "Predict"],
     ["/news", "News"], ["/highlights", "Highlights"], ["/live-tv", "Live TV"],
   ] as const;
   return (
