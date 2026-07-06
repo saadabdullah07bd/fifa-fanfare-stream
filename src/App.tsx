@@ -7,6 +7,7 @@ import Groups from "@/pages/Groups";
 import Teams from "@/pages/Teams";
 import Scorers from "@/pages/Scorers";
 import Venues from "@/pages/Venues";
+import VenueDetail from "@/pages/VenueDetail";
 import News from "@/pages/News";
 import Highlights from "@/pages/Highlights";
 import LiveTV from "@/pages/LiveTV";
@@ -85,6 +86,7 @@ export default function App() {
           <Route path="/teams" element={<Teams />} />
           <Route path="/scorers" element={<Scorers />} />
           <Route path="/venues" element={<Venues />} />
+          <Route path="/venues/:id" element={<VenueDetail />} />
           <Route path="/news" element={<News />} />
           <Route path="/highlights" element={<Highlights />} />
           <Route path="/live-tv" element={<RequireAuth><LiveTV /></RequireAuth>} />
