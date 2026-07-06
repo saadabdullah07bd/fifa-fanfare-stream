@@ -21,8 +21,10 @@ const KO_LABEL: Record<string, string> = {
   FINAL: "Final",
 };
 
+type View = "list" | "focus" | "bracket";
+
 export default function Fixtures() {
-  const [view, setView] = useState<"upcoming" | "bracket">("upcoming");
+  const [view, setView] = useState<View>("list");
   const { data = [] } = useQuery({
     queryKey: ["matches"],
     refetchInterval: 60_000,
@@ -38,9 +40,18 @@ export default function Fixtures() {
 
   const cardRefs = useRef<Array<HTMLElement | null>>([]);
   useEffect(() => {
-    if (view !== "upcoming" || !sorted.length) return;
+    if (view !== "focus" || !sorted.length) return;
     cardRefs.current[nextIdx]?.scrollIntoView({ block: "start" });
   }, [view, sorted.length, nextIdx]);
+
+  const grouped = useMemo(() => {
+    const g: Record<string, typeof sorted> = {};
+    for (const m of sorted) {
+      const d = bdDate(m.date_utc);
+      (g[d] ||= []).push(m);
+    }
+    return Object.entries(g);
+  }, [sorted]);
 
   const ko = KO_STAGES.map((stage) => ({
     stage,
@@ -59,12 +70,10 @@ export default function Fixtures() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="display text-5xl">Fixtures</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Scroll ↕ to see next or previous match · Times in Bangladesh (GMT+6, 12h)
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Times in Bangladesh (GMT+6, 12h)</p>
         </div>
         <div className="inline-flex rounded-md border border-border bg-card/40 p-1 text-xs uppercase tracking-[0.15em]">
-          {(["upcoming", "bracket"] as const).map((v) => (
+          {(["list", "focus", "bracket"] as const).map((v) => (
             <button key={v} onClick={() => setView(v)}
               className={`relative rounded px-4 py-2 font-bold transition ${view === v ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {view === v && (
@@ -83,10 +92,41 @@ export default function Fixtures() {
       )}
 
       <AnimatePresence mode="wait">
-        {view === "upcoming" ? (
-          <motion.div key="upcoming"
+        {view === "list" && (
+          <motion.div key="list"
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
+            className="mt-6 space-y-8"
+          >
+            {grouped.map(([day, matches]) => (
+              <section key={day}>
+                <h2 className="display text-xl text-primary">{day}</h2>
+                <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card/40">
+                  {matches.map((m, i) => (
+                    <motion.li key={m.id}
+                      initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
+                      className="flex items-center gap-4 p-4 hover:bg-card/70 transition-colors"
+                    >
+                      <span className="w-20 text-sm tabular-nums text-muted-foreground">{bdTime(m.date_utc)}</span>
+                      <MiniTeam code={m.home_team_code} align="right" />
+                      <span className="display min-w-[60px] text-center text-xl text-primary">
+                        {m.status === "scheduled" ? "v" : `${m.home_score ?? 0}–${m.away_score ?? 0}`}
+                      </span>
+                      <MiniTeam code={m.away_team_code} align="left" />
+                      <span className="w-20 text-right text-[11px] uppercase tracking-wider text-muted-foreground">
+                        {m.status === "live" ? <><span className="live-dot mr-1 align-middle" />Live</> : m.status}
+                      </span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </motion.div>
+        )}
+
+        {view === "focus" && (
+          <motion.div key="focus"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-            className="mt-6 snap-y snap-mandatory overflow-y-auto rounded-xl border border-border bg-card/20"
+            className="mt-6 snap-y snap-mandatory overflow-y-auto rounded-xl border border-border bg-card/20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{ height: "calc(100vh - 240px)" }}
           >
             {sorted.map((m, i) => {
@@ -119,14 +159,16 @@ export default function Fixtures() {
                       <TeamSide code={m.away_team_code} align="left" />
                     </div>
                     <p className="mt-8 text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
-                      Match {i + 1} of {sorted.length} · scroll ↑ ↓
+                      Match {i + 1} of {sorted.length}
                     </p>
                   </motion.div>
                 </article>
               );
             })}
           </motion.div>
-        ) : (
+        )}
+
+        {view === "bracket" && (
           <motion.div key="bracket"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
             className="mt-6 overflow-x-auto"
@@ -142,8 +184,8 @@ export default function Fixtures() {
                     {matches.map((m, i) => (
                       <motion.div key={m.id}
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                        whileHover={{ y: -3, borderColor: "hsl(var(--primary))" }}
-                        className="rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md"
+                        whileHover={{ y: -3 }}
+                        className="rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md hover:border-primary transition-colors"
                       >
                         <BracketRow code={m.home_team_code} score={m.home_score} />
                         <div className="my-1 h-px bg-border/60" />
@@ -178,6 +220,17 @@ function TeamSide({ code, align }: { code: string | null; align: "left" | "right
       )}
       <span className="mt-3 display text-2xl">{code ?? "TBD"}</span>
     </div>
+  );
+}
+
+function MiniTeam({ code, align }: { code: string | null; align: "left" | "right" }) {
+  const url = flagUrl(code, 40);
+  return (
+    <span className={`flex flex-1 items-center gap-2 ${align === "right" ? "justify-end" : ""}`}>
+      {align === "left" && (url ? <img src={url} alt="" className="h-4 w-6 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" /> : <span className="h-4 w-6 rounded-[2px] bg-secondary/40" />)}
+      <span className="display text-xl">{code ?? "TBD"}</span>
+      {align === "right" && (url ? <img src={url} alt="" className="h-4 w-6 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" /> : <span className="h-4 w-6 rounded-[2px] bg-secondary/40" />)}
+    </span>
   );
 }
 
