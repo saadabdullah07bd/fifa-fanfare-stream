@@ -83,13 +83,9 @@ function LiveTVAuthed() {
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="display text-5xl">Live TV</h1>
-        <div className="flex gap-2">
-          <Link to="/settings" className="rounded-md border border-border bg-secondary px-3 py-2 text-xs font-semibold uppercase tracking-wider">Server</Link>
-          <button onClick={() => refresh.mutate()} disabled={refresh.isPending}
-            className="rounded-md bg-primary px-3 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50">
-            {refresh.isPending ? "…" : "Refresh"}
-          </button>
-        </div>
+        <Link to="/settings" className="rounded-md border border-border bg-secondary px-3 py-2 text-xs font-semibold uppercase tracking-wider">
+          Account
+        </Link>
       </div>
 
       {active && (
@@ -113,7 +109,7 @@ function LiveTVAuthed() {
 
       {channels.length === 0 && (
         <p className="mt-8 rounded-lg border border-border bg-card/40 p-6 text-sm text-muted-foreground">
-          No channels yet. Go to <Link to="/settings" className="text-primary">Settings</Link> to connect your Xtream server, then hit Refresh.
+          No channels yet. The site admin needs to connect the Xtream server from Settings.
         </p>
       )}
 
