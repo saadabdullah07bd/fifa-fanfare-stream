@@ -6,7 +6,7 @@ const cors = {
   "Access-Control-Allow-Methods": "GET, OPTIONS",
 };
 
-let cache: { at: number; body: unknown } | null = null;
+const cache = new Map<string, { at: number; body: unknown }>();
 const CACHE_MS = 120_000; // 2 min
 
 function stripHtml(s: string): string {
@@ -30,9 +30,15 @@ async function fromNewsApi(q: string): Promise<any[] | null> {
   if (!key) return null;
   const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&language=en&sortBy=publishedAt&pageSize=30`;
   const r = await fetch(url, { headers: { "X-Api-Key": key, "User-Agent": "Pitch26/1.0" } });
-  if (!r.ok) return null;
+  if (!r.ok) {
+    console.error("newsapi error", r.status, await r.text());
+    return null;
+  }
   const j = await r.json().catch(() => null);
-  if (!j || j.status !== "ok" || !Array.isArray(j.articles)) return null;
+  if (!j || j.status !== "ok" || !Array.isArray(j.articles)) {
+    console.error("newsapi bad body", JSON.stringify(j).slice(0, 200));
+    return null;
+  }
   return j.articles
     .filter((a: any) => a.title && a.url && !/^\[Removed\]/.test(a.title))
     .map((a: any, i: number) => ({
@@ -71,8 +77,9 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   const q = url.searchParams.get("q") ?? "FIFA World Cup 2026 OR football soccer";
 
-  if (cache && Date.now() - cache.at < CACHE_MS) {
-    return new Response(JSON.stringify(cache.body), {
+  const hit = cache.get(q);
+  if (hit && Date.now() - hit.at < CACHE_MS) {
+    return new Response(JSON.stringify(hit.body), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   }
@@ -85,7 +92,7 @@ Deno.serve(async (req) => {
   }
 
   const body = { articles, source, updated_at: new Date().toISOString() };
-  cache = { at: Date.now(), body };
+  cache.set(q, { at: Date.now(), body });
   return new Response(JSON.stringify(body), {
     headers: { ...cors, "Content-Type": "application/json" },
   });
