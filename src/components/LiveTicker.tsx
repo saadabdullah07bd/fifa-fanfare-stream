@@ -62,9 +62,12 @@ export default function LiveTicker() {
 }
 
 function LiveCard({ m }: { m: LiveMatch }) {
-  const min = m.minute ? `${m.minute}${m.injury_time ? `+${m.injury_time}` : ""}'` : m.status === "PAUSED" ? "HT" : "LIVE";
+  const min =
+    m.status === "PAUSED" ? "HT"
+    : m.minute ? `${m.minute}${m.injury_time ? `+${m.injury_time}` : ""}'`
+    : "LIVE";
   return (
-    <Link to={`/match/${m.id}`} className="live-shimmer block rounded-xl border border-primary/40 bg-card/70 p-4 shadow-lg transition hover:border-primary">
+    <Link to={`/match/${m.id}`} className="live-shimmer block rounded-xl border border-primary/40 bg-card/70 p-4 shadow-lg transition hover:-translate-y-0.5 hover:border-primary">
       <div className="flex items-center justify-between text-xs uppercase tracking-wider">
         <span className="text-primary font-bold">
           <span className="live-dot mr-2 align-middle" />{min}

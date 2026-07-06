@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { Seo } from "@/lib/seo";
 import LiveTicker, { useLiveMatches } from "@/components/LiveTicker";
 import heroImg from "@/assets/hero-stadium.jpg";
-import { format } from "date-fns";
+import { bdTime, bdDate } from "@/lib/flags";
 
 type Article = {
   id: string; title: string; url: string; source: string;
@@ -53,44 +54,55 @@ export default function Home() {
             <Link to="/live-tv" className="rounded-md border border-border bg-secondary/60 px-5 py-3 text-sm font-bold uppercase tracking-wider">Live TV</Link>
           </div>
 
-          {hero && (
-            <Link
-              to={`/match/${hero.id}`}
-              className={`mt-10 block rounded-xl border border-border bg-card/85 p-6 shadow-2xl transition hover:border-primary ${["IN_PLAY", "PAUSED", "LIVE"].includes(hero.status) ? "live-shimmer" : ""}`}
-            >
-              <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
-                <span className="text-primary font-bold">
-                  {["IN_PLAY", "LIVE"].includes(hero.status)
-                    ? <><span className="live-dot mr-2 align-middle" />Live · {hero.minute ?? 0}{hero.injury_time ? `+${hero.injury_time}` : ""}'</>
-                    : hero.status === "PAUSED"
-                      ? <><span className="live-dot mr-2 align-middle" />Half-time</>
-                      : `Kick-off · ${format(new Date(hero.utc_date), "EEE d MMM · HH:mm")}`}
-                </span>
-                <span>{hero.competition}</span>
-              </div>
-              <div className="mt-6 grid grid-cols-3 items-center gap-4">
-                <div className="flex flex-col items-end gap-2 text-right">
-                  {hero.home.crest && <img src={hero.home.crest} alt={hero.home.name} className="h-14 w-14 object-contain" />}
-                  <p className="display text-xl md:text-3xl leading-tight">{hero.home.name}</p>
-                </div>
-                <div className="text-center">
-                  <p className="display text-5xl md:text-7xl text-primary tabular-nums">
-                    {hero.score.full.home ?? "–"} : {hero.score.full.away ?? "–"}
-                  </p>
-                  {hero.score.half.home !== null && (
-                    <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                      HT {hero.score.half.home}–{hero.score.half.away}
-                    </p>
-                  )}
-                </div>
-                <div className="flex flex-col items-start gap-2 text-left">
-                  {hero.away.crest && <img src={hero.away.crest} alt={hero.away.name} className="h-14 w-14 object-contain" />}
-                  <p className="display text-xl md:text-3xl leading-tight">{hero.away.name}</p>
-                </div>
-              </div>
-              <p className="mt-4 text-center text-xs uppercase tracking-wider text-muted-foreground">Tap for live timeline →</p>
-            </Link>
-          )}
+          {hero && (() => {
+            const isPaused = hero.status === "PAUSED";
+            const isLive = ["IN_PLAY", "LIVE"].includes(hero.status) || isPaused;
+            const statusEl = isPaused
+              ? <><span className="live-dot mr-2 align-middle" />Half-time</>
+              : ["IN_PLAY", "LIVE"].includes(hero.status)
+                ? <><span className="live-dot mr-2 align-middle" />Live · {hero.minute ?? 0}{hero.injury_time ? `+${hero.injury_time}` : ""}'</>
+                : `Kick-off · ${bdDate(hero.utc_date)} · ${bdTime(hero.utc_date)}`;
+            return (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
+                <Link to={`/match/${hero.id}`}
+                  className={`mt-10 block rounded-xl border border-border bg-card/85 p-6 shadow-2xl transition hover:-translate-y-0.5 hover:border-primary ${isLive ? "live-shimmer" : ""}`}
+                >
+                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    <span className="font-bold text-primary">{statusEl}</span>
+                    <span>{hero.competition}</span>
+                  </div>
+                  <div className="mt-6 grid grid-cols-3 items-center gap-4">
+                    <div className="flex flex-col items-end gap-2 text-right">
+                      {hero.home.crest && <img src={hero.home.crest} alt={hero.home.name} className="h-14 w-14 object-contain" />}
+                      <p className="display text-xl md:text-3xl leading-tight">{hero.home.name}</p>
+                    </div>
+                    <div className="text-center">
+                      <AnimatePresence mode="popLayout">
+                        <motion.p
+                          key={`${hero.score.full.home}-${hero.score.full.away}`}
+                          initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.15, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 220, damping: 18 }}
+                          className="display text-5xl md:text-7xl text-primary tabular-nums"
+                        >
+                          {hero.score.full.home ?? "–"} : {hero.score.full.away ?? "–"}
+                        </motion.p>
+                      </AnimatePresence>
+                      {hero.score.half.home !== null && (
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                          HT {hero.score.half.home}–{hero.score.half.away}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-start gap-2 text-left">
+                      {hero.away.crest && <img src={hero.away.crest} alt={hero.away.name} className="h-14 w-14 object-contain" />}
+                      <p className="display text-xl md:text-3xl leading-tight">{hero.away.name}</p>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">Tap for live stats & timeline →</p>
+                </Link>
+              </motion.div>
+            );
+          })()}
         </div>
       </section>
 
