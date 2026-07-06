@@ -55,7 +55,21 @@ export default function VenueDetail() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
-      <Seo title={`${venue.name} — Pitch26`} description={`${venue.name} in ${venue.city}, ${venue.country}. World Cup 2026 host venue.`} />
+      <Seo
+        title={`${venue.name} — 2026 World Cup venue | Pitch26`}
+        description={`${venue.name} in ${venue.city}, ${venue.country}${venue.capacity ? ` — capacity ${venue.capacity.toLocaleString()}` : ""}. Host stadium for the 2026 FIFA World Cup.`}
+        path={`/venues/${venue.id}`}
+        image={wiki?.thumbnail?.source ?? venue.image_url ?? undefined}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "StadiumOrArena",
+          name: venue.name,
+          address: { "@type": "PostalAddress", addressLocality: venue.city, addressCountry: venue.country },
+          maximumAttendeeCapacity: venue.capacity ?? undefined,
+          image: wiki?.thumbnail?.source ?? venue.image_url ?? undefined,
+          sameAs: wiki?.content_urls?.desktop.page,
+        }}
+      />
       <Link to="/venues" className="text-xs uppercase tracking-wider text-primary">← All venues</Link>
       <h1 className="display mt-2 text-5xl">{venue.name}</h1>
       <p className="mt-1 text-muted-foreground">
