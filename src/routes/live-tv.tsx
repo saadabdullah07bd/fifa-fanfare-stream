@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getChannels, getStreamUrl, refreshChannels } from "@/lib/xtream.functions";
+import { getChannels, getStreamUrl } from "@/lib/xtream.functions";
 import { supabase } from "@/integrations/supabase/client";
 import Hls from "hls.js";
 import { toast } from "sonner";
@@ -45,19 +45,13 @@ function LiveTV() {
 
 function LiveTVAuthed() {
   const chFn = useServerFn(getChannels);
-  const refreshFn = useServerFn(refreshChannels);
   const streamFn = useServerFn(getStreamUrl);
-  const { data: channels = [], refetch } = useQuery({ queryKey: ["channels"], queryFn: () => chFn() as Promise<Channel[]> });
+  const { data: channels = [] } = useQuery({ queryKey: ["channels"], queryFn: () => chFn() as Promise<Channel[]> });
 
   const [tab, setTab] = useState<"wc2026" | "cricket">("wc2026");
   const [active, setActive] = useState<Channel | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const refresh = useMutation({
-    mutationFn: () => refreshFn(),
-    onSuccess: async (r) => { toast.success(`${r.channels} channels loaded`); await refetch(); },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
   useEffect(() => {
     if (!active || !videoRef.current) return;
