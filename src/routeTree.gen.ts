@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VenuesRouteImport } from './routes/venues'
 import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as ScorersRouteImport } from './routes/scorers'
+import { Route as PredictionsRouteImport } from './routes/predictions'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as LiveTvRouteImport } from './routes/live-tv'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as FixturesRouteImport } from './routes/fixtures'
+import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -37,6 +39,11 @@ const ScorersRoute = ScorersRouteImport.update({
   path: '/scorers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PredictionsRoute = PredictionsRouteImport.update({
+  id: '/predictions',
+  path: '/predictions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewsRoute = NewsRouteImport.update({
   id: '/news',
   path: '/news',
@@ -55,6 +62,11 @@ const GroupsRoute = GroupsRouteImport.update({
 const FixturesRoute = FixturesRouteImport.update({
   id: '/fixtures',
   path: '/fixtures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -85,10 +97,12 @@ const ApiPublicCronRefreshAllRoute = ApiPublicCronRefreshAllRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/favorites': typeof FavoritesRoute
   '/fixtures': typeof FixturesRoute
   '/groups': typeof GroupsRoute
   '/live-tv': typeof LiveTvRoute
   '/news': typeof NewsRoute
+  '/predictions': typeof PredictionsRoute
   '/scorers': typeof ScorersRoute
   '/teams': typeof TeamsRoute
   '/venues': typeof VenuesRoute
@@ -98,10 +112,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/favorites': typeof FavoritesRoute
   '/fixtures': typeof FixturesRoute
   '/groups': typeof GroupsRoute
   '/live-tv': typeof LiveTvRoute
   '/news': typeof NewsRoute
+  '/predictions': typeof PredictionsRoute
   '/scorers': typeof ScorersRoute
   '/teams': typeof TeamsRoute
   '/venues': typeof VenuesRoute
@@ -113,10 +129,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/favorites': typeof FavoritesRoute
   '/fixtures': typeof FixturesRoute
   '/groups': typeof GroupsRoute
   '/live-tv': typeof LiveTvRoute
   '/news': typeof NewsRoute
+  '/predictions': typeof PredictionsRoute
   '/scorers': typeof ScorersRoute
   '/teams': typeof TeamsRoute
   '/venues': typeof VenuesRoute
@@ -128,10 +146,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/favorites'
     | '/fixtures'
     | '/groups'
     | '/live-tv'
     | '/news'
+    | '/predictions'
     | '/scorers'
     | '/teams'
     | '/venues'
@@ -141,10 +161,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/favorites'
     | '/fixtures'
     | '/groups'
     | '/live-tv'
     | '/news'
+    | '/predictions'
     | '/scorers'
     | '/teams'
     | '/venues'
@@ -155,10 +177,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/favorites'
     | '/fixtures'
     | '/groups'
     | '/live-tv'
     | '/news'
+    | '/predictions'
     | '/scorers'
     | '/teams'
     | '/venues'
@@ -170,10 +194,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  FavoritesRoute: typeof FavoritesRoute
   FixturesRoute: typeof FixturesRoute
   GroupsRoute: typeof GroupsRoute
   LiveTvRoute: typeof LiveTvRoute
   NewsRoute: typeof NewsRoute
+  PredictionsRoute: typeof PredictionsRoute
   ScorersRoute: typeof ScorersRoute
   TeamsRoute: typeof TeamsRoute
   VenuesRoute: typeof VenuesRoute
@@ -203,6 +229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScorersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/predictions': {
+      id: '/predictions'
+      path: '/predictions'
+      fullPath: '/predictions'
+      preLoaderRoute: typeof PredictionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/news': {
       id: '/news'
       path: '/news'
@@ -229,6 +262,13 @@ declare module '@tanstack/react-router' {
       path: '/fixtures'
       fullPath: '/fixtures'
       preLoaderRoute: typeof FixturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -284,10 +324,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  FavoritesRoute: FavoritesRoute,
   FixturesRoute: FixturesRoute,
   GroupsRoute: GroupsRoute,
   LiveTvRoute: LiveTvRoute,
   NewsRoute: NewsRoute,
+  PredictionsRoute: PredictionsRoute,
   ScorersRoute: ScorersRoute,
   TeamsRoute: TeamsRoute,
   VenuesRoute: VenuesRoute,
