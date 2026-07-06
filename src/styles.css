@@ -104,14 +104,15 @@
   }
 }
 
-@utility live-shimmer {
+.live-shimmer {
   position: relative;
   overflow: hidden;
 }
-@utility live-shimmer::after {
+.live-shimmer::after {
   content: "";
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.08), transparent);
   animation: shimmer 2.2s infinite;
 }
