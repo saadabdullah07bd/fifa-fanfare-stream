@@ -106,6 +106,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/fixtures" element={<Fixtures />} />
+          <Route path="/standings" element={<Standings />} />
           <Route path="/news" element={<News />} />
           <Route path="/live-tv" element={<RequireAuth><LiveTV /></RequireAuth>} />
           <Route path="/predictions" element={<Predictions />} />
