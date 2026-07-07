@@ -127,8 +127,11 @@ export default function Fixtures() {
             className="mt-6 space-y-8"
           >
             {grouped.map(([day, matches]) => (
-              <section key={day}>
-                <h2 className="display text-xl text-primary">{day}</h2>
+              <section key={day} ref={(el) => { dayRefs.current[day] = el; }}>
+                <h2 className="display text-xl text-primary">
+                  {day}
+                  {day === presentDay && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em]">Today</span>}
+                </h2>
                 <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card/40">
                   {matches.map((m, i) => (
                     <motion.li key={m.id}
