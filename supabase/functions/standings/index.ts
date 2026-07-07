@@ -62,31 +62,69 @@ Deno.serve(async (req) => {
     }
 
     if (kind === "scorers" || kind === "all") {
-      // Aggregate scorers across all World Cup qualification confederations +
-      // the main tournament, so the list is populated year-round.
-      const codes = ["WC", "WCQ", "CLI", "EL", "CL", "PL", "PD", "SA", "BL1", "FL1"];
-      const results = await Promise.all(codes.map(async (code) => {
-        try {
-          const r = await fetchJson(`/competitions/${code}/scorers?limit=20`);
-          return { code, scorers: r.scorers ?? [] };
-        } catch { return { code, scorers: [] as any[] }; }
-      }));
+      // 1) Try API-Football's World Cup top scorers first (league=1 = FIFA World Cup).
+      //    That endpoint aggregates goals across qualifying + tournament, so it stays
+      //    populated year-round with genuine WC-related players.
+      const afKey = Deno.env.get("API_FOOTBALL_KEY");
+      const season = new Date().getUTCFullYear();
+      let scorers: any[] = [];
+      let source = "";
 
-      // Prefer WC, then WCQ, then any club competition that returns data.
-      const primary = results.find((r) => r.code === "WC" && r.scorers.length)
-        ?? results.find((r) => r.code === "WCQ" && r.scorers.length)
-        ?? results.find((r) => r.scorers.length)
-        ?? { code: "WC", scorers: [] };
+      if (afKey) {
+        for (const yr of [season, season - 1]) {
+          try {
+            const r = await fetch(
+              `https://v3.football.api-sports.io/players/topscorers?league=1&season=${yr}`,
+              { headers: { "x-apisports-key": afKey } },
+            );
+            if (!r.ok) continue;
+            const j: any = await r.json();
+            const list = j?.response ?? [];
+            if (list.length) {
+              source = `WC ${yr}`;
+              scorers = list.slice(0, 20).map((x: any) => {
+                const g = x.statistics?.[0]?.goals ?? {};
+                const games = x.statistics?.[0]?.games ?? {};
+                return {
+                  player: { name: x.player?.name, nationality: x.player?.nationality, photo: x.player?.photo },
+                  team: { name: x.statistics?.[0]?.team?.name, crest: x.statistics?.[0]?.team?.logo },
+                  goals: g.total ?? 0,
+                  assists: g.assists ?? 0,
+                  penalties: null,
+                  played: games.appearences ?? null,
+                };
+              });
+              break;
+            }
+          } catch { /* try next season */ }
+        }
+      }
 
-      body.scorers_source = primary.code;
-      body.scorers = primary.scorers.slice(0, 20).map((x: any) => ({
-        player: { name: x.player?.name, nationality: x.player?.nationality },
-        team: { name: x.team?.name, tla: x.team?.tla, crest: x.team?.crest },
-        goals: x.goals,
-        assists: x.assists,
-        penalties: x.penalties,
-        played: x.playedMatches,
-      }));
+      // 2) Fallback chain via football-data.org (WCQ, then top club comps).
+      if (!scorers.length) {
+        const codes = ["WCQ", "CL", "PL", "PD", "SA", "BL1", "FL1"];
+        for (const code of codes) {
+          try {
+            const r = await fetchJson(`/competitions/${code}/scorers?limit=20`);
+            const list = r.scorers ?? [];
+            if (list.length) {
+              source = code;
+              scorers = list.map((x: any) => ({
+                player: { name: x.player?.name, nationality: x.player?.nationality },
+                team: { name: x.team?.name, tla: x.team?.tla, crest: x.team?.crest },
+                goals: x.goals,
+                assists: x.assists,
+                penalties: x.penalties,
+                played: x.playedMatches,
+              }));
+              break;
+            }
+          } catch { /* try next comp */ }
+        }
+      }
+
+      body.scorers_source = source || "WC";
+      body.scorers = scorers;
     }
 
     body.updated_at = new Date().toISOString();
