@@ -20,6 +20,7 @@ export default function Standings() {
   const [tab, setTab] = useState<"standings" | "scorers">("standings");
   const [groups, setGroups] = useState<Group[]>([]);
   const [scorers, setScorers] = useState<Scorer[]>([]);
+  const [scorersSource, setScorersSource] = useState<string>("");
   const [updated, setUpdated] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -30,9 +31,10 @@ export default function Standings() {
       const { data, error } = await supabase.functions.invoke("standings", { body: { kind: "all" } });
       if (cancelled) return;
       if (error) { setErr(error.message); setLoading(false); return; }
-      const d = data as { standings?: Group[]; scorers?: Scorer[]; updated_at?: string };
+      const d = data as { standings?: Group[]; scorers?: Scorer[]; scorers_source?: string; updated_at?: string };
       setGroups(d.standings ?? []);
       setScorers(d.scorers ?? []);
+      setScorersSource(d.scorers_source ?? "");
       setUpdated(d.updated_at ?? "");
       setLoading(false);
     };
