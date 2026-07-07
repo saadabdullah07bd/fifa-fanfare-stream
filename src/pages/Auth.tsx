@@ -1,20 +1,22 @@
 import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { toast } from "sonner";
 
 export default function Auth() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from ?? "/live-tv";
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { if (data.session) navigate("/"); });
-  }, [navigate]);
+    supabase.auth.getSession().then(({ data }) => { if (data.session) navigate(from, { replace: true }); });
+  }, [from, navigate]);
 
   async function google() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}${from}` },
     });
     if (error) toast.error(error.message);
   }

@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink, Link, Navigate } from "react-router-dom";
+import { Routes, Route, NavLink, Link, Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Home from "@/pages/Home";
@@ -28,8 +28,9 @@ function useSession() {
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { ready, authed } = useSession();
+  const location = useLocation();
   if (!ready) return <div className="p-12 text-center text-muted-foreground">Loading…</div>;
-  if (!authed) return <Navigate to="/auth" replace />;
+  if (!authed) return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
   return <>{children}</>;
 }
 
