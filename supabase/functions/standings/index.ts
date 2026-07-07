@@ -184,77 +184,97 @@ async function scrapePageScorers(page: string, debug: any) {
 }
 
 function parseScorerTable(html: string) {
-  const tblMatch = html.match(/<table[^>]*class="[^"]*wikitable[^"]*"[\s\S]*?<\/table>/i);
-  if (!tblMatch) return [];
-  const table = tblMatch[0];
-
   const rows: any[] = [];
-  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = trRe.exec(table))) {
-    const tr = m[1];
-    if (/<th[\s>]/i.test(tr) && !/<td[\s>]/i.test(tr)) continue;
 
-    // Country from flagicon
-    let country = "";
-    const flag = tr.match(/class="[^"]*flagicon[^"]*"[\s\S]*?title="([^"]+)"/i)
-      ?? tr.match(/class="[^"]*flagicon[^"]*"[\s\S]*?alt="([^"]+)"/i);
-    if (flag) country = flag[1];
+  // Wikipedia's WC qualification "Top scorers" sections use a list format:
+  //   <p><b>16 goals</b></p><div class="div-col"><ul><li>[flag][player]</li>...
+  // Parse each "N goal(s)" heading and then extract player <li>s until the
+  // next heading.
+  const headingRe = /<(?:p|h[1-6])[^>]*>[\s\S]*?<b>\s*(\d{1,2})\s+goals?\s*<\/b>/gi;
+  const matches = [...html.matchAll(headingRe)];
+  for (let i = 0; i < matches.length; i++) {
+    const goals = Number(matches[i][1]);
+    const start = matches[i].index! + matches[i][0].length;
+    const end = i + 1 < matches.length ? matches[i + 1].index! : html.length;
+    const chunk = html.slice(start, end);
 
-    // Cells
-    const cells: string[] = [];
-    const tdRe = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
-    let c: RegExpExecArray | null;
-    while ((c = tdRe.exec(tr))) cells.push(c[1]);
-    if (cells.length < 2) continue;
+    const liRe = /<li[^>]*>([\s\S]*?)<\/li>/gi;
+    let li: RegExpExecArray | null;
+    while ((li = liRe.exec(chunk))) {
+      const cell = li[1];
+      // country = title of the flagicon's <a> link
+      let country = "";
+      const flag = cell.match(/class="[^"]*flagicon[^"]*"[\s\S]*?title="([^"]+)"/i)
+        ?? cell.match(/class="[^"]*flagicon[^"]*"[\s\S]*?alt="([^"]+)"/i);
+      if (flag) country = flag[1].replace(/\s+national football team$/i, "").trim();
 
-    // Player: first <a title="..."> whose title isn't the country
-    let playerName = "";
-    for (const cell of cells) {
-      const aMatches = [...cell.matchAll(/<a[^>]*title="([^"]+)"[^>]*>([^<]+)<\/a>/gi)];
-      for (const a of aMatches) {
+      // player name = first <a title="..."> whose title isn't the flag country
+      let playerName = "";
+      for (const a of cell.matchAll(/<a[^>]*title="([^"]+)"[^>]*>([^<]+)<\/a>/gi)) {
         const title = a[1];
         const label = decodeEntities(a[2]).trim();
-        if (title === country) continue;
-        if (!label || /^\d+$/.test(label)) continue;
-        if (/^(Hat-trick|Own goal|edit|note)$/i.test(label)) continue;
+        if (/national football team$/i.test(title)) continue;
+        if (!label || label.length < 2 || /^\d+$/.test(label)) continue;
+        if (/^(edit|note)$/i.test(label)) continue;
         playerName = label;
         break;
       }
-      if (playerName) break;
-    }
 
-    // If no linked name, take first cell that's non-numeric text
-    if (!playerName) {
-      for (const cell of cells) {
-        const t = decodeEntities(stripTags(cell)).trim();
-        if (t && t.length > 2 && !/^\d+$/.test(t) && t !== country) {
-          playerName = t.split(/[(\[]/)[0].trim();
+      if (!playerName || !goals) continue;
+      rows.push({
+        player: { name: playerName, nationality: country || null },
+        team: { name: country || "National team" },
+        goals,
+        assists: null,
+        penalties: null,
+        played: null,
+      });
+    }
+  }
+
+  // Fallback: table-based layout (some confederations may use it).
+  if (!rows.length) {
+    const tblMatch = html.match(/<table[^>]*class="[^"]*wikitable[^"]*"[\s\S]*?<\/table>/i);
+    if (tblMatch) {
+      const table = tblMatch[0];
+      const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+      let m: RegExpExecArray | null;
+      while ((m = trRe.exec(table))) {
+        const tr = m[1];
+        if (/<th[\s>]/i.test(tr) && !/<td[\s>]/i.test(tr)) continue;
+        let country = "";
+        const flag = tr.match(/class="[^"]*flagicon[^"]*"[\s\S]*?title="([^"]+)"/i);
+        if (flag) country = flag[1].replace(/\s+national football team$/i, "").trim();
+        const cells: string[] = [];
+        const tdRe = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+        let c: RegExpExecArray | null;
+        while ((c = tdRe.exec(tr))) cells.push(c[1]);
+        if (cells.length < 2) continue;
+        let playerName = "";
+        for (const cell of cells) {
+          for (const a of cell.matchAll(/<a[^>]*title="([^"]+)"[^>]*>([^<]+)<\/a>/gi)) {
+            if (/national football team$/i.test(a[1])) continue;
+            const label = decodeEntities(a[2]).trim();
+            if (!label || /^\d+$/.test(label)) continue;
+            playerName = label; break;
+          }
           if (playerName) break;
         }
+        let goals = 0;
+        for (const cell of cells) {
+          const t = decodeEntities(stripTags(cell)).trim();
+          const digits = t.replace(/[^\d]/g, "");
+          const n = Number(digits);
+          if (Number.isFinite(n) && n > 0 && n < 40 && digits === t) goals = Math.max(goals, n);
+        }
+        if (!playerName || !goals) continue;
+        rows.push({
+          player: { name: playerName, nationality: country || null },
+          team: { name: country || "National team" },
+          goals, assists: null, penalties: null, played: null,
+        });
       }
     }
-
-    // Goals: pick the largest pure integer 1-30 across cells
-    let goals = 0;
-    for (const cell of cells) {
-      const t = decodeEntities(stripTags(cell)).trim();
-      const digits = t.replace(/[^\d]/g, "");
-      const n = Number(digits);
-      if (Number.isFinite(n) && n > 0 && n < 40 && digits === t) {
-        goals = Math.max(goals, n);
-      }
-    }
-
-    if (!playerName || !goals) continue;
-    rows.push({
-      player: { name: playerName, nationality: country || null },
-      team: { name: country || "National team" },
-      goals,
-      assists: null,
-      penalties: null,
-      played: null,
-    });
   }
 
   return rows;
