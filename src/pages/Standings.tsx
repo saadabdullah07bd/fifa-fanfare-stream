@@ -122,7 +122,16 @@ export default function Standings() {
           ))}
         </div>
       ) : (
-        <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card/40">
+        <div className="mt-8 space-y-3">
+          {scorersSource && scorersSource !== "WC" && (
+            <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-muted-foreground">
+              World Cup 2026 hasn't kicked off yet, so no tournament goals to rank.
+              Showing top scorers from <span className="font-bold text-primary">
+                {({ WCQ: "World Cup Qualifying", CL: "UEFA Champions League", EL: "UEFA Europa League", PL: "Premier League", PD: "LaLiga", SA: "Serie A", BL1: "Bundesliga", FL1: "Ligue 1", CLI: "Copa Libertadores" } as Record<string,string>)[scorersSource] ?? scorersSource}
+              </span> instead.
+            </p>
+          )}
+          <div className="overflow-hidden rounded-xl border border-border bg-card/40"></div>
           <table className="w-full text-sm">
             <thead className="text-xs uppercase tracking-wider text-muted-foreground">
               <tr className="border-b border-border/60">
