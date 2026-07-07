@@ -100,8 +100,9 @@ Deno.serve(async (req) => {
       if (!cfg) return json({ error: "No Xtream config" }, 400);
       const edgeBase = `${new URL(req.url).origin}/functions/v1/xtream`;
       const t = await signPayload({ type: "stream", streamId, exp: expiresAt() }, serviceKey);
-      const url = `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`;
-      return json({ url });
+      // Most xtream live channels are MPEG-TS. Return .ts by default; client uses mpegts.js.
+      const url = `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`;
+      return json({ url, type: "mpegts" });
     }
 
     return json({ error: "Unknown action" }, 400);
