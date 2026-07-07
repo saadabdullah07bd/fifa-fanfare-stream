@@ -25,6 +25,25 @@ Deno.serve(async (req) => {
       return await handleStreamProxy(req, admin, serviceKey);
     }
 
+    const body = await req.json().catch(() => ({}));
+    const action = body.action as string;
+
+    if (action === "stream_url") {
+      const streamId = String(body.streamId || "");
+      if (!streamId) return json({ error: "streamId required" }, 400);
+      const { data: channel } = await admin.from("channels").select("stream_id").eq("stream_id", streamId).maybeSingle();
+      if (!channel) return json({ error: "Channel not found" }, 404);
+      const { data: cfg } = await admin.from("xtream_config").select("id").eq("id", 1).maybeSingle();
+      if (!cfg) return json({ error: "No Xtream config" }, 400);
+      const edgeBase = `${new URL(req.url).origin}/functions/v1/xtream`;
+      const t = await signPayload({ type: "stream", streamId, exp: expiresAt() }, serviceKey);
+      return json({
+        url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`,
+        type: "mpegts",
+        fallbackUrl: `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`,
+      });
+    }
+
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
     if (!token) return json({ error: "Not signed in" }, 401);
@@ -38,9 +57,6 @@ Deno.serve(async (req) => {
 
     const { data: isAdminData } = await admin.rpc("has_role", { _user_id: userId, _role: "admin" });
     const isAdmin = !!isAdminData;
-
-    const body = await req.json().catch(() => ({}));
-    const action = body.action as string;
 
     if (action === "get_config") {
       if (!isAdmin) return json({ error: "Admin only" }, 403);
@@ -91,18 +107,6 @@ Deno.serve(async (req) => {
         }
       }
       return json({ ok: true, categories: wanted.length, channels: total });
-    }
-
-    if (action === "stream_url") {
-      const streamId = String(body.streamId || "");
-      if (!streamId) return json({ error: "streamId required" }, 400);
-      const { data: cfg } = await admin.from("xtream_config").select("*").eq("id", 1).maybeSingle();
-      if (!cfg) return json({ error: "No Xtream config" }, 400);
-      const edgeBase = `${new URL(req.url).origin}/functions/v1/xtream`;
-      const t = await signPayload({ type: "stream", streamId, exp: expiresAt() }, serviceKey);
-      // Most xtream live channels are MPEG-TS. Return .ts by default; client uses mpegts.js.
-      const url = `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`;
-      return json({ url, type: "mpegts" });
     }
 
     return json({ error: "Unknown action" }, 400);
