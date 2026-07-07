@@ -21,7 +21,13 @@ export function useIsAdmin() {
   const [admin, setAdmin] = useState(false);
   useEffect(() => {
     if (!user) { setAdmin(false); return; }
-    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => setAdmin(!!data));
+    supabase
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => setAdmin(!!data));
   }, [user]);
   return { admin, ready };
 }
