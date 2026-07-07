@@ -123,11 +123,11 @@ function json(body: unknown, status = 200) {
 
 const CONFED_PAGES = [
   "2026 FIFA World Cup qualification (UEFA)",
-  "2026 FIFA World Cup qualification – CONMEBOL",
-  "2026 FIFA World Cup qualification – AFC",
-  "2026 FIFA World Cup qualification – CAF",
-  "2026 FIFA World Cup qualification – CONCACAF",
-  "2026 FIFA World Cup qualification – OFC",
+  "2026 FIFA World Cup qualification (CONMEBOL)",
+  "2026 FIFA World Cup qualification (AFC)",
+  "2026 FIFA World Cup qualification (CAF)",
+  "2026 FIFA World Cup qualification (CONCACAF)",
+  "2026 FIFA World Cup qualification (OFC)",
 ];
 
 async function scrapeAllConfederationScorers(debug: any) {
