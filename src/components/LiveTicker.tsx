@@ -42,7 +42,6 @@ export default function LiveTicker() {
     <section className="mx-auto max-w-7xl px-4 pb-6 pt-4">
       <div className="flex items-baseline justify-between">
         <h2 className="display text-3xl">Live around the world</h2>
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">Auto-refresh · 30s</span>
       </div>
 
       {live.length > 0 && (

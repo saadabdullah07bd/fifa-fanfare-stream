@@ -189,7 +189,7 @@ export default function MatchDetail() {
                 </motion.div>
               );
             })}
-            <p className="mt-2 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Source: SofaScore · updates every 45s</p>
+            
           </div>
         )}
       </section>

@@ -134,3 +134,8 @@
   background: var(--live);
   animation: pulse-dot 1.2s ease-in-out infinite;
 }
+
+/* Hide native scrollbars globally while keeping scrolling functional */
+html { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar { width: 0; height: 0; display: none; }
+body::-webkit-scrollbar { width: 0; height: 0; display: none; }
