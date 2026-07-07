@@ -42,8 +42,8 @@ export default function LiveTV() {
       if (error) throw new Error(error.message);
       const url = (data as { url: string }).url;
       const v = videoRef.current!;
-      if (Hls.isSupported()) {
-        hls = new Hls({ enableWorker: true });
+      if (Hls.isSupported() && !url.endsWith(".mp4")) {
+        hls = new Hls({ enableWorker: true, lowLatencyMode: true });
         hls.loadSource(url);
         hls.attachMedia(v);
       } else v.src = url;
