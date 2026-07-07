@@ -51,7 +51,21 @@ ReactDOM.createRoot(root).render(
         >
           <BrowserRouter>
             <App />
-            <Toaster position="top-right" richColors />
+            <Toaster
+              position="top-center"
+              richColors={false}
+              toastOptions={{
+                unstyled: false,
+                classNames: {
+                  toast:
+                    "glass-toast !bg-white/10 !text-white !border !border-white/20 !backdrop-blur-2xl !shadow-2xl !rounded-2xl",
+                  title: "!text-white !font-semibold",
+                  description: "!text-white/80",
+                  actionButton: "!bg-white/20 !text-white",
+                  cancelButton: "!bg-white/10 !text-white",
+                },
+              }}
+            />
           </BrowserRouter>
         </PersistQueryClientProvider>
       </HelmetProvider>
