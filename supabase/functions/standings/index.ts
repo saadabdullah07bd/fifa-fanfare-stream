@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     } catch { /* no JSON body */ }
   }
   const kind = (url.searchParams.get("kind") ?? bodyKind) || "standings"; // standings | scorers | all
-  const cacheKey = `v4:${kind}`;
+  const cacheKey = `v5:${kind}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.at < TTL) return json(cached.body);
 
