@@ -308,7 +308,7 @@ function ChannelLogo({ url, name }: { url: string | null; name: string }) {
 function ModernPlayer({
   videoRef, channel, onClose,
 }: {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   channel: Channel;
   onClose: () => void;
 }) {
