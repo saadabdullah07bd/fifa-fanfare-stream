@@ -248,7 +248,7 @@ export default function Fixtures() {
                 </motion.button>
               )}
             </AnimatePresence>
-            <p className="mt-4 text-xs text-muted-foreground">Bracket populates as knockout matches are confirmed.</p>
+            
           </motion.div>
         )}
       </AnimatePresence>
