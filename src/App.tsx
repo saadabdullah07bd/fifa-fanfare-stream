@@ -13,6 +13,7 @@ import TeamDetail from "@/pages/TeamDetail";
 import NotFound from "@/pages/NotFound";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
+import Standings from "@/pages/Standings";
 
 function useSession() {
   const [ready, setReady] = useState(false);
