@@ -111,6 +111,8 @@ export default function App() {
           <Route path="/team/:name" element={<TeamDetail />} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
