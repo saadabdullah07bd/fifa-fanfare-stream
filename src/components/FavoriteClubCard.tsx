@@ -57,7 +57,7 @@ export default function FavoriteClubCard() {
           .select("code, name, group, confederation, flag_url").eq("code", code).maybeSingle();
         t = data as Team | null;
       }
-      if (!t) {
+      if (!t && profile.favorite_club_name) {
         const { data } = await supabase.from("teams")
           .select("code, name, group, confederation, flag_url")
           .eq("name", profile.favorite_club_name).maybeSingle();
