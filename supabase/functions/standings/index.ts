@@ -107,7 +107,20 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 2) Fallback chain via football-data.org (WCQ, then top club comps).
+      // 2) User-requested fallback: scrape Google's search result snippets for
+      //    World Cup qualifying top scorer rows before using club competitions.
+      //    Google markup changes often and may occasionally return a consent or
+      //    bot-check page instead of results, so football-data remains below as
+      //    the final safety fallback.
+      if (!scorers.length) {
+        const googleScorers = await scrapeGoogleTopScorers();
+        if (googleScorers.length) {
+          source = "Google";
+          scorers = googleScorers;
+        }
+      }
+
+      // 3) Final fallback chain via football-data.org (WCQ, then top club comps).
       if (!scorers.length) {
         const codes = ["WCQ", "CL", "PL", "PD", "SA", "BL1", "FL1"];
         for (const code of codes) {
@@ -127,18 +140,6 @@ Deno.serve(async (req) => {
               break;
             }
           } catch { /* try next comp */ }
-        }
-      }
-
-      // 3) Last resort: scrape Google's search result snippets for World Cup
-      //    qualifying top scorer rows. This is intentionally a fallback because
-      //    Google markup changes often and may occasionally return a consent or
-      //    bot-check page instead of results.
-      if (!scorers.length) {
-        const googleScorers = await scrapeGoogleTopScorers();
-        if (googleScorers.length) {
-          source = "Google";
-          scorers = googleScorers;
         }
       }
 
