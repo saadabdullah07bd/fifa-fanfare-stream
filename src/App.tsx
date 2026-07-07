@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink, Link, Navigate } from "react-router-dom";
+import { Routes, Route, NavLink, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Home from "@/pages/Home";
@@ -28,9 +28,33 @@ function useSession() {
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { ready, authed } = useSession();
+  const location = useLocation();
   if (!ready) return <div className="p-12 text-center text-muted-foreground">Loading…</div>;
-  if (!authed) return <Navigate to="/auth" replace />;
+  if (!authed) return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
   return <>{children}</>;
+}
+
+function getPendingAuthRedirect() {
+  if (typeof window === "undefined") return null;
+  const path = window.sessionStorage.getItem("postAuthRedirect");
+  if (!path || !path.startsWith("/") || path.startsWith("//")) return null;
+  return path;
+}
+
+function AuthRedirector() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const redirect = () => {
+      const path = getPendingAuthRedirect();
+      if (!path) return;
+      window.sessionStorage.removeItem("postAuthRedirect");
+      navigate(path, { replace: true });
+    };
+    supabase.auth.getSession().then(({ data }) => { if (data.session) redirect(); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => { if (session) setTimeout(redirect, 0); });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate]);
+  return null;
 }
 
 function Nav() {
@@ -60,6 +84,7 @@ function Nav() {
 export default function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <AuthRedirector />
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
