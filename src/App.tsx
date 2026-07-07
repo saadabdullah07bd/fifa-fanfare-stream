@@ -11,6 +11,8 @@ import Auth from "@/pages/Auth";
 import MatchDetail from "@/pages/MatchDetail";
 import TeamDetail from "@/pages/TeamDetail";
 import NotFound from "@/pages/NotFound";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
 
 function useSession() {
   const [ready, setReady] = useState(false);
@@ -109,6 +111,8 @@ export default function App() {
           <Route path="/team/:name" element={<TeamDetail />} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

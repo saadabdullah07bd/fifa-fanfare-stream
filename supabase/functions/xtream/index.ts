@@ -100,8 +100,9 @@ Deno.serve(async (req) => {
       if (!cfg) return json({ error: "No Xtream config" }, 400);
       const edgeBase = `${new URL(req.url).origin}/functions/v1/xtream`;
       const t = await signPayload({ type: "stream", streamId, exp: expiresAt() }, serviceKey);
-      const url = `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`;
-      return json({ url });
+      // Most xtream live channels are MPEG-TS. Return .ts by default; client uses mpegts.js.
+      const url = `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`;
+      return json({ url, type: "mpegts" });
     }
 
     return json({ error: "Unknown action" }, 400);
@@ -119,15 +120,16 @@ async function handleStreamProxy(req: Request, admin: ReturnType<typeof createCl
   const path = requestUrl.pathname;
   const edgeBase = `${requestUrl.origin}/functions/v1/xtream`;
 
-  const streamMatch = path.match(/\/xtream\/stream\/([^/]+)\.m3u8$/);
+  const streamMatch = path.match(/\/xtream\/stream\/([^/]+)\.(m3u8|ts)$/);
   if (streamMatch) {
     const streamId = decodeURIComponent(streamMatch[1]);
+    const ext = streamMatch[2];
     const payload = await verifyPayload(requestUrl.searchParams.get("t") ?? "", secret);
     if (!payload || payload.type !== "stream" || payload.streamId !== streamId) return json({ error: "Invalid stream link" }, 403);
 
     const cfg = await getConfig(admin);
     if (!cfg) return json({ error: "No Xtream config" }, 400);
-    const upstreamUrl = buildUpstreamUrl(cfg, `${streamId}.m3u8`);
+    const upstreamUrl = buildUpstreamUrl(cfg, `${streamId}.${ext}`);
     return await proxyUpstream(req, cfg, streamId, upstreamUrl, edgeBase, secret);
   }
 

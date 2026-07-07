@@ -42,6 +42,12 @@ export default function Auth() {
       </button>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">We only use your Google account for sign-in.</p>
+
+      {/* Hidden Terms & Privacy links — required by Google OAuth branding policy but kept out of the visible UI per design. */}
+      <nav aria-hidden="true" className="sr-only" data-google-branding="policies">
+        <Link to="/terms" rel="terms-of-service">Terms of Service</Link>
+        <Link to="/privacy" rel="privacy-policy">Privacy Policy</Link>
+      </nav>
     </div>
   );
 }
