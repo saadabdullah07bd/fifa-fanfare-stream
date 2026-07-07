@@ -121,7 +121,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
+      <footer className="glass-nav mt-8 py-8 text-center text-xs text-muted-foreground">
         Pitch26 · Independent fan hub · Not affiliated with FIFA
       </footer>
     </div>
