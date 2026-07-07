@@ -6,7 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import Hls from "hls.js";
 import { toast } from "sonner";
-import { Search, Tv, Radio, Play, Sparkles, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search, Tv, Radio, Play, Pause, Sparkles, X, ChevronLeft, ChevronRight,
+  Volume2, VolumeX, Maximize, Minimize, Loader2, PictureInPicture2,
+} from "lucide-react";
 
 type Channel = { id: string; category: string; stream_id: string; name: string; logo_url: string | null };
 
