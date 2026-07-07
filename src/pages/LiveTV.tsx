@@ -282,3 +282,208 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
     </motion.button>
   );
 }
+
+function ChannelLogo({ url, name }: { url: string | null; name: string }) {
+  const [ok, setOk] = useState(!!url);
+  useEffect(() => { setOk(!!url); }, [url]);
+  const initials = name
+    .replace(/\(.*?\)|\[.*?\]/g, "")
+    .split(/\s+/).filter(Boolean).slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "").join("");
+  if (!ok || !url) {
+    return (
+      <div className="grid h-full w-full place-items-center">
+        <span className="display text-2xl tracking-widest text-primary/80">{initials || "TV"}</span>
+      </div>
+    );
+  }
+  return (
+    <img
+      src={url} alt={name} loading="lazy" onError={() => setOk(false)}
+      className="max-h-[85%] max-w-[85%] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+    />
+  );
+}
+
+function ModernPlayer({
+  videoRef, channel, onClose,
+}: {
+  videoRef: React.RefObject<HTMLVideoElement>;
+  channel: Channel;
+  onClose: () => void;
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [buffering, setBuffering] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [showUI, setShowUI] = useState(true);
+  const hideTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onWaiting = () => setBuffering(true);
+    const onPlaying = () => setBuffering(false);
+    const onVolume = () => { setMuted(v.muted); setVolume(v.volume); };
+    v.addEventListener("play", onPlay);
+    v.addEventListener("pause", onPause);
+    v.addEventListener("waiting", onWaiting);
+    v.addEventListener("playing", onPlaying);
+    v.addEventListener("volumechange", onVolume);
+    return () => {
+      v.removeEventListener("play", onPlay);
+      v.removeEventListener("pause", onPause);
+      v.removeEventListener("waiting", onWaiting);
+      v.removeEventListener("playing", onPlaying);
+      v.removeEventListener("volumechange", onVolume);
+    };
+  }, [videoRef, channel.id]);
+
+  useEffect(() => {
+    const onFs = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, []);
+
+  const kick = () => {
+    setShowUI(true);
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setShowUI(false), 2600);
+  };
+  useEffect(() => { kick(); return () => { if (hideTimer.current) window.clearTimeout(hideTimer.current); }; }, [channel.id]);
+
+  const toggle = () => {
+    const v = videoRef.current; if (!v) return;
+    if (v.paused) v.play(); else v.pause();
+  };
+  const toggleMute = () => { const v = videoRef.current; if (v) v.muted = !v.muted; };
+  const setVol = (val: number) => { const v = videoRef.current; if (v) { v.volume = val; v.muted = val === 0; } };
+  const toggleFs = async () => {
+    if (!wrapRef.current) return;
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await wrapRef.current.requestFullscreen();
+  };
+  const togglePip = async () => {
+    const v = videoRef.current as any; if (!v) return;
+    try {
+      if ((document as any).pictureInPictureElement) await (document as any).exitPictureInPicture();
+      else await v.requestPictureInPicture();
+    } catch { /* not supported */ }
+  };
+
+  return (
+    <div
+      ref={wrapRef}
+      onMouseMove={kick}
+      onTouchStart={kick}
+      className="group relative overflow-hidden rounded-2xl border border-primary/30 bg-black shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.35)]"
+    >
+      <video
+        ref={videoRef}
+        autoPlay playsInline
+        onClick={toggle}
+        className="aspect-video w-full cursor-pointer bg-black"
+      />
+
+      <AnimatePresence>
+        {buffering && (
+          <motion.div key="buf" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="pointer-events-none absolute inset-0 grid place-items-center bg-black/30 backdrop-blur-[2px]"
+          >
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showUI && (
+          <motion.div key="top"
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 bg-gradient-to-b from-black/80 to-transparent p-4"
+          >
+            <div className="pointer-events-auto flex items-center gap-3">
+              <span className="flex items-center gap-1.5 rounded-full bg-primary/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary-foreground">
+                <span className="live-dot" /> Live
+              </span>
+              <div>
+                <p className="display text-lg leading-tight text-white">{channel.name}</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">
+                  {CAT_LABEL[channel.category] ?? channel.category}
+                </p>
+              </div>
+              {is4k(channel.name) && (
+                <span className="rounded bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[10px] font-black tracking-wider text-black">4K UHD</span>
+              )}
+            </div>
+            <button onClick={onClose}
+              className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full bg-black/50 text-white/90 backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+              aria-label="Close player"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {!playing && !buffering && (
+          <motion.button key="center"
+            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+            onClick={toggle}
+            className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-primary/90 text-primary-foreground shadow-2xl transition hover:scale-110"
+            aria-label="Play"
+          >
+            <Play className="h-9 w-9 fill-current" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showUI && (
+          <motion.div key="bot"
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+            className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 sm:p-4"
+          >
+            <button onClick={toggle}
+              className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
+              aria-label={playing ? "Pause" : "Play"}
+            >
+              {playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current" />}
+            </button>
+            <button onClick={toggleMute}
+              className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
+              aria-label={muted ? "Unmute" : "Mute"}
+            >
+              {muted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
+            <input
+              type="range" min={0} max={1} step={0.01}
+              value={muted ? 0 : volume}
+              onChange={(e) => setVol(parseFloat(e.target.value))}
+              className="hidden h-1 w-24 cursor-pointer appearance-none rounded-full bg-white/20 accent-primary sm:block"
+              aria-label="Volume"
+            />
+            <div className="ml-auto flex items-center gap-2">
+              <button onClick={togglePip}
+                className="hidden h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground sm:grid"
+                aria-label="Picture in picture"
+              >
+                <PictureInPicture2 className="h-4 w-4" />
+              </button>
+              <button onClick={toggleFs}
+                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
+                aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+              >
+                {fullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
