@@ -7,7 +7,7 @@ import { toast } from "sonner";
 export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/live-tv";
+  const from = (location.state as { from?: string } | null)?.from ?? window.sessionStorage.getItem("postAuthRedirect") ?? "/live-tv";
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => { if (data.session) navigate(from, { replace: true }); });
@@ -16,7 +16,7 @@ export default function Auth() {
   async function google() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}${from}` },
+      options: { redirectTo: window.location.origin },
     });
     if (error) toast.error(error.message);
   }
@@ -30,7 +30,7 @@ export default function Auth() {
         Sign in with Google to save favorite teams, submit predictions, and stream live matches.
       </p>
 
-      <button onClick={google}
+      <button onClick={() => { window.sessionStorage.setItem("postAuthRedirect", from); google(); }}
         className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90">
         <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
           <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.46c-.28 1.48-1.13 2.74-2.4 3.58v2.98h3.87c2.26-2.09 3.56-5.17 3.56-8.8z"/>
