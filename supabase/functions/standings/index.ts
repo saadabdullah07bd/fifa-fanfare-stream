@@ -75,25 +75,25 @@ Deno.serve(async (req) => {
       // then football-data WCQ.
       let scorers: any[] = [];
       let source = "";
+      const debug: any = { afKey: false, afLeagues: {}, wikiFound: 0, fdFound: 0 };
 
       const afKey = Deno.env.get("API_FOOTBALL_KEY");
+      debug.afKey = !!afKey;
       if (afKey) {
-        // League IDs for World Cup - Qualification (API-Football):
-        // Europe=32, S.America=34, Africa=29, Asia=30, CONCACAF=31, Oceania=33
         const leagues = [32, 34, 29, 30, 31, 33];
         const season = new Date().getUTCFullYear();
         const merged = new Map<string, any>();
         await Promise.all(leagues.map(async (lg) => {
-          for (const yr of [season, season - 1]) {
+          for (const yr of [season, season - 1, season - 2]) {
             try {
               const r = await fetch(
                 `https://v3.football.api-sports.io/players/topscorers?league=${lg}&season=${yr}`,
                 { headers: { "x-apisports-key": afKey } },
               );
-              if (!r.ok) continue;
-              const j: any = await r.json();
+              const j: any = await r.json().catch(() => ({}));
               const list = j?.response ?? [];
-              if (!list.length) continue;
+              debug.afLeagues[`${lg}_${yr}`] = { status: r.status, count: list.length, errors: j?.errors };
+              if (!r.ok || !list.length) continue;
               for (const x of list) {
                 const g = x.statistics?.[0]?.goals ?? {};
                 const games = x.statistics?.[0]?.games ?? {};
@@ -112,8 +112,10 @@ Deno.serve(async (req) => {
                 const prev = merged.get(key);
                 if (!prev || goals > prev.goals) merged.set(key, row);
               }
-              break; // got data for this league, don't try prior season
-            } catch { /* try next season */ }
+              break;
+            } catch (e) {
+              debug.afLeagues[`${lg}_${yr}`] = { error: (e as Error).message };
+            }
           }
         }));
         if (merged.size) {
@@ -125,14 +127,16 @@ Deno.serve(async (req) => {
       if (!scorers.length) {
         try {
           const wiki = await scrapeWikipediaWCQScorers();
+          debug.wikiFound = wiki.length;
           if (wiki.length) { scorers = wiki; source = "Wikipedia WCQ"; }
-        } catch { /* fall through */ }
+        } catch (e) { debug.wikiError = (e as Error).message; }
       }
 
       if (!scorers.length) {
         try {
           const r = await fetchJson(`/competitions/WCQ/scorers?limit=20`);
           const list = r.scorers ?? [];
+          debug.fdFound = list.length;
           if (list.length) {
             source = "football-data WCQ";
             scorers = list.map((x: any) => ({
@@ -144,12 +148,14 @@ Deno.serve(async (req) => {
               played: x.playedMatches,
             }));
           }
-        } catch { /* nothing */ }
+        } catch (e) { debug.fdError = (e as Error).message; }
       }
 
       body.scorers_source = source || "none";
       body.scorers = scorers;
+      if (url.searchParams.get("debug") === "1") body.debug = debug;
     }
+
 
 
     body.updated_at = new Date().toISOString();
