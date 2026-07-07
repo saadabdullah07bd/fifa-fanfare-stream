@@ -269,7 +269,7 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
       onClick={() => onPlay(c)}
       whileHover={{ y: -6, scale: 1.03 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      className={`group relative w-44 shrink-0 overflow-hidden rounded-xl border bg-card/60 text-left shadow-md transition-colors sm:w-52 ${
+      className={`group relative w-full overflow-hidden rounded-xl border bg-card/60 text-left shadow-md transition-colors ${
         isActive ? "border-primary ring-2 ring-primary/50" : "border-border hover:border-primary/60"
       }`}
     >
