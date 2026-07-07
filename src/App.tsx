@@ -14,6 +14,7 @@ import NotFound from "@/pages/NotFound";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Standings from "@/pages/Standings";
+import OnboardingModal from "@/components/OnboardingModal";
 
 function useSession() {
   const [ready, setReady] = useState(false);
