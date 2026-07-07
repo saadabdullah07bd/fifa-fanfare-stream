@@ -67,11 +67,12 @@ Deno.serve(async (req) => {
       const catsRes = await fetch(`${base}&action=get_live_categories`);
       if (!catsRes.ok) return json({ error: `Xtream categories failed [${catsRes.status}]` }, 502);
       const cats = await catsRes.json() as Array<{ category_id: string; category_name: string }>;
-      const wcRe = /world.?cup|fifa|wc.?2026/i;
+      const wcRe = /world.?cup|fifa|wc.?2026|coupe.?du.?monde|mundial/i;
+      const excludeRe = /bein/i;
       const crRe = /cricket|ipl|t20|test match/i;
       const wanted = cats
         .map((c) => ({ id: c.category_id, name: c.category_name,
-          category: wcRe.test(c.category_name) ? "wc2026" : crRe.test(c.category_name) ? "cricket" : null }))
+          category: excludeRe.test(c.category_name) ? null : (wcRe.test(c.category_name) ? "wc2026" : crRe.test(c.category_name) ? "cricket" : null) }))
         .filter((c) => c.category !== null) as Array<{ id: string; name: string; category: "wc2026" | "cricket" }>;
 
       await admin.from("channels").delete().neq("id", "00000000-0000-0000-0000-000000000000");
