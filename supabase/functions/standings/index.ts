@@ -122,12 +122,12 @@ function json(body: unknown, status = 200) {
 }
 
 const CONFED_PAGES = [
-  "2026_FIFA_World_Cup_qualification_–_UEFA",
-  "2026_FIFA_World_Cup_qualification_–_CONMEBOL",
-  "2026_FIFA_World_Cup_qualification_–_AFC",
-  "2026_FIFA_World_Cup_qualification_–_CAF",
-  "2026_FIFA_World_Cup_qualification_–_CONCACAF",
-  "2026_FIFA_World_Cup_qualification_–_OFC",
+  "2026 FIFA World Cup qualification (UEFA)",
+  "2026 FIFA World Cup qualification – CONMEBOL",
+  "2026 FIFA World Cup qualification – AFC",
+  "2026 FIFA World Cup qualification – CAF",
+  "2026 FIFA World Cup qualification – CONCACAF",
+  "2026 FIFA World Cup qualification – OFC",
 ];
 
 async function scrapeAllConfederationScorers(debug: any) {
