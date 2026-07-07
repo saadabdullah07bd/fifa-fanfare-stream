@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import Hls from "hls.js";
+import mpegts from "mpegts.js";
 import { toast } from "sonner";
 import {
   Search, Tv, Radio, Play, Pause, Sparkles, X, ChevronLeft, ChevronRight,
