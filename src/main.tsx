@@ -1,7 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "sonner";
 import App from "./App";
@@ -16,7 +18,23 @@ import { installTamperGuard } from "./lib/tamper-guard";
 installTamperGuard();
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: {
+      // Keep data considered "fresh" for 2 minutes so pages render instantly
+      // from cache instead of showing a spinner every navigation.
+      staleTime: 2 * 60_000,
+      gcTime: 24 * 3600_000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    },
+  },
+});
+
+// Persist the query cache across reloads so returning users see instant content.
+const persister = createSyncStoragePersister({
+  storage: typeof window !== "undefined" ? window.localStorage : undefined,
+  key: "pitch26-query-cache",
+  throttleTime: 1000,
 });
 
 const root = document.getElementById("root")!;
@@ -27,12 +45,15 @@ ReactDOM.createRoot(root).render(
   <React.StrictMode>
     {configured ? (
       <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{ persister, maxAge: 24 * 3600_000, buster: "v1" }}
+        >
           <BrowserRouter>
             <App />
             <Toaster position="top-right" richColors />
           </BrowserRouter>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </HelmetProvider>
     ) : (
       <ConfigError />
