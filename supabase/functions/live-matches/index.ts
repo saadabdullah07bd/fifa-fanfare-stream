@@ -162,7 +162,62 @@ Deno.serve(async (req) => {
     }
   } catch (_) { /* enrichment optional */ }
 
-  // Final fallback: if a match is live but no source gave us a minute, compute it from kickoff.
+  // Google scrape enrichment — authoritative minute + score from Google's sports card.
+  // Runs in parallel for all live matches.
+  const liveIdx = matches
+    .map((m: any, i: number) => ({ m, i }))
+    .filter(({ m }) => ["IN_PLAY", "LIVE", "PAUSED"].includes(m.status));
+
+  await Promise.all(liveIdx.map(async ({ m, i }) => {
+    try {
+      const q = encodeURIComponent(`${m.home.name} vs ${m.away.name} score`);
+      const gRes = await fetch(`https://www.google.com/search?q=${q}&hl=en&gl=us`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      });
+      if (!gRes.ok) return;
+      const html = await gRes.text();
+      // Strip tags for easier regex.
+      const text = html.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+      // Look for patterns like "72'", "45+2'", "HT", "FT"
+      let minute: number | null = null;
+      let injury: number | null = null;
+      let status = m.status;
+      const htMatch = /\b(HT|Half[- ]time)\b/i.test(text);
+      const ftMatch = /\b(FT|Full[- ]time)\b/i.test(text);
+      const minMatch = text.match(/(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]/);
+      if (htMatch) { status = "PAUSED"; }
+      else if (ftMatch) { status = "FINISHED"; }
+      else if (minMatch) {
+        const mn = parseInt(minMatch[1], 10);
+        if (mn > 0 && mn <= 130) {
+          minute = mn;
+          if (minMatch[2]) injury = parseInt(minMatch[2], 10);
+          status = "IN_PLAY";
+        }
+      }
+      // Score: try to find "X - Y" near team names.
+      const scoreMatch = text.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
+      let sHome = m.score.full.home;
+      let sAway = m.score.full.away;
+      if (scoreMatch) {
+        sHome = parseInt(scoreMatch[1], 10);
+        sAway = parseInt(scoreMatch[2], 10);
+      }
+      matches[i] = {
+        ...m,
+        status,
+        minute: minute ?? m.minute,
+        injury_time: injury ?? m.injury_time,
+        score: { ...m.score, full: { home: sHome, away: sAway } },
+        minute_source: minute ? "google" : m.minute_source,
+      };
+    } catch (_) { /* ignore per-match failures */ }
+  }));
+
+  // Final fallback: if still no minute, compute from kickoff time.
   matches = matches.map((m: any) => {
     if (!["IN_PLAY", "LIVE"].includes(m.status)) return m;
     if (m.minute != null && m.minute > 0) return m;
@@ -170,12 +225,12 @@ Deno.serve(async (req) => {
     if (!Number.isFinite(koMs)) return m;
     const elapsedMin = Math.floor((Date.now() - koMs) / 60000);
     if (elapsedMin <= 0) return m;
-    // Cap so we don't display absurd numbers. HT (~45-60) is handled by PAUSED status upstream.
     let minute = elapsedMin;
-    if (minute > 45 && minute <= 60) minute = 45; // likely in HT window
-    else if (minute > 60) minute = Math.min(minute - 15, 120); // subtract typical HT break
+    if (minute > 45 && minute <= 60) minute = 45;
+    else if (minute > 60) minute = Math.min(minute - 15, 120);
     return { ...m, minute, minute_source: "kickoff-fallback" };
   });
+
 
 
   // Sort: live first, then scheduled today, then finished
