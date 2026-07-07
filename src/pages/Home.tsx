@@ -14,6 +14,7 @@ type Article = {
 const NEWS_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
 
 export default function Home() {
+  const navigate = useNavigate();
   const { data: liveData } = useLiveMatches();
   const matches = liveData?.matches ?? [];
   const hero =
