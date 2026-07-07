@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       if (!channel) return json({ error: "Channel not found" }, 404);
       const { data: cfg } = await admin.from("xtream_config").select("id").eq("id", 1).maybeSingle();
       if (!cfg) return json({ error: "No Xtream config" }, 400);
-      const edgeBase = `${new URL(req.url).origin}/functions/v1/xtream`;
+      const edgeBase = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/xtream`;
       const t = await signPayload({ type: "stream", streamId, exp: expiresAt() }, serviceKey);
       return json({
         url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`,
