@@ -222,19 +222,31 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          favorite_club_id: number | null
+          favorite_club_logo: string | null
+          favorite_club_name: string | null
           id: string
+          onboarded_at: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          favorite_club_id?: number | null
+          favorite_club_logo?: string | null
+          favorite_club_name?: string | null
           id: string
+          onboarded_at?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          favorite_club_id?: number | null
+          favorite_club_logo?: string | null
+          favorite_club_name?: string | null
           id?: string
+          onboarded_at?: string | null
         }
         Relationships: []
       }

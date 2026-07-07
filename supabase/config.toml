@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.standings]
 verify_jwt = false
+
+[functions.club]
+verify_jwt = false
