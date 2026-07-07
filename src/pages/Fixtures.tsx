@@ -203,34 +203,52 @@ export default function Fixtures() {
         {view === "bracket" && (
           <motion.div key="bracket"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-            className="mt-6 overflow-x-auto"
+            className="relative mt-6"
           >
-            <div className="flex min-w-max gap-6 pb-4">
-              {ko.map(({ stage, matches }) => (
-                <div key={stage} className="flex min-w-[240px] flex-col gap-4">
-                  <h3 className="display text-center text-sm uppercase tracking-[0.2em] text-primary">{KO_LABEL[stage]}</h3>
-                  <div className="flex flex-1 flex-col justify-around gap-4">
-                    {matches.length === 0 && (
-                      <div className="rounded-lg border border-dashed border-border bg-card/20 p-4 text-center text-xs text-muted-foreground">TBD</div>
-                    )}
-                    {matches.map((m, i) => (
-                      <motion.div key={m.id}
-                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                        whileHover={{ y: -3 }}
-                        className="rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md hover:border-primary transition-colors"
-                      >
-                        <BracketRow code={m.home_team_code} score={m.home_score} />
-                        <div className="my-1 h-px bg-border/60" />
-                        <BracketRow code={m.away_team_code} score={m.away_score} />
-                        <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                          {bdShortDate(m.date_utc)} · {bdTime(m.date_utc)}
-                        </p>
-                      </motion.div>
-                    ))}
+            <div
+              ref={bracketScrollRef}
+              className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              <div className="flex min-w-max gap-6 pb-4">
+                {ko.map(({ stage, matches }) => (
+                  <div key={stage} className="flex min-w-[240px] flex-col gap-4">
+                    <h3 className="display text-center text-sm uppercase tracking-[0.2em] text-primary">{KO_LABEL[stage]}</h3>
+                    <div className="flex flex-1 flex-col justify-around gap-4">
+                      {matches.length === 0 && (
+                        <div className="rounded-lg border border-dashed border-border bg-card/20 p-4 text-center text-xs text-muted-foreground">TBD</div>
+                      )}
+                      {matches.map((m, i) => (
+                        <motion.div key={m.id}
+                          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                          whileHover={{ y: -3 }}
+                          className="rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md hover:border-primary transition-colors"
+                        >
+                          <BracketRow code={m.home_team_code} score={m.home_score} />
+                          <div className="my-1 h-px bg-border/60" />
+                          <BracketRow code={m.away_team_code} score={m.away_score} />
+                          <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                            {bdShortDate(m.date_utc)} · {bdTime(m.date_utc)}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+            <AnimatePresence>
+              {bracketHasOverflow && (
+                <motion.button
+                  type="button"
+                  onClick={() => bracketScrollRef.current?.scrollBy({ left: 300, behavior: "smooth" })}
+                  initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}
+                  className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur hover:bg-primary hover:text-primary-foreground transition"
+                  aria-label="Scroll bracket right"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </motion.button>
+              )}
+            </AnimatePresence>
             <p className="mt-4 text-xs text-muted-foreground">Bracket populates as knockout matches are confirmed.</p>
           </motion.div>
         )}
