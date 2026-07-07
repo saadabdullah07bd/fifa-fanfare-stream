@@ -126,7 +126,11 @@ export default function Home() {
 
       <LiveTicker />
 
-      <section className="mx-auto max-w-7xl px-4 pb-16">
+      <section className="mx-auto max-w-7xl px-4 pt-10">
+        <FavoriteClubCard />
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-16 pt-10">
         <h2 className="display text-3xl">Latest news</h2>
         {newsError ? (
           <p className="mt-4 text-sm text-destructive">Could not load headlines right now.</p>
