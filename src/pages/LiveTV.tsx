@@ -14,11 +14,14 @@ const is4k = (name: string) => /\b(4k|uhd)\b/i.test(name);
 const CAT_LABEL: Record<string, string> = { wc2026: "World Cup 2026", cricket: "Cricket" };
 
 export default function LiveTV() {
-  const { data: channels = [], isLoading } = useQuery({
+  const { data: channels = [], isLoading, isError, error } = useQuery({
     queryKey: ["channels"],
-    queryFn: async () =>
-      ((await supabase.from("channels").select("*").order("category").order("name")).data as Channel[] ?? [])
-        .sort((a, b) => (is4k(a.name) ? 1 : 0) - (is4k(b.name) ? 1 : 0) || a.name.localeCompare(b.name)),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("channels").select("*").order("category").order("name");
+      if (error) throw new Error(error.message);
+      return ((data as Channel[] | null) ?? [])
+        .sort((a, b) => (is4k(a.name) ? 1 : 0) - (is4k(b.name) ? 1 : 0) || a.name.localeCompare(b.name));
+    },
   });
 
   const [active, setActive] = useState<Channel | null>(null);
@@ -175,6 +178,8 @@ export default function LiveTV() {
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading channels…</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">{(error as Error).message || "Could not load channels."}</p>
       ) : channels.length === 0 ? (
         <div className="rounded-lg border border-border bg-card/40 p-6 text-sm text-muted-foreground">
           No channels yet. The site admin needs to connect the Xtream server from Settings.

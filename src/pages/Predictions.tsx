@@ -10,26 +10,40 @@ export default function Predictions() {
   const { user, ready } = useAuth();
   const qc = useQueryClient();
 
-  const { data: matches = [] } = useQuery({
+  const { data: matches = [], isLoading: matchesLoading, isError: matchesError } = useQuery({
     queryKey: ["matches"],
-    queryFn: async () => (await supabase.from("matches").select("*").order("date_utc")).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("matches").select("*").order("date_utc");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
-  const { data: teams = [] } = useQuery({
+  const { data: teams = [], isError: teamsError } = useQuery({
     queryKey: ["teams"],
-    queryFn: async () => (await supabase.from("teams").select("*")).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("teams").select("*");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
-  const { data: mine = [] } = useQuery({
+  const { data: mine = [], isError: mineError } = useQuery({
     queryKey: ["predictions", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("predictions").select("*").eq("user_id", user!.id)).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("predictions").select("*").eq("user_id", user!.id);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
-  const { data: leader = [] } = useQuery({
+  const { data: leader = [], isError: leaderboardError } = useQuery({
     queryKey: ["leaderboard"],
     queryFn: async () => {
       const [preds, profiles] = await Promise.all([
         supabase.from("predictions").select("user_id, points"),
         supabase.from("profiles").select("id, display_name, avatar_url"),
       ]);
+      if (preds.error) throw new Error(preds.error.message);
+      if (profiles.error) throw new Error(profiles.error.message);
       const totals = new Map<string, { points: number; count: number }>();
       for (const p of preds.data ?? []) {
         const t = totals.get(p.user_id) ?? { points: 0, count: 0 };
@@ -75,6 +89,10 @@ export default function Predictions() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div>
           <h2 className="display text-2xl">Upcoming matches</h2>
+          {matchesLoading && <p className="mt-4 text-sm text-muted-foreground">Loading matches…</p>}
+          {(matchesError || teamsError || mineError) && (
+            <p className="mt-4 text-sm text-destructive">Could not load predictions data right now.</p>
+          )}
           <div className="mt-4 space-y-3">
             {upcoming.map((m) => {
               const my = mine.find((p) => p.match_id === m.id);
@@ -91,6 +109,7 @@ export default function Predictions() {
 
         <aside>
           <h2 className="display text-2xl">Leaderboard</h2>
+          {leaderboardError && <p className="mt-2 text-sm text-destructive">Could not load leaderboard.</p>}
           <ol className="mt-4 space-y-2 rounded-lg border border-border bg-card/40 p-3">
             {leader.length === 0 && <li className="text-sm text-muted-foreground">No predictions yet.</li>}
             {leader.map((row, i) => (

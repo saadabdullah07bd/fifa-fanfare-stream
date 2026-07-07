@@ -21,11 +21,12 @@ export default function Home() {
     matches.find((m) => m.status === "SCHEDULED" || m.status === "TIMED") ??
     null;
 
-  const { data: newsData } = useQuery({
+  const { data: newsData, isError: newsError } = useQuery({
     queryKey: ["news-feed-home"],
     refetchInterval: 300_000,
     queryFn: async () => {
       const res = await fetch(NEWS_FN, { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } });
+      if (!res.ok) throw new Error(`News feed failed (${res.status})`);
       return res.json() as Promise<{ articles: Article[] }>;
     },
   });
@@ -110,7 +111,9 @@ export default function Home() {
 
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <h2 className="display text-3xl">Latest news</h2>
-        {news.length === 0 ? (
+        {newsError ? (
+          <p className="mt-4 text-sm text-destructive">Could not load headlines right now.</p>
+        ) : news.length === 0 ? (
           <p className="mt-4 text-sm text-muted-foreground">Loading headlines…</p>
         ) : (
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">

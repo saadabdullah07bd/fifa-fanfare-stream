@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { flagUrl, bdDate, bdTime, bdShortDate } from "@/lib/flags";
+import { normalizeAppMatchStatus } from "@/lib/match-status";
 
 const KO_STAGES = ["LAST_16", "QUARTER_FINALS", "SEMI_FINALS", "THIRD_PLACE", "FINAL"] as const;
 const KO_LEGACY: Record<string, string> = {
@@ -76,7 +77,7 @@ export default function Fixtures() {
   })).filter(({ matches }) => {
     // Hide stages whose matches are all finished
     if (matches.length === 0) return true; // keep TBD placeholders
-    return !matches.every((m) => m.status === "finished" || m.status === "FINISHED");
+    return !matches.every((m) => normalizeAppMatchStatus(m.status) === "finished");
   });
 
   useEffect(() => {
@@ -140,11 +141,11 @@ export default function Fixtures() {
                       <span className="w-20 text-sm tabular-nums text-muted-foreground">{bdTime(m.date_utc)}</span>
                       <MiniTeam code={m.home_team_code} align="right" />
                       <span className="display min-w-[60px] text-center text-xl text-primary">
-                        {m.status === "scheduled" ? "v" : `${m.home_score ?? 0}–${m.away_score ?? 0}`}
+                        {normalizeAppMatchStatus(m.status) === "scheduled" ? "v" : `${m.home_score ?? 0}–${m.away_score ?? 0}`}
                       </span>
                       <MiniTeam code={m.away_team_code} align="left" />
                       <span className="w-20 text-right text-[11px] uppercase tracking-wider text-muted-foreground">
-                        {m.status === "live" ? <><span className="live-dot mr-1 align-middle" />Live</> : m.status}
+                        {normalizeAppMatchStatus(m.status) === "live" ? <><span className="live-dot mr-1 align-middle" />Live</> : normalizeAppMatchStatus(m.status)}
                       </span>
                     </motion.li>
                   ))}
@@ -176,7 +177,7 @@ export default function Fixtures() {
                   >
                     <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-primary">
                       {isNext && upcoming && <span className="rounded-full bg-primary/15 px-2 py-0.5">Next up</span>}
-                      {m.status === "live" && <span className="rounded-full bg-accent/20 px-2 py-0.5 text-accent"><span className="live-dot mr-1 align-middle" />Live</span>}
+                      {normalizeAppMatchStatus(m.status) === "live" && <span className="rounded-full bg-accent/20 px-2 py-0.5 text-accent"><span className="live-dot mr-1 align-middle" />Live</span>}
                       <span>{m.stage ?? "Group stage"}</span>
                     </div>
                     <p className="mt-4 text-center text-sm text-muted-foreground">{bdDate(m.date_utc)}</p>
@@ -185,7 +186,7 @@ export default function Fixtures() {
                     <div className="mt-8 grid w-full grid-cols-[1fr_auto_1fr] items-center gap-6">
                       <TeamSide code={m.home_team_code} align="right" />
                       <span className="display text-4xl text-muted-foreground">
-                        {m.status === "scheduled" ? "vs" : `${m.home_score ?? 0}–${m.away_score ?? 0}`}
+                        {normalizeAppMatchStatus(m.status) === "scheduled" ? "vs" : `${m.home_score ?? 0}–${m.away_score ?? 0}`}
                       </span>
                       <TeamSide code={m.away_team_code} align="left" />
                     </div>

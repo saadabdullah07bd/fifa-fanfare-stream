@@ -38,10 +38,16 @@ Deno.serve(async (req) => {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/teams`, { headers: fdHeaders });
       if (res.ok) {
         const { teams } = await res.json() as { teams: Array<{ tla: string; name: string; crest: string; area: { name: string } }> };
-        for (const t of teams) {
-          await admin.from("teams").upsert({
-            code: t.tla, name: t.name, flag_url: t.crest, confederation: t.area?.name ?? null,
-          }, { onConflict: "code" });
+        const teamRows = teams
+          .filter((t) => !!t.tla)
+          .map((t) => ({
+            code: t.tla,
+            name: t.name,
+            flag_url: t.crest,
+            confederation: t.area?.name ?? null,
+          }));
+        if (teamRows.length) {
+          await admin.from("teams").upsert(teamRows, { onConflict: "code" });
         }
         await record("teams", "ok", `${teams.length} teams`);
       } else await record("teams", "error", `HTTP ${res.status}`);
@@ -52,10 +58,13 @@ Deno.serve(async (req) => {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/matches`, { headers: fdHeaders });
       if (res.ok) {
         const { matches } = await res.json() as { matches: Array<any> };
-        for (const m of matches) {
-          const status = m.status === "IN_PLAY" || m.status === "PAUSED" ? "live"
-            : m.status === "FINISHED" ? "ft" : "scheduled";
-          await admin.from("matches").upsert({
+        const matchRows = matches.map((m) => {
+          const status = m.status === "IN_PLAY" || m.status === "PAUSED"
+            ? "live"
+            : m.status === "FINISHED"
+              ? "finished"
+              : "scheduled";
+          return {
             external_id: `fd_${m.id}`,
             stage: (m.stage || "GROUP_STAGE").toLowerCase().replace(/_/g, "-"),
             group: m.group ? String(m.group).replace(/^GROUP_/, "") : null,
@@ -67,7 +76,10 @@ Deno.serve(async (req) => {
             status,
             minute: m.minute ?? null,
             updated_at: now,
-          }, { onConflict: "external_id" });
+          };
+        });
+        if (matchRows.length) {
+          await admin.from("matches").upsert(matchRows, { onConflict: "external_id" });
         }
         await record("matches", "ok", `${matches.length} matches`);
       } else await record("matches", "error", `HTTP ${res.status}`);
@@ -78,21 +90,24 @@ Deno.serve(async (req) => {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/standings`, { headers: fdHeaders });
       if (res.ok) {
         const { standings } = await res.json() as { standings: Array<{ group?: string; type: string; table: Array<any> }> };
-        let count = 0;
+        const standingRows: Array<Record<string, unknown>> = [];
         for (const s of standings) {
           if (s.type !== "TOTAL") continue;
           const groupLetter = s.group ? String(s.group).replace(/^GROUP_/, "") : null;
           if (!groupLetter) continue;
           for (const row of s.table) {
-            await admin.from("standings").upsert({
+            standingRows.push({
               group: groupLetter, team_code: row.team.tla,
               played: row.playedGames, w: row.won, d: row.draw, l: row.lost,
               gf: row.goalsFor, ga: row.goalsAgainst, gd: row.goalDifference, pts: row.points,
               updated_at: now,
-            }, { onConflict: "group,team_code" });
-            count++;
+            });
           }
         }
+        if (standingRows.length) {
+          await admin.from("standings").upsert(standingRows, { onConflict: "group,team_code" });
+        }
+        const count = standingRows.length;
         await record("standings", "ok", `${count} rows`);
       } else await record("standings", "error", `HTTP ${res.status}`);
     } catch (e) { await record("standings", "error", (e as Error).message.slice(0, 200)); }
@@ -103,12 +118,11 @@ Deno.serve(async (req) => {
       if (res.ok) {
         const { scorers } = await res.json() as { scorers: Array<any> };
         await admin.from("scorers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-        for (const s of scorers) {
-          await admin.from("scorers").insert({
+        const scorerRows = scorers.map((s) => ({
             player: s.player.name, team_code: s.team.tla,
             goals: s.goals ?? 0, assists: s.assists ?? 0,
-          });
-        }
+          }));
+        if (scorerRows.length) await admin.from("scorers").insert(scorerRows);
         await record("scorers", "ok", `${scorers.length} scorers`);
       } else await record("scorers", "error", `HTTP ${res.status}`);
     } catch (e) { await record("scorers", "error", (e as Error).message.slice(0, 200)); }
@@ -123,16 +137,16 @@ Deno.serve(async (req) => {
       const res = await fetch(url);
       if (res.ok) {
         const { articles } = await res.json() as { articles: Array<any> };
-        for (const a of articles) {
-          if (!a.url || !a.title) continue;
-          await admin.from("news").upsert({
+        const newsRows = articles
+          .filter((a) => !!a.url && !!a.title)
+          .map((a) => ({
             url: a.url, title: a.title,
             summary: a.description ?? null,
             source: a.source?.name ?? new URL(a.url).hostname.replace(/^www\./, ""),
             image_url: a.urlToImage ?? null,
             published_at: a.publishedAt ?? now,
-          }, { onConflict: "url" });
-        }
+          }));
+        if (newsRows.length) await admin.from("news").upsert(newsRows, { onConflict: "url" });
         await record("news", "ok", `${articles.length} items`);
       } else await record("news", "error", `HTTP ${res.status}`);
     } catch (e) { await record("news", "error", (e as Error).message.slice(0, 200)); }

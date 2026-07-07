@@ -2,6 +2,14 @@ import { Helmet } from "react-helmet-async";
 
 type JsonLd = Record<string, unknown>;
 
+function withSiteOrigin(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  const origin =
+    import.meta.env.VITE_SITE_URL ??
+    (typeof window !== "undefined" ? window.location.origin : "https://pitch26.drmabari.com");
+  return `${origin.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export function Seo({
   title,
   description,
@@ -15,7 +23,8 @@ export function Seo({
   image?: string;
   jsonLd?: JsonLd | JsonLd[];
 }) {
-  const url = path ?? (typeof window !== "undefined" ? window.location.pathname : "/");
+  const relPath = path ?? (typeof window !== "undefined" ? window.location.pathname : "/");
+  const url = withSiteOrigin(relPath);
   const schemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   return (
     <Helmet>

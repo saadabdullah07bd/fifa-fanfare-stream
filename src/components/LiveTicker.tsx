@@ -23,20 +23,20 @@ export function useLiveMatches() {
     refetchInterval: 30_000,
     queryFn: async () => {
       const res = await fetch(FN_URL, { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } });
-      if (!res.ok) return { matches: [] as LiveMatch[] };
+      if (!res.ok) throw new Error(`Live matches request failed (${res.status})`);
       return res.json() as Promise<{ matches: LiveMatch[] }>;
     },
   });
 }
 
 export default function LiveTicker() {
-  const { data } = useLiveMatches();
+  const { data, isError } = useLiveMatches();
   const matches = data?.matches ?? [];
   const live = matches.filter((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status));
   const upcoming = matches.filter((m) => m.status === "SCHEDULED" || m.status === "TIMED").slice(0, 3);
   const finished = matches.filter((m) => m.status === "FINISHED").slice(0, 3);
 
-  if (matches.length === 0) return null;
+  if (isError || matches.length === 0) return null;
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-6 pt-4">

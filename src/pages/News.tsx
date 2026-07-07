@@ -10,7 +10,7 @@ type Article = {
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
 
 export default function News() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["news-feed"],
     refetchInterval: 120_000,
     refetchOnWindowFocus: true,
@@ -18,6 +18,7 @@ export default function News() {
       const res = await fetch(`${FN_URL}?t=${Math.floor(Date.now() / 120_000)}`, {
         headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
       });
+      if (!res.ok) throw new Error(`News request failed (${res.status})`);
       return res.json() as Promise<{ articles: Article[] }>;
     },
   });
@@ -32,6 +33,11 @@ export default function News() {
       <div className="mt-6 h-px w-full bg-border" />
 
       {isLoading && <p className="mt-8 font-sans text-sm text-muted-foreground">Loading headlines…</p>}
+      {isError && (
+        <p className="mt-8 font-sans text-sm text-destructive">
+          {(error as Error).message || "Could not load headlines right now."}
+        </p>
+      )}
       {!isLoading && articles.length === 0 && (
         <p className="mt-8 font-sans text-sm text-muted-foreground">No headlines available right now.</p>
       )}

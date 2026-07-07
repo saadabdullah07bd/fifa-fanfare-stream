@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/useAuth";
@@ -23,6 +23,12 @@ export default function Settings() {
   const [host, setHost] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    if (!cfg) return;
+    setHost(cfg.host ?? "");
+    setUsername(cfg.username ?? "");
+  }, [cfg]);
 
   const save = useMutation({
     mutationFn: async () => {
