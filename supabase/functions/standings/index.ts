@@ -62,8 +62,24 @@ Deno.serve(async (req) => {
     }
 
     if (kind === "scorers" || kind === "all") {
-      const s = await fetchJson("/competitions/WC/scorers?limit=20");
-      body.scorers = (s.scorers ?? []).map((x: any) => ({
+      // Aggregate scorers across all World Cup qualification confederations +
+      // the main tournament, so the list is populated year-round.
+      const codes = ["WC", "WCQ", "CLI", "EL", "CL", "PL", "PD", "SA", "BL1", "FL1"];
+      const results = await Promise.all(codes.map(async (code) => {
+        try {
+          const r = await fetchJson(`/competitions/${code}/scorers?limit=20`);
+          return { code, scorers: r.scorers ?? [] };
+        } catch { return { code, scorers: [] as any[] }; }
+      }));
+
+      // Prefer WC, then WCQ, then any club competition that returns data.
+      const primary = results.find((r) => r.code === "WC" && r.scorers.length)
+        ?? results.find((r) => r.code === "WCQ" && r.scorers.length)
+        ?? results.find((r) => r.scorers.length)
+        ?? { code: "WC", scorers: [] };
+
+      body.scorers_source = primary.code;
+      body.scorers = primary.scorers.slice(0, 20).map((x: any) => ({
         player: { name: x.player?.name, nationality: x.player?.nationality },
         team: { name: x.team?.name, tla: x.team?.tla, crest: x.team?.crest },
         goals: x.goals,
