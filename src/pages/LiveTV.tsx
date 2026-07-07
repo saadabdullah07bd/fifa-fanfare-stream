@@ -44,6 +44,7 @@ export default function LiveTV() {
       if (error) throw new Error(error.message);
       const { url, type, fallbackUrl } = data as { url: string; type?: "mpegts" | "hls"; fallbackUrl?: string };
       const v = videoRef.current!;
+      v.muted = true;
       v.removeAttribute("src");
       v.load();
       const playVideo = () => v.play().catch(() => toast.error("Tap play to start the live stream."));
@@ -347,7 +348,7 @@ function ModernPlayer({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [volume, setVolume] = useState(1);
   const [buffering, setBuffering] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
@@ -446,12 +447,12 @@ function ModernPlayer({
       ref={wrapRef}
       onMouseMove={kick}
       onTouchStart={kick}
-      className="group relative overflow-hidden rounded-2xl border border-primary/30 bg-black shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.35)] outline-none focus:outline-none focus-visible:outline-none [&:fullscreen]:h-screen [&:fullscreen]:w-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none"
+      className="live-player group relative overflow-hidden rounded-2xl border border-primary/30 bg-black shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.35)] outline-none focus:outline-none focus-visible:outline-none [&:fullscreen]:h-screen [&:fullscreen]:w-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none"
       tabIndex={-1}
     >
       <video
         ref={videoRef}
-        autoPlay playsInline
+        autoPlay playsInline muted defaultMuted
         onClick={toggle}
         className="aspect-video w-full cursor-pointer bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full group-[:fullscreen]:object-contain"
       />
