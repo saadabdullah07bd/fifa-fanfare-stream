@@ -11,6 +11,8 @@ import Auth from "@/pages/Auth";
 import MatchDetail from "@/pages/MatchDetail";
 import TeamDetail from "@/pages/TeamDetail";
 import NotFound from "@/pages/NotFound";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
 
 function useSession() {
   const [ready, setReady] = useState(false);
