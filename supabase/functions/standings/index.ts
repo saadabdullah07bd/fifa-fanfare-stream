@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     } catch { /* no JSON body */ }
   }
   const kind = (url.searchParams.get("kind") ?? bodyKind) || "standings"; // standings | scorers | all
-  const cacheKey = `v6:${kind}`;
+  const cacheKey = `v7:${kind}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.at < TTL) return json(cached.body);
 
@@ -69,18 +69,41 @@ Deno.serve(async (req) => {
     }
 
     if (kind === "scorers" || kind === "all") {
-      // WC 2026 hasn't kicked off yet — top scorers = WC qualification scorers.
-      // API-Football's free plan is capped at seasons 2022-2024 so it can't
-      // return current qualifier data. Instead scrape each confederation's
-      // Wikipedia qualification article via the MediaWiki API (structured and
-      // reliable) and merge the "Top scorers" tables.
+      // World Cup 2026 is active: prefer current tournament Golden Boot data
+      // scraped from live web articles, then fall back to APIs/qualifier data.
       let scorers: any[] = [];
       let source = "";
       const debug: any = { pages: {} };
 
       try {
-        const wiki = await scrapeAllConfederationScorers(debug);
-        if (wiki.length) { scorers = wiki; source = "Wikipedia WCQ"; }
+        const web = await scrapeWorldCupWikiGoldenBoot(debug);
+        if (web.length) { scorers = web; source = "WorldCupWiki"; }
+      } catch (e) { debug.worldCupWikiError = (e as Error).message; }
+
+      if (!scorers.length) {
+        try {
+          const r = await fetchJson(`/competitions/WC/scorers?limit=20`);
+          const list = r.scorers ?? [];
+          debug.fdWcFound = list.length;
+          if (list.length) {
+            source = "WC";
+            scorers = list.map((x: any) => ({
+              player: { name: x.player?.name, nationality: x.player?.nationality },
+              team: { name: x.team?.name, tla: x.team?.tla, crest: x.team?.crest },
+              goals: x.goals,
+              assists: x.assists,
+              penalties: x.penalties,
+              played: x.playedMatches,
+            }));
+          }
+        } catch (e) { debug.fdWcError = (e as Error).message; }
+      }
+
+      try {
+        if (!scorers.length) {
+          const wiki = await scrapeAllConfederationScorers(debug);
+          if (wiki.length) { scorers = wiki; source = "Wikipedia WCQ"; }
+        }
       } catch (e) { debug.wikiError = (e as Error).message; }
 
       if (!scorers.length) {
@@ -129,6 +152,72 @@ const CONFED_PAGES = [
   "2026 FIFA World Cup qualification (CONCACAF)",
   "2026 FIFA World Cup qualification (OFC)",
 ];
+
+const COUNTRY_BY_FLAG: Record<string, string> = {
+  "🇫🇷": "France",
+  "🇦🇷": "Argentina",
+  "🇳🇴": "Norway",
+  "🏴": "England",
+  "🇧🇷": "Brazil",
+  "🇲🇽": "Mexico",
+  "🇩🇪": "Germany",
+  "🇨🇭": "Switzerland",
+  "🇸🇳": "Senegal",
+  "🇳🇱": "Netherlands",
+  "🇨🇩": "DR Congo",
+  "🇨🇦": "Canada",
+  "🇲🇦": "Morocco",
+};
+
+async function scrapeWorldCupWikiGoldenBoot(debug: any) {
+  const url = "https://worldcupwiki.com/world-cup-2026-golden-boot-standings/";
+  const res = await fetch(url, {
+    headers: {
+      "user-agent": "Mozilla/5.0 Pitch26/1.0 (+https://lovable.app)",
+      "accept": "text/html,application/xhtml+xml",
+    },
+  });
+  debug.worldCupWikiStatus = res.status;
+  if (!res.ok) return [];
+  const html = await res.text();
+  const rows: any[] = [];
+  for (const table of html.matchAll(/<table[^>]*>[\s\S]*?<\/table>/gi)) {
+    for (const match of table[0].matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+      const cells = [...match[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((cell) =>
+        decodeEntities(stripTags(cell[1])).trim(),
+      );
+      if (cells.length < 5 || !/^\d+$/.test(cells[0])) continue;
+      const country = cleanCountry(cells[2]);
+      const goals = Number(cells[3].replace(/\D/g, ""));
+      const assists = Number(cells[4].replace(/\D/g, ""));
+      const minutes = Number((cells[5] ?? "").replace(/\D/g, ""));
+      if (!cells[1] || !Number.isFinite(goals)) continue;
+      rows.push({
+        player: { name: cells[1], nationality: country },
+        team: { name: country || "National team" },
+        goals,
+        assists: Number.isFinite(assists) ? assists : null,
+        penalties: null,
+        played: Number.isFinite(minutes) && minutes > 0 ? minutes : null,
+      });
+    }
+  }
+
+  debug.worldCupWikiFound = rows.length;
+  return rows.sort((a, b) => (b.goals - a.goals) || ((b.assists ?? 0) - (a.assists ?? 0))).slice(0, 20);
+}
+
+function cleanCountry(value: string) {
+  const stripped = value
+    .replace(/[\u{1F1E6}-\u{1F1FF}\u{1F3F4}\u{E0061}-\u{E007A}\u{E007F}]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (stripped) return stripped.replace(/\b(.+?)\s+\1\b/i, "$1");
+  for (const [flag, name] of Object.entries(COUNTRY_BY_FLAG)) {
+    if (value.includes(flag)) return name;
+  }
+  return "";
+}
 
 async function scrapeAllConfederationScorers(debug: any) {
   const merged = new Map<string, any>();
