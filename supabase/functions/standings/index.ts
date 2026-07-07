@@ -171,7 +171,7 @@ async function scrapePageScorers(page: string, debug: any) {
 
   // 2. Fetch that section's HTML.
   const txtRes = await fetch(
-    `${api}?action=parse&page=${encodeURIComponent(page)}&prop=text&section=${target.index}&format=json&origin=*`,
+    `${api}?action=parse&page=${encodeURIComponent(page)}&prop=text&section=${target.index}&format=json&redirects=1`,
     { headers: { "user-agent": ua } },
   );
   if (!txtRes.ok) { debug.pages[page] = { textStatus: txtRes.status }; return []; }
