@@ -63,6 +63,7 @@ function AuthRedirector() {
 function Nav() {
   const items = [
     ["/", "Home"], ["/fixtures", "Fixtures"],
+    ["/standings", "Standings"],
     ["/predictions", "Predict"],
     ["/news", "News"], ["/live-tv", "Live TV"],
   ] as const;
