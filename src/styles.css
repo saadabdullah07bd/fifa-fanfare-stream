@@ -180,4 +180,93 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
   display: none; align-items: center; justify-content: center;
   padding: 2rem; text-align: center; font-family: system-ui, sans-serif;
 }
+
+/* ============ Apple Glass Theme ============ */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-highlight: rgba(255, 255, 255, 0.35);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+body {
+  background:
+    radial-gradient(1200px 800px at 10% -10%, oklch(0.42 0.14 150 / 0.55), transparent 60%),
+    radial-gradient(1000px 700px at 110% 10%, oklch(0.55 0.20 27 / 0.35), transparent 55%),
+    radial-gradient(900px 700px at 50% 120%, oklch(0.82 0.16 85 / 0.28), transparent 60%),
+    var(--color-background);
+  background-attachment: fixed;
+}
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  border-radius: 1rem;
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 var(--glass-highlight);
+  border-radius: 1rem;
+}
+
+.glass-nav {
+  background: rgba(20, 30, 25, 0.55);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-pill {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 9999px;
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+/* Sonner glass toast tweaks */
+[data-sonner-toaster] {
+  --width: 380px;
+}
+[data-sonner-toaster] [data-sonner-toast].glass-toast {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  backdrop-filter: blur(28px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  color: #fff !important;
+  border-radius: 18px !important;
+}
+
+/* Auto-upgrade common surfaces to glass */
+[data-slot="card"],
+.bg-card,
+.bg-popover,
+.bg-secondary {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 var(--glass-highlight);
+  border-radius: 1rem;
+}
 #tamper-block.on { display: flex; }

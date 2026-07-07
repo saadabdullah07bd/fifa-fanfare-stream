@@ -91,14 +91,14 @@ export default function App() {
     <div className="min-h-screen bg-background text-foreground">
       <AuthRedirector />
       <OnboardingModal />
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
+      <header className="sticky top-0 z-40 glass-nav">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground display text-xl">26</span>
             <span className="display text-2xl tracking-wider text-foreground">PITCH<span className="text-primary">26</span></span>
           </Link>
           <nav className="hidden items-center gap-1 lg:flex"><Nav /></nav>
-          <Link to="/live-tv" className="rounded-md bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wider text-accent-foreground">
+          <Link to="/live-tv" className="glass-pill px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-white/20 transition-colors">
             <span className="live-dot mr-2 align-middle" />Watch
           </Link>
         </div>
@@ -121,7 +121,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
+      <footer className="glass-nav mt-8 py-8 text-center text-xs text-muted-foreground">
         Pitch26 · Independent fan hub · Not affiliated with FIFA
       </footer>
     </div>
