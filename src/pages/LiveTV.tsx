@@ -248,62 +248,16 @@ export default function LiveTV() {
 function ChannelRow({
   title, items, onPlay, activeId,
 }: { title: string; items: Channel[]; onPlay: (c: Channel) => void; activeId: string | null }) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const [overflow, setOverflow] = useState<{ left: boolean; right: boolean }>({ left: false, right: false });
-
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const check = () => setOverflow({
-      left: el.scrollLeft > 8,
-      right: el.scrollWidth - el.clientWidth - el.scrollLeft > 8,
-    });
-    check();
-    el.addEventListener("scroll", check);
-    window.addEventListener("resize", check);
-    return () => { el.removeEventListener("scroll", check); window.removeEventListener("resize", check); };
-  }, [items.length]);
-
-  const scrollBy = (dir: -1 | 1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
-  };
-
   return (
-    <section className="group/row space-y-3">
+    <section className="space-y-3">
       <h3 className="display flex items-center gap-2 text-2xl text-primary">
         <span className="inline-block h-4 w-1 rounded bg-primary" />{title}
         <span className="ml-1 text-xs text-muted-foreground tabular-nums">· {items.length}</span>
       </h3>
-      <div className="relative">
-        <AnimatePresence>
-          {overflow.left && (
-            <motion.button
-              key="l" initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }}
-              onClick={() => scrollBy(-1)} aria-label="Scroll left"
-              className="absolute left-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur hover:bg-primary hover:text-primary-foreground transition"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </motion.button>
-          )}
-          {overflow.right && (
-            <motion.button
-              key="r" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 6 }}
-              onClick={() => scrollBy(1)} aria-label="Scroll right"
-              className="absolute right-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur hover:bg-primary hover:text-primary-foreground transition"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </motion.button>
-          )}
-        </AnimatePresence>
-        <div ref={scrollerRef}
-          className="-mx-1 flex gap-3 overflow-x-auto scroll-smooth px-1 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {items.map((c) => (
-            <ChannelCard key={title + c.id} channel={c} onPlay={onPlay} isActive={activeId === c.id} />
-          ))}
-        </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        {items.map((c) => (
+          <ChannelCard key={title + c.id} channel={c} onPlay={onPlay} isActive={activeId === c.id} />
+        ))}
       </div>
     </section>
   );
