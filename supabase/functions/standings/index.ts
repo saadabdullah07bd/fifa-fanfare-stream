@@ -155,7 +155,7 @@ async function scrapePageScorers(page: string, debug: any) {
 
   // 1. List sections, find one that looks like "Top scorers"/"Goalscorers".
   const secRes = await fetch(
-    `${api}?action=parse&page=${encodeURIComponent(page)}&prop=sections&format=json&origin=*`,
+    `${api}?action=parse&page=${encodeURIComponent(page)}&prop=sections&format=json&redirects=1`,
     { headers: { "user-agent": ua } },
   );
   if (!secRes.ok) { debug.pages[page] = { status: secRes.status }; return []; }
