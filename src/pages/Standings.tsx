@@ -20,6 +20,7 @@ export default function Standings() {
   const [tab, setTab] = useState<"standings" | "scorers">("standings");
   const [groups, setGroups] = useState<Group[]>([]);
   const [scorers, setScorers] = useState<Scorer[]>([]);
+  const [scorersSource, setScorersSource] = useState<string>("");
   const [updated, setUpdated] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -30,9 +31,10 @@ export default function Standings() {
       const { data, error } = await supabase.functions.invoke("standings", { body: { kind: "all" } });
       if (cancelled) return;
       if (error) { setErr(error.message); setLoading(false); return; }
-      const d = data as { standings?: Group[]; scorers?: Scorer[]; updated_at?: string };
+      const d = data as { standings?: Group[]; scorers?: Scorer[]; scorers_source?: string; updated_at?: string };
       setGroups(d.standings ?? []);
       setScorers(d.scorers ?? []);
+      setScorersSource(d.scorers_source ?? "");
       setUpdated(d.updated_at ?? "");
       setLoading(false);
     };
@@ -120,39 +122,49 @@ export default function Standings() {
           ))}
         </div>
       ) : (
-        <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card/40">
-          <table className="w-full text-sm">
-            <thead className="text-xs uppercase tracking-wider text-muted-foreground">
-              <tr className="border-b border-border/60">
-                <th className="w-8 py-3 pl-4 text-left">#</th>
-                <th className="py-3 text-left">Player</th>
-                <th className="py-3 text-left">Team</th>
-                <th className="py-3 text-center">P</th>
-                <th className="py-3 text-center">Ast</th>
-                <th className="py-3 pr-4 text-center font-bold text-primary">Goals</th>
-              </tr>
-            </thead>
-            <tbody>
-              {scorers.length === 0 && (
-                <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">No goals recorded yet.</td></tr>
-              )}
-              {scorers.map((s, i) => (
-                <tr key={s.player.name + i} className="border-b border-border/40 last:border-0 tabular-nums">
-                  <td className="py-3 pl-4 text-muted-foreground">{i + 1}</td>
-                  <td className="py-3 font-medium">{s.player.name}</td>
-                  <td className="py-3">
-                    <div className="flex items-center gap-2">
-                      {s.team.crest && <img src={s.team.crest} alt="" className="h-4 w-4" loading="lazy" />}
-                      <span>{s.team.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 text-center">{s.played ?? "—"}</td>
-                  <td className="py-3 text-center">{s.assists ?? 0}</td>
-                  <td className="py-3 pr-4 text-center text-lg font-bold text-primary">{s.goals}</td>
+        <div className="mt-8 space-y-3">
+          {scorersSource && scorersSource !== "WC" && (
+            <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-muted-foreground">
+              World Cup 2026 hasn't kicked off yet, so no tournament goals to rank.
+              Showing top scorers from <span className="font-bold text-primary">
+                {({ WCQ: "World Cup Qualifying", CL: "UEFA Champions League", EL: "UEFA Europa League", PL: "Premier League", PD: "LaLiga", SA: "Serie A", BL1: "Bundesliga", FL1: "Ligue 1", CLI: "Copa Libertadores" } as Record<string,string>)[scorersSource] ?? scorersSource}
+              </span> instead.
+            </p>
+          )}
+          <div className="overflow-hidden rounded-xl border border-border bg-card/40">
+            <table className="w-full text-sm">
+              <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-border/60">
+                  <th className="w-8 py-3 pl-4 text-left">#</th>
+                  <th className="py-3 text-left">Player</th>
+                  <th className="py-3 text-left">Team</th>
+                  <th className="py-3 text-center">P</th>
+                  <th className="py-3 text-center">Ast</th>
+                  <th className="py-3 pr-4 text-center font-bold text-primary">Goals</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {scorers.length === 0 && (
+                  <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">No goals recorded yet.</td></tr>
+                )}
+                {scorers.map((s, i) => (
+                  <tr key={s.player.name + i} className="border-b border-border/40 last:border-0 tabular-nums">
+                    <td className="py-3 pl-4 text-muted-foreground">{i + 1}</td>
+                    <td className="py-3 font-medium">{s.player.name}</td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-2">
+                        {s.team.crest && <img src={s.team.crest} alt="" className="h-4 w-4" loading="lazy" />}
+                        <span>{s.team.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 text-center">{s.played ?? "—"}</td>
+                    <td className="py-3 text-center">{s.assists ?? 0}</td>
+                    <td className="py-3 pr-4 text-center text-lg font-bold text-primary">{s.goals}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

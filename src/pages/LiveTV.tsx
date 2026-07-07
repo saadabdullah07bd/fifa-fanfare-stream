@@ -442,6 +442,7 @@ function ModernPlayer({
       ref={wrapRef}
       onMouseMove={kick}
       onTouchStart={kick}
+      style={{ cursor: showUI ? "" : "none" }}
       className="live-player group relative overflow-hidden rounded-2xl border border-primary/30 bg-black shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.35)] outline-none focus:outline-none focus-visible:outline-none [&:fullscreen]:h-screen [&:fullscreen]:w-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none"
       tabIndex={-1}
     >
@@ -449,8 +450,10 @@ function ModernPlayer({
         ref={videoRef}
         autoPlay playsInline muted
         onClick={toggle}
-        className="aspect-video w-full cursor-pointer bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full group-[:fullscreen]:object-contain"
+        style={{ cursor: showUI ? "pointer" : "none" }}
+        className="aspect-video w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full group-[:fullscreen]:object-contain"
       />
+
 
       <AnimatePresence>
         {buffering && (
