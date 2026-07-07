@@ -40,6 +40,11 @@ export default function Fixtures() {
   }, [sorted]);
 
   const cardRefs = useRef<Array<HTMLElement | null>>([]);
+  const dayRefs = useRef<Record<string, HTMLElement | null>>({});
+  const listScrollRef = useRef<HTMLDivElement | null>(null);
+  const bracketScrollRef = useRef<HTMLDivElement | null>(null);
+  const [bracketHasOverflow, setBracketHasOverflow] = useState(false);
+
   useEffect(() => {
     if (view !== "focus" || !sorted.length) return;
     cardRefs.current[nextIdx]?.scrollIntoView({ block: "start" });
@@ -54,13 +59,36 @@ export default function Fixtures() {
     return Object.entries(g);
   }, [sorted]);
 
+  const presentDay = useMemo(() => sorted[nextIdx] ? bdDate(sorted[nextIdx].date_utc) : null, [sorted, nextIdx]);
+
+  useEffect(() => {
+    if (view !== "list" || !presentDay) return;
+    const el = dayRefs.current[presentDay];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [view, presentDay]);
+
   const ko = KO_STAGES.map((stage) => ({
     stage,
     matches: sorted.filter((m) => {
       const s = (m.stage ?? "").toString();
       return s === stage || KO_LEGACY[s] === stage;
     }),
-  }));
+  })).filter(({ matches }) => {
+    // Hide stages whose matches are all finished
+    if (matches.length === 0) return true; // keep TBD placeholders
+    return !matches.every((m) => m.status === "finished" || m.status === "FINISHED");
+  });
+
+  useEffect(() => {
+    if (view !== "bracket") return;
+    const el = bracketScrollRef.current;
+    if (!el) return;
+    const check = () => setBracketHasOverflow(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    check();
+    el.addEventListener("scroll", check);
+    window.addEventListener("resize", check);
+    return () => { el.removeEventListener("scroll", check); window.removeEventListener("resize", check); };
+  }, [view, ko.length]);
 
   return (
     <motion.div
