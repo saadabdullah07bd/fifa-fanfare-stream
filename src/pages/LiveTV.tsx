@@ -47,12 +47,24 @@ export default function LiveTV() {
       v.muted = true;
       v.removeAttribute("src");
       v.load();
-      const PREBUFFER_MS = 2500; // hold ~2.5s of video before starting playback
-      const playVideo = () =>
-        window.setTimeout(
-          () => v.play().catch(() => toast.error("Tap play to start the live stream.")),
-          PREBUFFER_MS,
-        );
+      // Wait until the browser has ~3s of media buffered before starting playback.
+      // This avoids the perceived "stuck loading" from a blind setTimeout.
+      const MIN_BUFFER_SEC = 3;
+      let started = false;
+      const tryStart = () => {
+        if (started) return;
+        const b = v.buffered;
+        const ahead = b.length ? b.end(b.length - 1) - v.currentTime : 0;
+        if (ahead >= MIN_BUFFER_SEC || v.readyState >= 4) {
+          started = true;
+          v.play().catch(() => toast.error("Tap play to start the live stream."));
+        }
+      };
+      v.addEventListener("progress", tryStart);
+      v.addEventListener("canplaythrough", tryStart);
+      // Safety net: start after 4s regardless so the user is never stuck.
+      const safety = window.setTimeout(() => { started = true; v.play().catch(() => {}); }, 4000);
+      const playVideo = () => { window.clearTimeout(safety); tryStart(); };
       if (type === "mpegts" && mpegts.getFeatureList().mseLivePlayback) {
         mts = mpegts.createPlayer(
           { type: "mpegts", isLive: true, url },
