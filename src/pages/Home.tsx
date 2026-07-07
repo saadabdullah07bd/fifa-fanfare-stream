@@ -102,15 +102,15 @@ export default function Home() {
                   </div>
                   {isLive && (
                     <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                      <Link
-                        to="/live-tv"
-                        onClick={(e) => e.stopPropagation()}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate("/live-tv"); }}
                         className="group/btn relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-primary px-6 py-3 text-sm font-black uppercase tracking-[0.2em] text-primary-foreground shadow-lg shadow-primary/30 transition hover:scale-[1.03]"
                       >
                         <span className="live-dot" />
                         <span>Watch this game live</span>
                         <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
-                      </Link>
+                      </button>
                       <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
                         Streaming now on Pitch26
                       </span>
