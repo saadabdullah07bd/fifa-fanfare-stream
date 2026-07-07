@@ -181,6 +181,13 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
   padding: 2rem; text-align: center; font-family: system-ui, sans-serif;
 }
 
+#lovable-badge,
+#lovable-badge * {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* ============ Apple Glass Theme ============ */
 :root {
   --glass-bg: rgba(255, 255, 255, 0.08);
