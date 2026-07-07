@@ -162,6 +162,22 @@ Deno.serve(async (req) => {
     }
   } catch (_) { /* enrichment optional */ }
 
+  // Final fallback: if a match is live but no source gave us a minute, compute it from kickoff.
+  matches = matches.map((m: any) => {
+    if (!["IN_PLAY", "LIVE"].includes(m.status)) return m;
+    if (m.minute != null && m.minute > 0) return m;
+    const koMs = new Date(m.utc_date).getTime();
+    if (!Number.isFinite(koMs)) return m;
+    const elapsedMin = Math.floor((Date.now() - koMs) / 60000);
+    if (elapsedMin <= 0) return m;
+    // Cap so we don't display absurd numbers. HT (~45-60) is handled by PAUSED status upstream.
+    let minute = elapsedMin;
+    if (minute > 45 && minute <= 60) minute = 45; // likely in HT window
+    else if (minute > 60) minute = Math.min(minute - 15, 120); // subtract typical HT break
+    return { ...m, minute, minute_source: "kickoff-fallback" };
+  });
+
+
   // Sort: live first, then scheduled today, then finished
   const rank = (s: string) => (["IN_PLAY", "PAUSED", "LIVE"].includes(s) ? 0 : s === "SCHEDULED" || s === "TIMED" ? 1 : 2);
   matches.sort((a: any, b: any) => rank(a.status) - rank(b.status) || a.utc_date.localeCompare(b.utc_date));
