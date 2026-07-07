@@ -256,12 +256,9 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
         isActive ? "border-primary ring-2 ring-primary/50" : "border-border hover:border-primary/60"
       }`}
     >
-      <div className="relative flex aspect-video items-center justify-center bg-secondary/30">
-        {c.logo_url ? (
-          <img src={c.logo_url} alt={c.name} className="max-h-full max-w-full object-contain p-3" loading="lazy" />
-        ) : (
-          <Tv className="h-8 w-8 text-muted-foreground" />
-        )}
+      <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-gradient-to-br from-secondary/40 via-secondary/20 to-primary/10">
+        <ChannelLogo url={c.logo_url} name={c.name} />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         {is4k(c.name) && (
           <span className="absolute bottom-2 right-2 rounded bg-gradient-to-r from-amber-400 to-orange-500 px-1.5 py-0.5 text-[10px] font-black tracking-wider text-black shadow">
             4K UHD
