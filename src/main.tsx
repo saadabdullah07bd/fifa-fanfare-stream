@@ -11,6 +11,9 @@ import "@fontsource/bebas-neue/400.css";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/700.css";
+import { installTamperGuard } from "./lib/tamper-guard";
+
+installTamperGuard();
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
