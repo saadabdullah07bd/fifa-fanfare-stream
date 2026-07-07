@@ -36,21 +36,34 @@ export default function LiveTV() {
   useEffect(() => {
     if (!active || !videoRef.current) return;
     let hls: Hls | undefined;
+    let mts: ReturnType<typeof mpegts.createPlayer> | undefined;
     (async () => {
       const { data, error } = await supabase.functions.invoke("xtream", {
         body: { action: "stream_url", streamId: active.stream_id },
       });
       if (error) throw new Error(error.message);
-      const url = (data as { url: string }).url;
+      const { url, type } = data as { url: string; type?: "mpegts" | "hls" };
       const v = videoRef.current!;
-      if (Hls.isSupported() && !url.endsWith(".mp4")) {
+      if (type === "mpegts" && mpegts.getFeatureList().mseLivePlayback) {
+        mts = mpegts.createPlayer(
+          { type: "mpegts", isLive: true, url },
+          { enableStashBuffer: false, liveBufferLatencyChasing: true, lazyLoad: false },
+        );
+        mts.attachMediaElement(v);
+        mts.load();
+      } else if (Hls.isSupported() && !url.endsWith(".mp4")) {
         hls = new Hls({ enableWorker: true, lowLatencyMode: true });
         hls.loadSource(url);
         hls.attachMedia(v);
-      } else v.src = url;
+      } else {
+        v.src = url;
+      }
       v.play().catch(() => {});
     })().catch((e) => toast.error((e as Error).message));
-    return () => { hls?.destroy(); };
+    return () => {
+      hls?.destroy();
+      try { mts?.pause(); mts?.unload(); mts?.detachMediaElement(); mts?.destroy(); } catch { /* ignore */ }
+    };
   }, [active]);
 
   const categories = useMemo(
