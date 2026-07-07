@@ -69,81 +69,41 @@ Deno.serve(async (req) => {
     }
 
     if (kind === "scorers" || kind === "all") {
-      // 1) Try API-Football's World Cup top scorers first (league=1 = FIFA World Cup).
-      //    That endpoint aggregates goals across qualifying + tournament, so it stays
-      //    populated year-round with genuine WC-related players.
-      const afKey = Deno.env.get("API_FOOTBALL_KEY");
-      const season = new Date().getUTCFullYear();
+      // World Cup 2026 has NOT kicked off yet — only qualification is under way.
+      // "Top scorers" therefore means top scorers across WC qualification.
+      // Primary source: Wikipedia's "2026 FIFA World Cup qualification" article,
+      // which maintains a structured "Top goalscorers" table. Fallback:
+      // football-data.org /competitions/WCQ/scorers.
       let scorers: any[] = [];
       let source = "";
 
-      if (afKey) {
-        for (const yr of [season, season - 1]) {
-          try {
-            const r = await fetch(
-              `https://v3.football.api-sports.io/players/topscorers?league=1&season=${yr}`,
-              { headers: { "x-apisports-key": afKey } },
-            );
-            if (!r.ok) continue;
-            const j: any = await r.json();
-            const list = j?.response ?? [];
-            if (list.length) {
-              source = `WC ${yr}`;
-              scorers = list.slice(0, 20).map((x: any) => {
-                const g = x.statistics?.[0]?.goals ?? {};
-                const games = x.statistics?.[0]?.games ?? {};
-                return {
-                  player: { name: x.player?.name, nationality: x.player?.nationality, photo: x.player?.photo },
-                  team: { name: x.statistics?.[0]?.team?.name, crest: x.statistics?.[0]?.team?.logo },
-                  goals: g.total ?? 0,
-                  assists: g.assists ?? 0,
-                  penalties: null,
-                  played: games.appearences ?? null,
-                };
-              });
-              break;
-            }
-          } catch { /* try next season */ }
+      try {
+        const wiki = await scrapeWikipediaWCQScorers();
+        if (wiki.length) {
+          scorers = wiki;
+          source = "Wikipedia WCQ";
         }
-      }
+      } catch { /* fall through */ }
 
-      // 2) User-requested fallback: scrape Google's search result snippets for
-      //    World Cup qualifying top scorer rows before using club competitions.
-      //    Google markup changes often and may occasionally return a consent or
-      //    bot-check page instead of results, so football-data remains below as
-      //    the final safety fallback.
       if (!scorers.length) {
-        const googleScorers = await scrapeGoogleTopScorers();
-        if (googleScorers.length) {
-          source = "Google";
-          scorers = googleScorers;
-        }
+        try {
+          const r = await fetchJson(`/competitions/WCQ/scorers?limit=20`);
+          const list = r.scorers ?? [];
+          if (list.length) {
+            source = "football-data WCQ";
+            scorers = list.map((x: any) => ({
+              player: { name: x.player?.name, nationality: x.player?.nationality },
+              team: { name: x.team?.name, tla: x.team?.tla, crest: x.team?.crest },
+              goals: x.goals,
+              assists: x.assists,
+              penalties: x.penalties,
+              played: x.playedMatches,
+            }));
+          }
+        } catch { /* nothing */ }
       }
 
-      // 3) Final fallback chain via football-data.org (WCQ, then top club comps).
-      if (!scorers.length) {
-        const codes = ["WCQ", "CL", "PL", "PD", "SA", "BL1", "FL1"];
-        for (const code of codes) {
-          try {
-            const r = await fetchJson(`/competitions/${code}/scorers?limit=20`);
-            const list = r.scorers ?? [];
-            if (list.length) {
-              source = code;
-              scorers = list.map((x: any) => ({
-                player: { name: x.player?.name, nationality: x.player?.nationality },
-                team: { name: x.team?.name, tla: x.team?.tla, crest: x.team?.crest },
-                goals: x.goals,
-                assists: x.assists,
-                penalties: x.penalties,
-                played: x.playedMatches,
-              }));
-              break;
-            }
-          } catch { /* try next comp */ }
-        }
-      }
-
-      body.scorers_source = source || "WC";
+      body.scorers_source = source || "none";
       body.scorers = scorers;
     }
 
@@ -161,74 +121,96 @@ function json(body: unknown, status = 200) {
   });
 }
 
-async function scrapeGoogleTopScorers() {
-  const queries = [
-    "2026 fifa world cup qualifying top scorers goals",
-    "World Cup 2026 qualifiers top scorers",
-    "FIFA World Cup qualification top scorers 2026",
-  ];
-  const found = new Map<string, any>();
+// Scrape the "Top goalscorers" table from Wikipedia's WC 2026 qualification page.
+async function scrapeWikipediaWCQScorers() {
+  const url = "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_qualification";
+  const r = await fetch(url, {
+    headers: {
+      "accept": "text/html",
+      "user-agent": "Mozilla/5.0 (compatible; FanfareBot/1.0)",
+    },
+  });
+  if (!r.ok) return [];
+  const html = await r.text();
 
-  for (const q of queries) {
-    try {
-      const r = await fetch(`https://www.google.com/search?hl=en&gl=us&igu=1&q=${encodeURIComponent(q)}`, {
-        headers: {
-          "accept": "text/html,application/xhtml+xml",
-          "accept-language": "en-US,en;q=0.9",
-          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
-        },
-      });
-      if (!r.ok) continue;
-      const html = decodeEntities(stripTags(await r.text()))
-        .replace(/\s+/g, " ")
-        .replace(/\b(?:Wikipedia|ESPN|FOX Sports|BBC Sport|Transfermarkt|Statbunker|Google Search)\b/g, " ");
+  const secIdx = html.search(/id="Top_goalscorers"|>Top goalscorers</i);
+  if (secIdx < 0) return [];
+  const rest = html.slice(secIdx);
+  const tblMatch = rest.match(/<table[^>]*class="[^"]*wikitable[^"]*"[\s\S]*?<\/table>/i);
+  if (!tblMatch) return [];
+  const table = tblMatch[0];
 
-      for (const row of parseScorerText(html)) {
-        const key = row.player.name.toLowerCase();
-        const existing = found.get(key);
-        if (!existing || row.goals > existing.goals) found.set(key, row);
+  const rows: any[] = [];
+  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = trRe.exec(table))) {
+    const tr = m[1];
+    if (/<th[\s>]/i.test(tr) && !/<td[\s>]/i.test(tr)) continue;
+
+    let country = "";
+    const flag = tr.match(/class="[^"]*flagicon[^"]*"[\s\S]*?title="([^"]+)"/i)
+      ?? tr.match(/class="[^"]*flagicon[^"]*"[\s\S]*?alt="([^"]+)"/i);
+    if (flag) country = flag[1];
+
+    const cells: string[] = [];
+    const tdRe = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+    let c: RegExpExecArray | null;
+    while ((c = tdRe.exec(tr))) cells.push(c[1]);
+    if (cells.length < 3) continue;
+
+    const cellsText = cells.map(x => decodeEntities(stripTags(x)).trim());
+
+    let playerName = "";
+    for (const cell of cells) {
+      const aMatches = [...cell.matchAll(/<a[^>]*title="([^"]+)"[^>]*>([^<]+)<\/a>/gi)];
+      for (const a of aMatches) {
+        const title = a[1];
+        const label = decodeEntities(a[2]).trim();
+        if (title === country) continue;
+        if (!label || /^\d+$/.test(label)) continue;
+        if (/^(Hat-trick|Own goal|edit)$/i.test(label)) continue;
+        playerName = label;
+        break;
       }
-    } catch { /* try next Google query */ }
-  }
-
-  return [...found.values()].sort((a, b) => b.goals - a.goals).slice(0, 20);
-}
-
-function parseScorerText(text: string) {
-  const scorers: any[] = [];
-  const patterns = [
-    /([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+(?:\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+){0,3})\s+(?:\(([^)]+)\)\s*)?(\d{1,2})\s+goals?/gi,
-    /([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+(?:\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+){0,3})\s+[–-]\s+([^–-]{2,32})\s+[–-]\s+(\d{1,2})/gi,
-    /(\d{1,2})\s+goals?\s+(?:for\s+)?([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+(?:\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+){0,3})/gi,
-  ];
-
-  for (const pattern of patterns) {
-    for (const match of text.matchAll(pattern)) {
-      const reverse = /^\d/.test(match[0]);
-      const name = cleanName(reverse ? match[2] : match[1]);
-      const team = cleanTeam(reverse ? "" : match[2] ?? "National team");
-      const goals = Number(reverse ? match[1] : match[3]);
-      if (!name || !Number.isFinite(goals) || goals <= 0) continue;
-      if (name.length < 4 || /^(Top|World|FIFA|Qualifying|Players|Scorers|Goals|Search|Images|News)$/i.test(name)) continue;
-      scorers.push({
-        player: { name },
-        team: { name: team || "National team" },
-        goals,
-        assists: null,
-        penalties: null,
-        played: null,
-      });
+      if (playerName) break;
     }
+
+    let goals = 0;
+    for (const t of cellsText) {
+      const digits = t.replace(/[^\d]/g, "");
+      const n = Number(digits);
+      if (Number.isFinite(n) && n > 0 && n < 40 && digits === t) {
+        goals = Math.max(goals, n);
+      }
+    }
+
+    if (!playerName || !goals) continue;
+    rows.push({
+      player: { name: playerName, nationality: country || null },
+      team: { name: country || "National team" },
+      goals,
+      assists: null,
+      penalties: null,
+      played: null,
+    });
   }
 
-  return scorers;
+  const dedup = new Map<string, any>();
+  for (const row of rows) {
+    const k = row.player.name.toLowerCase();
+    const prev = dedup.get(k);
+    if (!prev || row.goals > prev.goals) dedup.set(k, row);
+  }
+  return [...dedup.values()].sort((a, b) => b.goals - a.goals).slice(0, 20);
 }
 
 function stripTags(html: string) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ");
+    .replace(/<sup[\s\S]*?<\/sup>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
 }
 
 function decodeEntities(text: string) {
@@ -239,15 +221,4 @@ function decodeEntities(text: string) {
     .replace(/&#39;|&apos;/g, "'")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">");
-}
-
-function cleanName(value = "") {
-  return value
-    .replace(/\b(?:Top scorers?|Goals?|Players?|World Cup|Qualification|Qualifiers?)\b/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function cleanTeam(value = "") {
-  return value.replace(/\s+/g, " ").replace(/[,.;:]$/g, "").trim();
 }
