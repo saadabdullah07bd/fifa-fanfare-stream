@@ -69,68 +69,19 @@ Deno.serve(async (req) => {
     }
 
     if (kind === "scorers" || kind === "all") {
-      // WC 2026 has NOT kicked off yet — only qualification is underway.
-      // Aggregate top scorers across all 6 confederation WCQ competitions on
-      // API-Football (season = current year). Fall back to Wikipedia scrape,
-      // then football-data WCQ.
+      // WC 2026 hasn't kicked off yet — top scorers = WC qualification scorers.
+      // API-Football's free plan is capped at seasons 2022-2024 so it can't
+      // return current qualifier data. Instead scrape each confederation's
+      // Wikipedia qualification article via the MediaWiki API (structured and
+      // reliable) and merge the "Top scorers" tables.
       let scorers: any[] = [];
       let source = "";
-      const debug: any = { afKey: false, afLeagues: {}, wikiFound: 0, fdFound: 0 };
+      const debug: any = { pages: {} };
 
-      const afKey = Deno.env.get("API_FOOTBALL_KEY");
-      debug.afKey = !!afKey;
-      if (afKey) {
-        const leagues = [32, 34, 29, 30, 31, 33];
-        const season = new Date().getUTCFullYear();
-        const merged = new Map<string, any>();
-        await Promise.all(leagues.map(async (lg) => {
-          for (const yr of [season, season - 1, season - 2]) {
-            try {
-              const r = await fetch(
-                `https://v3.football.api-sports.io/players/topscorers?league=${lg}&season=${yr}`,
-                { headers: { "x-apisports-key": afKey } },
-              );
-              const j: any = await r.json().catch(() => ({}));
-              const list = j?.response ?? [];
-              debug.afLeagues[`${lg}_${yr}`] = { status: r.status, count: list.length, errors: j?.errors };
-              if (!r.ok || !list.length) continue;
-              for (const x of list) {
-                const g = x.statistics?.[0]?.goals ?? {};
-                const games = x.statistics?.[0]?.games ?? {};
-                const name = x.player?.name;
-                if (!name) continue;
-                const key = name.toLowerCase();
-                const goals = g.total ?? 0;
-                const row = {
-                  player: { name, nationality: x.player?.nationality, photo: x.player?.photo },
-                  team: { name: x.statistics?.[0]?.team?.name, crest: x.statistics?.[0]?.team?.logo },
-                  goals,
-                  assists: g.assists ?? null,
-                  penalties: null,
-                  played: games.appearences ?? null,
-                };
-                const prev = merged.get(key);
-                if (!prev || goals > prev.goals) merged.set(key, row);
-              }
-              break;
-            } catch (e) {
-              debug.afLeagues[`${lg}_${yr}`] = { error: (e as Error).message };
-            }
-          }
-        }));
-        if (merged.size) {
-          scorers = [...merged.values()].sort((a, b) => b.goals - a.goals).slice(0, 20);
-          source = "API-Football WCQ";
-        }
-      }
-
-      if (!scorers.length) {
-        try {
-          const wiki = await scrapeWikipediaWCQScorers();
-          debug.wikiFound = wiki.length;
-          if (wiki.length) { scorers = wiki; source = "Wikipedia WCQ"; }
-        } catch (e) { debug.wikiError = (e as Error).message; }
-      }
+      try {
+        const wiki = await scrapeAllConfederationScorers(debug);
+        if (wiki.length) { scorers = wiki; source = "Wikipedia WCQ"; }
+      } catch (e) { debug.wikiError = (e as Error).message; }
 
       if (!scorers.length) {
         try {
@@ -156,8 +107,6 @@ Deno.serve(async (req) => {
       if (url.searchParams.get("debug") === "1") body.debug = debug;
     }
 
-
-
     body.updated_at = new Date().toISOString();
     cache.set(cacheKey, { at: Date.now(), body });
     return json(body);
@@ -172,22 +121,70 @@ function json(body: unknown, status = 200) {
   });
 }
 
-// Scrape the "Top goalscorers" table from Wikipedia's WC 2026 qualification page.
-async function scrapeWikipediaWCQScorers() {
-  const url = "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_qualification";
-  const r = await fetch(url, {
-    headers: {
-      "accept": "text/html",
-      "user-agent": "Mozilla/5.0 (compatible; FanfareBot/1.0)",
-    },
-  });
-  if (!r.ok) return [];
-  const html = await r.text();
+const CONFED_PAGES = [
+  "2026_FIFA_World_Cup_qualification_–_UEFA",
+  "2026_FIFA_World_Cup_qualification_–_CONMEBOL",
+  "2026_FIFA_World_Cup_qualification_–_AFC",
+  "2026_FIFA_World_Cup_qualification_–_CAF",
+  "2026_FIFA_World_Cup_qualification_–_CONCACAF",
+  "2026_FIFA_World_Cup_qualification_–_OFC",
+];
 
-  const secIdx = html.search(/id="Top_goalscorers"|>Top goalscorers</i);
-  if (secIdx < 0) return [];
-  const rest = html.slice(secIdx);
-  const tblMatch = rest.match(/<table[^>]*class="[^"]*wikitable[^"]*"[\s\S]*?<\/table>/i);
+async function scrapeAllConfederationScorers(debug: any) {
+  const merged = new Map<string, any>();
+  await Promise.all(CONFED_PAGES.map(async (page) => {
+    try {
+      const rows = await scrapePageScorers(page, debug);
+      for (const row of rows) {
+        const key = row.player.name.toLowerCase();
+        const prev = merged.get(key);
+        if (!prev || row.goals > prev.goals) merged.set(key, row);
+      }
+    } catch (e) {
+      debug.pages[page] = { error: (e as Error).message };
+    }
+  }));
+  return [...merged.values()]
+    .sort((a, b) => b.goals - a.goals)
+    .slice(0, 20);
+}
+
+async function scrapePageScorers(page: string, debug: any) {
+  const api = "https://en.wikipedia.org/w/api.php";
+  const ua = "FanfareBot/1.0 (contact: support@lovable.app)";
+
+  // 1. List sections, find one that looks like "Top scorers"/"Goalscorers".
+  const secRes = await fetch(
+    `${api}?action=parse&page=${encodeURIComponent(page)}&prop=sections&format=json&origin=*`,
+    { headers: { "user-agent": ua } },
+  );
+  if (!secRes.ok) { debug.pages[page] = { status: secRes.status }; return []; }
+  const secJson: any = await secRes.json();
+  const sections: any[] = secJson?.parse?.sections ?? [];
+  const target = sections.find((s: any) =>
+    /goal ?scorers?|top scorers?/i.test(s.line ?? "")
+  );
+  if (!target) {
+    debug.pages[page] = { sections: sections.length, missing: true };
+    return [];
+  }
+
+  // 2. Fetch that section's HTML.
+  const txtRes = await fetch(
+    `${api}?action=parse&page=${encodeURIComponent(page)}&prop=text&section=${target.index}&format=json&origin=*`,
+    { headers: { "user-agent": ua } },
+  );
+  if (!txtRes.ok) { debug.pages[page] = { textStatus: txtRes.status }; return []; }
+  const txtJson: any = await txtRes.json();
+  const html: string = txtJson?.parse?.text?.["*"] ?? "";
+
+  const rows = parseScorerTable(html);
+  debug.pages[page] = { section: target.line, rows: rows.length };
+  return rows;
+}
+
+function parseScorerTable(html: string) {
+  const tblMatch = html.match(/<table[^>]*class="[^"]*wikitable[^"]*"[\s\S]*?<\/table>/i);
   if (!tblMatch) return [];
   const table = tblMatch[0];
 
@@ -198,19 +195,20 @@ async function scrapeWikipediaWCQScorers() {
     const tr = m[1];
     if (/<th[\s>]/i.test(tr) && !/<td[\s>]/i.test(tr)) continue;
 
+    // Country from flagicon
     let country = "";
     const flag = tr.match(/class="[^"]*flagicon[^"]*"[\s\S]*?title="([^"]+)"/i)
       ?? tr.match(/class="[^"]*flagicon[^"]*"[\s\S]*?alt="([^"]+)"/i);
     if (flag) country = flag[1];
 
+    // Cells
     const cells: string[] = [];
     const tdRe = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
     let c: RegExpExecArray | null;
     while ((c = tdRe.exec(tr))) cells.push(c[1]);
-    if (cells.length < 3) continue;
+    if (cells.length < 2) continue;
 
-    const cellsText = cells.map(x => decodeEntities(stripTags(x)).trim());
-
+    // Player: first <a title="..."> whose title isn't the country
     let playerName = "";
     for (const cell of cells) {
       const aMatches = [...cell.matchAll(/<a[^>]*title="([^"]+)"[^>]*>([^<]+)<\/a>/gi)];
@@ -219,15 +217,28 @@ async function scrapeWikipediaWCQScorers() {
         const label = decodeEntities(a[2]).trim();
         if (title === country) continue;
         if (!label || /^\d+$/.test(label)) continue;
-        if (/^(Hat-trick|Own goal|edit)$/i.test(label)) continue;
+        if (/^(Hat-trick|Own goal|edit|note)$/i.test(label)) continue;
         playerName = label;
         break;
       }
       if (playerName) break;
     }
 
+    // If no linked name, take first cell that's non-numeric text
+    if (!playerName) {
+      for (const cell of cells) {
+        const t = decodeEntities(stripTags(cell)).trim();
+        if (t && t.length > 2 && !/^\d+$/.test(t) && t !== country) {
+          playerName = t.split(/[(\[]/)[0].trim();
+          if (playerName) break;
+        }
+      }
+    }
+
+    // Goals: pick the largest pure integer 1-30 across cells
     let goals = 0;
-    for (const t of cellsText) {
+    for (const cell of cells) {
+      const t = decodeEntities(stripTags(cell)).trim();
       const digits = t.replace(/[^\d]/g, "");
       const n = Number(digits);
       if (Number.isFinite(n) && n > 0 && n < 40 && digits === t) {
@@ -246,13 +257,7 @@ async function scrapeWikipediaWCQScorers() {
     });
   }
 
-  const dedup = new Map<string, any>();
-  for (const row of rows) {
-    const k = row.player.name.toLowerCase();
-    const prev = dedup.get(k);
-    if (!prev || row.goals > prev.goals) dedup.set(k, row);
-  }
-  return [...dedup.values()].sort((a, b) => b.goals - a.goals).slice(0, 20);
+  return rows;
 }
 
 function stripTags(html: string) {
@@ -273,3 +278,4 @@ function decodeEntities(text: string) {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">");
 }
+
