@@ -452,7 +452,7 @@ function ModernPlayer({
     >
       <video
         ref={videoRef}
-        autoPlay playsInline muted defaultMuted
+        autoPlay playsInline muted
         onClick={toggle}
         className="aspect-video w-full cursor-pointer bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full group-[:fullscreen]:object-contain"
       />
