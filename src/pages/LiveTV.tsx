@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import {
   Search, Tv, Radio, Play, Pause, Sparkles, X, ChevronLeft, ChevronRight,
   Volume2, VolumeX, Maximize, Minimize, Loader2, PictureInPicture2,
+  LogOut,
 } from "lucide-react";
 
 type Channel = { id: string; category: string; stream_id: string; name: string; logo_url: string | null };
@@ -18,6 +19,7 @@ const is4k = (name: string) => /\b(4k|uhd)\b/i.test(name);
 const CAT_LABEL: Record<string, string> = { wc2026: "World Cup 2026", cricket: "Cricket" };
 
 export default function LiveTV() {
+  const navigate = useNavigate();
   const { data: channels = [], isLoading, isError, error } = useQuery({
     queryKey: ["channels"],
     queryFn: async () => {
@@ -163,6 +165,11 @@ export default function LiveTV() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/", { replace: true });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
@@ -172,7 +179,9 @@ export default function LiveTV() {
 
       <div className="flex items-center justify-between">
         <h1 className="display text-5xl">Live TV</h1>
-        <Link to="/settings" className="rounded-md border border-border bg-secondary px-3 py-2 text-xs font-semibold uppercase tracking-wider hover:border-primary transition-colors">Account</Link>
+        <button onClick={signOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors hover:border-primary">
+          <LogOut className="h-4 w-4" /> Sign out
+        </button>
       </div>
 
       <AnimatePresence mode="wait">

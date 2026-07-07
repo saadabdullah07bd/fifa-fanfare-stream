@@ -16,6 +16,29 @@ type Scorer = {
   goals: number; assists?: number; penalties?: number; played?: number;
 };
 
+function titleCase(value: string) {
+  return value.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function cleanCompetitionLabel(value: string | null | undefined) {
+  return (value ?? "")
+    .replace(/^GROUP[_\s-]*/i, "")
+    .replace(/_/g, " ")
+    .trim();
+}
+
+function groupTitle(group: string | null | undefined, stage: string | null | undefined) {
+  const label = cleanCompetitionLabel(group || stage);
+  if (!label) return "Group";
+  if (/^group\b/i.test(label)) return titleCase(label);
+  return `Group ${titleCase(label)}`;
+}
+
+function stageTitle(stage: string | null | undefined) {
+  const label = (stage ?? "").replace(/_/g, " ").trim();
+  return label ? titleCase(label) : "";
+}
+
 export default function Standings() {
   const [tab, setTab] = useState<"standings" | "scorers">("standings");
   const [groups, setGroups] = useState<Group[]>([]);
@@ -76,12 +99,12 @@ export default function Standings() {
       ) : tab === "standings" ? (
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           {groups.length === 0 && <p className="text-sm text-muted-foreground">No group data yet — draw has not been staged.</p>}
-          {groups.map((g) => (
-            <motion.div key={g.group ?? g.stage} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          {groups.map((g, index) => (
+            <motion.div key={`${g.group ?? "group"}-${g.stage}-${index}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               className="overflow-hidden rounded-xl border border-border bg-card/40">
               <div className="flex items-center justify-between border-b border-border/60 bg-secondary/30 px-4 py-2">
-                <h2 className="display text-xl tracking-wider text-primary">Group {g.group ?? g.stage}</h2>
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{g.stage}</span>
+                <h2 className="display text-xl tracking-wider text-primary">{groupTitle(g.group, g.stage)}</h2>
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{stageTitle(g.stage)}</span>
               </div>
               <table className="w-full text-sm">
                 <thead className="text-xs uppercase tracking-wider text-muted-foreground">
@@ -123,9 +146,8 @@ export default function Standings() {
         </div>
       ) : (
         <div className="mt-8 space-y-3">
-          {scorersSource && scorersSource !== "WC" && (
+          {scorersSource && !["WC", "WorldCupWiki", "Google"].includes(scorersSource) && (
             <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-muted-foreground">
-              World Cup 2026 hasn't kicked off yet, so no tournament goals to rank.
               Showing top scorers from <span className="font-bold text-primary">
                 {({ WCQ: "World Cup Qualifying", CL: "UEFA Champions League", EL: "UEFA Europa League", PL: "Premier League", PD: "LaLiga", SA: "Serie A", BL1: "Bundesliga", FL1: "Ligue 1", CLI: "Copa Libertadores" } as Record<string,string>)[scorersSource] ?? scorersSource}
               </span> instead.

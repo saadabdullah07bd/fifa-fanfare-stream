@@ -10,6 +10,11 @@ export default function Settings() {
   const navigate = useNavigate();
   const { admin } = useIsAdmin();
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/", { replace: true });
+  };
+
   const { data: cfg, refetch } = useQuery({
     queryKey: ["xtream-cfg"],
     queryFn: async () => {
@@ -56,13 +61,13 @@ export default function Settings() {
     <div className="mx-auto max-w-2xl px-4 py-12">
       <Seo title="Settings — Pitch26" />
       <h1 className="display text-5xl">Settings</h1>
-      <p className="mt-2 text-muted-foreground">Your account and (for admins) the shared Xtream server.</p>
+      {admin && <p className="mt-2 text-muted-foreground">Shared Xtream server controls.</p>}
 
       {!admin && (
-        <div className="mt-6 rounded-lg border border-border bg-card/40 p-4 text-sm">
-          <p className="text-xs uppercase tracking-wider text-primary">Viewer</p>
-          <p className="mt-1">You're signed in. Live TV channels are managed by the site admin.</p>
-        </div>
+        <button onClick={signOut}
+          className="mt-6 rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground">
+          Sign out
+        </button>
       )}
 
       {admin && (
@@ -95,10 +100,10 @@ export default function Settings() {
         </>
       )}
 
-      <button onClick={async () => { await supabase.auth.signOut(); navigate("/"); }}
+      {admin && <button onClick={signOut}
         className="mt-12 text-xs uppercase tracking-wider text-muted-foreground hover:text-destructive">
         Sign out
-      </button>
+      </button>}
     </div>
   );
 }
