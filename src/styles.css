@@ -139,3 +139,32 @@
 html { scrollbar-width: none; -ms-overflow-style: none; }
 html::-webkit-scrollbar { width: 0; height: 0; display: none; }
 body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+.live-player,
+.live-player:focus,
+.live-player:focus-visible,
+.live-player:fullscreen,
+.live-player:fullscreen:focus,
+.live-player:fullscreen:focus-visible,
+.live-player video,
+.live-player video:focus,
+.live-player video:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.live-player:fullscreen {
+  border: 0;
+  border-radius: 0;
+  background: black;
+}
+
+.live-player:fullscreen::backdrop {
+  background: black;
+}
+
+.live-player:fullscreen video {
+  width: 100vw;
+  height: 100vh;
+  object-fit: contain;
+}

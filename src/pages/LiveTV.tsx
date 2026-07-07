@@ -42,23 +42,43 @@ export default function LiveTV() {
         body: { action: "stream_url", streamId: active.stream_id },
       });
       if (error) throw new Error(error.message);
-      const { url, type } = data as { url: string; type?: "mpegts" | "hls" };
+      const { url, type, fallbackUrl } = data as { url: string; type?: "mpegts" | "hls"; fallbackUrl?: string };
       const v = videoRef.current!;
+      v.muted = true;
+      v.removeAttribute("src");
+      v.load();
+      const playVideo = () => v.play().catch(() => toast.error("Tap play to start the live stream."));
       if (type === "mpegts" && mpegts.getFeatureList().mseLivePlayback) {
         mts = mpegts.createPlayer(
           { type: "mpegts", isLive: true, url },
           { enableStashBuffer: false, liveBufferLatencyChasing: true, lazyLoad: false },
         );
+        mts.on(mpegts.Events.ERROR, (_event: unknown, detail: unknown) => {
+          console.error("Live stream error", detail);
+          if (fallbackUrl && Hls.isSupported() && !hls) {
+            try { mts?.pause(); mts?.unload(); mts?.detachMediaElement(); mts?.destroy(); } catch { /* ignore */ }
+            hls = new Hls({ enableWorker: true, lowLatencyMode: true, liveSyncDurationCount: 2 });
+            hls.loadSource(fallbackUrl);
+            hls.attachMedia(v);
+            void playVideo();
+            return;
+          }
+          toast.error("This channel is not sending playable video right now.");
+        });
         mts.attachMediaElement(v);
         mts.load();
       } else if (Hls.isSupported() && !url.endsWith(".mp4")) {
-        hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+        hls = new Hls({ enableWorker: true, lowLatencyMode: true, liveSyncDurationCount: 2 });
+        hls.on(Hls.Events.ERROR, (_event, hlsData) => {
+          console.error("HLS stream error", hlsData);
+          if (hlsData.fatal) toast.error("This channel is not sending playable video right now.");
+        });
         hls.loadSource(url);
         hls.attachMedia(v);
       } else {
         v.src = url;
       }
-      v.play().catch(() => {});
+      void playVideo();
     })().catch((e) => toast.error((e as Error).message));
     return () => {
       hls?.destroy();
@@ -328,7 +348,7 @@ function ModernPlayer({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [volume, setVolume] = useState(1);
   const [buffering, setBuffering] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
@@ -427,13 +447,14 @@ function ModernPlayer({
       ref={wrapRef}
       onMouseMove={kick}
       onTouchStart={kick}
-      className="group relative overflow-hidden rounded-2xl border border-primary/30 bg-black shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.35)]"
+      className="live-player group relative overflow-hidden rounded-2xl border border-primary/30 bg-black shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.35)] outline-none focus:outline-none focus-visible:outline-none [&:fullscreen]:h-screen [&:fullscreen]:w-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none"
+      tabIndex={-1}
     >
       <video
         ref={videoRef}
-        autoPlay playsInline
+        autoPlay playsInline muted
         onClick={toggle}
-        className="aspect-video w-full cursor-pointer bg-black"
+        className="aspect-video w-full cursor-pointer bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full group-[:fullscreen]:object-contain"
       />
 
       <AnimatePresence>
