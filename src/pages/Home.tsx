@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Seo } from "@/lib/seo";
@@ -14,6 +14,7 @@ type Article = {
 const NEWS_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
 
 export default function Home() {
+  const navigate = useNavigate();
   const { data: liveData } = useLiveMatches();
   const matches = liveData?.matches ?? [];
   const hero =
@@ -99,7 +100,22 @@ export default function Home() {
                       <p className="display text-xl md:text-3xl leading-tight">{hero.away.name}</p>
                     </div>
                   </div>
-                  
+                  {isLive && (
+                    <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate("/live-tv"); }}
+                        className="group/btn relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-primary px-6 py-3 text-sm font-black uppercase tracking-[0.2em] text-primary-foreground shadow-lg shadow-primary/30 transition hover:scale-[1.03]"
+                      >
+                        <span className="live-dot" />
+                        <span>Watch this game live</span>
+                        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
+                      </button>
+                      <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                        Streaming now on Pitch26
+                      </span>
+                    </div>
+                  )}
                 </Link>
               </motion.div>
             );
