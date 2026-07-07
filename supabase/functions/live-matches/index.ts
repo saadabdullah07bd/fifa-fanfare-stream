@@ -108,6 +108,60 @@ Deno.serve(async (req) => {
     } catch (_) { /* enrichment optional */ }
   }
 
+  // TheSportsDB enrichment — free, no key required. Used as a tiebreaker:
+  // if API-Football didn't tag a match live, or its data is stale, TSDB fills gaps.
+  try {
+    const tsdbRes = await fetch(
+      `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${today}&s=Soccer`,
+    );
+    if (tsdbRes.ok) {
+      const tsdbJson: any = await tsdbRes.json();
+      const events: any[] = tsdbJson?.events ?? [];
+      const norm = (s: string) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const parseNum = (v: any) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
+      matches = matches.map((m: any) => {
+        const hn = norm(m.home.name);
+        const an = norm(m.away.name);
+        const e = events.find((x) => {
+          const h = norm(x.strHomeTeam);
+          const a = norm(x.strAwayTeam);
+          return h && a &&
+            (h.includes(hn.slice(0, 5)) || hn.includes(h.slice(0, 5))) &&
+            (a.includes(an.slice(0, 5)) || an.includes(a.slice(0, 5)));
+        });
+        if (!e) return m;
+        const tsdbHome = parseNum(e.intHomeScore);
+        const tsdbAway = parseNum(e.intAwayScore);
+        // Prefer existing enriched values; fall back to TSDB when missing.
+        const merged = {
+          ...m,
+          score: {
+            ...m.score,
+            full: {
+              home: m.score.full.home ?? tsdbHome,
+              away: m.score.full.away ?? tsdbAway,
+            },
+          },
+          sources: [m.live_source, "thesportsdb"].filter(Boolean),
+          tsdb_status: e.strStatus ?? null,
+          tsdb_progress: e.strProgress ?? null,
+        };
+        // If neither football-data nor api-football flagged live, but TSDB shows a progress minute, mark live.
+        if (
+          (merged.status === "SCHEDULED" || merged.status === "TIMED") &&
+          e.strProgress && /\d/.test(e.strProgress)
+        ) {
+          merged.status = "IN_PLAY";
+          merged.minute = parseInt(e.strProgress, 10) || merged.minute;
+        }
+        return merged;
+      });
+    }
+  } catch (_) { /* enrichment optional */ }
+
   // Sort: live first, then scheduled today, then finished
   const rank = (s: string) => (["IN_PLAY", "PAUSED", "LIVE"].includes(s) ? 0 : s === "SCHEDULED" || s === "TIMED" ? 1 : 2);
   matches.sort((a: any, b: any) => rank(a.status) - rank(b.status) || a.utc_date.localeCompare(b.utc_date));
