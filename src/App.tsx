@@ -13,6 +13,7 @@ import TeamDetail from "@/pages/TeamDetail";
 import NotFound from "@/pages/NotFound";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
+import Standings from "@/pages/Standings";
 
 function useSession() {
   const [ready, setReady] = useState(false);
@@ -62,6 +63,7 @@ function AuthRedirector() {
 function Nav() {
   const items = [
     ["/", "Home"], ["/fixtures", "Fixtures"],
+    ["/standings", "Standings"],
     ["/predictions", "Predict"],
     ["/news", "News"], ["/live-tv", "Live TV"],
   ] as const;
@@ -104,6 +106,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/fixtures" element={<Fixtures />} />
+          <Route path="/standings" element={<Standings />} />
           <Route path="/news" element={<News />} />
           <Route path="/live-tv" element={<RequireAuth><LiveTV /></RequireAuth>} />
           <Route path="/predictions" element={<Predictions />} />

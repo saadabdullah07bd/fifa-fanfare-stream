@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.xtream]
 verify_jwt = false
+
+[functions.standings]
+verify_jwt = false
