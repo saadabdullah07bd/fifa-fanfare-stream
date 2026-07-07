@@ -69,21 +69,65 @@ Deno.serve(async (req) => {
     }
 
     if (kind === "scorers" || kind === "all") {
-      // World Cup 2026 has NOT kicked off yet — only qualification is under way.
-      // "Top scorers" therefore means top scorers across WC qualification.
-      // Primary source: Wikipedia's "2026 FIFA World Cup qualification" article,
-      // which maintains a structured "Top goalscorers" table. Fallback:
-      // football-data.org /competitions/WCQ/scorers.
+      // WC 2026 has NOT kicked off yet — only qualification is underway.
+      // Aggregate top scorers across all 6 confederation WCQ competitions on
+      // API-Football (season = current year). Fall back to Wikipedia scrape,
+      // then football-data WCQ.
       let scorers: any[] = [];
       let source = "";
 
-      try {
-        const wiki = await scrapeWikipediaWCQScorers();
-        if (wiki.length) {
-          scorers = wiki;
-          source = "Wikipedia WCQ";
+      const afKey = Deno.env.get("API_FOOTBALL_KEY");
+      if (afKey) {
+        // League IDs for World Cup - Qualification (API-Football):
+        // Europe=32, S.America=34, Africa=29, Asia=30, CONCACAF=31, Oceania=33
+        const leagues = [32, 34, 29, 30, 31, 33];
+        const season = new Date().getUTCFullYear();
+        const merged = new Map<string, any>();
+        await Promise.all(leagues.map(async (lg) => {
+          for (const yr of [season, season - 1]) {
+            try {
+              const r = await fetch(
+                `https://v3.football.api-sports.io/players/topscorers?league=${lg}&season=${yr}`,
+                { headers: { "x-apisports-key": afKey } },
+              );
+              if (!r.ok) continue;
+              const j: any = await r.json();
+              const list = j?.response ?? [];
+              if (!list.length) continue;
+              for (const x of list) {
+                const g = x.statistics?.[0]?.goals ?? {};
+                const games = x.statistics?.[0]?.games ?? {};
+                const name = x.player?.name;
+                if (!name) continue;
+                const key = name.toLowerCase();
+                const goals = g.total ?? 0;
+                const row = {
+                  player: { name, nationality: x.player?.nationality, photo: x.player?.photo },
+                  team: { name: x.statistics?.[0]?.team?.name, crest: x.statistics?.[0]?.team?.logo },
+                  goals,
+                  assists: g.assists ?? null,
+                  penalties: null,
+                  played: games.appearences ?? null,
+                };
+                const prev = merged.get(key);
+                if (!prev || goals > prev.goals) merged.set(key, row);
+              }
+              break; // got data for this league, don't try prior season
+            } catch { /* try next season */ }
+          }
+        }));
+        if (merged.size) {
+          scorers = [...merged.values()].sort((a, b) => b.goals - a.goals).slice(0, 20);
+          source = "API-Football WCQ";
         }
-      } catch { /* fall through */ }
+      }
+
+      if (!scorers.length) {
+        try {
+          const wiki = await scrapeWikipediaWCQScorers();
+          if (wiki.length) { scorers = wiki; source = "Wikipedia WCQ"; }
+        } catch { /* fall through */ }
+      }
 
       if (!scorers.length) {
         try {
@@ -106,6 +150,7 @@ Deno.serve(async (req) => {
       body.scorers_source = source || "none";
       body.scorers = scorers;
     }
+
 
     body.updated_at = new Date().toISOString();
     cache.set(cacheKey, { at: Date.now(), body });
