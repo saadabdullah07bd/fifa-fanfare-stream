@@ -39,7 +39,7 @@
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 1.25rem;
   /* Pitch-green base, chalk cream, tri-nation accents, signal gold */
   --background: oklch(0.24 0.05 155);          /* deep pitch green */
   --foreground: oklch(0.97 0.02 90);           /* chalk cream */
