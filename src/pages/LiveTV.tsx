@@ -104,24 +104,8 @@ export default function LiveTV() {
         {active ? (
           <motion.div key="player"
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="overflow-hidden rounded-2xl border border-border bg-black shadow-2xl"
           >
-            <video ref={videoRef} controls autoPlay playsInline className="aspect-video w-full" poster={active.logo_url ?? undefined} />
-            <div className="flex flex-wrap items-center gap-3 border-t border-border bg-card/60 p-4">
-              <h2 className="display text-xl">{active.name}</h2>
-              <span className="rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                {CAT_LABEL[active.category] ?? active.category}
-              </span>
-              <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary">
-                <Radio className="h-3 w-3 animate-pulse" /> Live
-              </span>
-              {is4k(active.name) && (
-                <span className="rounded bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[10px] font-black tracking-wider text-black">4K UHD</span>
-              )}
-              <button onClick={() => setActive(null)} className="ml-auto flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs uppercase tracking-wider hover:border-primary hover:text-primary transition-colors">
-                <X className="h-3.5 w-3.5" /> Close
-              </button>
-            </div>
+            <ModernPlayer videoRef={videoRef} channel={active} onClose={() => setActive(null)} />
           </motion.div>
         ) : heroChannel ? (
           <motion.div key="hero"
