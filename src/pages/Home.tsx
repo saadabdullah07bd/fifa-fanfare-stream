@@ -98,7 +98,7 @@ export default function Home() {
                       <p className="display text-xl md:text-3xl leading-tight">{hero.away.name}</p>
                     </div>
                   </div>
-                  <p className="mt-4 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">Tap for live stats & timeline →</p>
+                  
                 </Link>
               </motion.div>
             );
