@@ -206,7 +206,12 @@ function parseScorerTable(html: string) {
       let country = "";
       const flag = cell.match(/class="[^"]*flagicon[^"]*"[\s\S]*?title="([^"]+)"/i)
         ?? cell.match(/class="[^"]*flagicon[^"]*"[\s\S]*?alt="([^"]+)"/i);
-      if (flag) country = flag[1].replace(/\s+national football team$/i, "").trim();
+      if (flag) {
+        country = decodeEntities(flag[1])
+          .replace(/\s+(?:men'?s\s+)?national football team$/i, "")
+          .replace(/\s+men'?s$/i, "")
+          .trim();
+      }
 
       // player name = first <a title="..."> whose title isn't the flag country
       let playerName = "";
