@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 
 const PORT = Number(process.env.PORT || 3000);
+const HOST = process.env.HOST || "0.0.0.0";
 const DIST_DIR = join(process.cwd(), "dist");
 
 const MIME_TYPES = {
@@ -74,6 +75,6 @@ createServer(async (req, res) => {
     res.end("Server error");
   });
   stream.pipe(res);
-}).listen(PORT, () => {
-  console.log(`Pitch26 server listening on :${PORT}`);
+}).listen(PORT, HOST, () => {
+  console.log(`Pitch26 server listening on http://${HOST}:${PORT}`);
 });

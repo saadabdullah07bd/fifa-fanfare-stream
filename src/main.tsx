@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "sonner";
 import App from "./App";
+import ConfigError from "./components/ConfigError";
 import "./styles.css";
 import "@fontsource/bebas-neue/400.css";
 import "@fontsource/inter/400.css";
@@ -15,15 +16,23 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
 });
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root")!;
+const configured =
+  !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-          <Toaster position="top-right" richColors />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </HelmetProvider>
+    {configured ? (
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <App />
+            <Toaster position="top-right" richColors />
+          </BrowserRouter>
+        </QueryClientProvider>
+      </HelmetProvider>
+    ) : (
+      <ConfigError />
+    )}
   </React.StrictMode>,
 );
