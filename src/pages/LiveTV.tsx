@@ -47,17 +47,39 @@ export default function LiveTV() {
       v.muted = true;
       v.removeAttribute("src");
       v.load();
-      const playVideo = () => v.play().catch(() => toast.error("Tap play to start the live stream."));
+      const PREBUFFER_MS = 2500; // hold ~2.5s of video before starting playback
+      const playVideo = () =>
+        window.setTimeout(
+          () => v.play().catch(() => toast.error("Tap play to start the live stream.")),
+          PREBUFFER_MS,
+        );
       if (type === "mpegts" && mpegts.getFeatureList().mseLivePlayback) {
         mts = mpegts.createPlayer(
           { type: "mpegts", isLive: true, url },
-          { enableStashBuffer: false, liveBufferLatencyChasing: true, lazyLoad: false },
+          {
+            // Buffered playback — trade ~3s of latency for smooth frames.
+            enableStashBuffer: true,
+            stashInitialSize: 384,          // KB pre-roll before decoding
+            liveBufferLatencyChasing: false, // don't skip ahead when buffer grows
+            liveSync: false,
+            lazyLoad: false,
+            autoCleanupSourceBuffer: true,
+            autoCleanupMaxBackwardDuration: 30,
+            autoCleanupMinBackwardDuration: 15,
+          },
         );
         mts.on(mpegts.Events.ERROR, (_event: unknown, detail: unknown) => {
           console.error("Live stream error", detail);
           if (fallbackUrl && Hls.isSupported() && !hls) {
             try { mts?.pause(); mts?.unload(); mts?.detachMediaElement(); mts?.destroy(); } catch { /* ignore */ }
-            hls = new Hls({ enableWorker: true, lowLatencyMode: true, liveSyncDurationCount: 2 });
+            hls = new Hls({
+              enableWorker: true,
+              lowLatencyMode: false,
+              liveSyncDurationCount: 4,   // ~4 segments (≈8-12s) buffered ahead
+              liveMaxLatencyDurationCount: 10,
+              maxBufferLength: 30,
+              backBufferLength: 30,
+            });
             hls.loadSource(fallbackUrl);
             hls.attachMedia(v);
             void playVideo();
@@ -68,7 +90,14 @@ export default function LiveTV() {
         mts.attachMediaElement(v);
         mts.load();
       } else if (Hls.isSupported() && !url.endsWith(".mp4")) {
-        hls = new Hls({ enableWorker: true, lowLatencyMode: true, liveSyncDurationCount: 2 });
+        hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          liveSyncDurationCount: 4,
+          liveMaxLatencyDurationCount: 10,
+          maxBufferLength: 30,
+          backBufferLength: 30,
+        });
         hls.on(Hls.Events.ERROR, (_event, hlsData) => {
           console.error("HLS stream error", hlsData);
           if (hlsData.fatal) toast.error("This channel is not sending playable video right now.");
