@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Seo } from "@/lib/seo";
 import LiveTicker, { useLiveMatches } from "@/components/LiveTicker";
+import FavoriteClubCard from "@/components/FavoriteClubCard";
 import heroImg from "@/assets/hero-stadium.jpg";
 import { bdTime, bdDate } from "@/lib/flags";
 
