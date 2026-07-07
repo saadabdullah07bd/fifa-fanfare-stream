@@ -71,6 +71,44 @@ async function fromGoogleRss(q: string): Promise<any[]> {
   });
 }
 
+async function fromFirecrawl(q: string): Promise<any[] | null> {
+  const key = Deno.env.get("FIRECRAWL_API_KEY");
+  if (!key) return null;
+  try {
+    const r = await fetch("https://api.firecrawl.dev/v2/search", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: q,
+        limit: 20,
+        sources: ["news"],
+        tbs: "qdr:d", // last 24 hours
+      }),
+    });
+    if (!r.ok) {
+      console.error("firecrawl error", r.status, (await r.text()).slice(0, 200));
+      return null;
+    }
+    const j: any = await r.json();
+    const results: any[] = j?.data?.news ?? j?.data?.web ?? j?.data ?? [];
+    if (!Array.isArray(results) || results.length === 0) return null;
+    return results
+      .filter((a: any) => a?.title && a?.url)
+      .map((a: any, i: number) => ({
+        id: `f-${i}-${a.url}`,
+        title: stripHtml(a.title).replace(/\s*-\s*[^-]+$/, "").trim() || stripHtml(a.title),
+        url: a.url,
+        source: a.source || a.publisher || (() => { try { return new URL(a.url).hostname.replace(/^www\./, ""); } catch { return "Google News"; } })(),
+        summary: stripHtml(a.description ?? a.snippet ?? "").slice(0, 260),
+        image_url: a.imageUrl ?? a.image ?? null,
+        published_at: a.date ?? a.publishedAt ?? null,
+      }));
+  } catch (e) {
+    console.error("firecrawl fetch failed", (e as Error).message);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
@@ -84,13 +122,18 @@ Deno.serve(async (req) => {
     });
   }
 
-  let articles = (await fromNewsApi(q)) ?? [];
-  let source: "newsapi" | "google" = "newsapi";
-  console.log("news-feed", { q, newsapi_count: articles.length, has_key: !!Deno.env.get("NEWSAPI_KEY") });
+  let articles = (await fromFirecrawl(q)) ?? [];
+  let source: "firecrawl" | "newsapi" | "google" = "firecrawl";
+  console.log("news-feed", { q, firecrawl_count: articles.length });
+  if (articles.length === 0) {
+    articles = (await fromNewsApi(q)) ?? [];
+    source = "newsapi";
+    console.log("news-feed fallback newsapi", { count: articles.length });
+  }
   if (articles.length === 0) {
     articles = await fromGoogleRss(q);
     source = "google";
-    console.log("news-feed fallback google", { count: articles.length });
+    console.log("news-feed fallback google-rss", { count: articles.length });
   }
 
   const body = { articles, source, updated_at: new Date().toISOString() };

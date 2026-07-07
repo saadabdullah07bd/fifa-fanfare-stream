@@ -162,60 +162,69 @@ Deno.serve(async (req) => {
     }
   } catch (_) { /* enrichment optional */ }
 
-  // Google scrape enrichment — authoritative minute + score from Google's sports card.
+  // Google scrape enrichment via Firecrawl — reliable minute + score from Google's sports card.
   // Runs in parallel for all live matches.
-  const liveIdx = matches
-    .map((m: any, i: number) => ({ m, i }))
-    .filter(({ m }) => ["IN_PLAY", "LIVE", "PAUSED"].includes(m.status));
+  const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
+  if (fcKey) {
+    const liveIdx = matches
+      .map((m: any, i: number) => ({ m, i }))
+      .filter(({ m }) => ["IN_PLAY", "LIVE", "PAUSED", "SCHEDULED", "TIMED"].includes(m.status));
 
-  await Promise.all(liveIdx.map(async ({ m, i }) => {
-    try {
-      const q = encodeURIComponent(`${m.home.name} vs ${m.away.name} score`);
-      const gRes = await fetch(`https://www.google.com/search?q=${q}&hl=en&gl=us`, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept-Language": "en-US,en;q=0.9",
-        },
-      });
-      if (!gRes.ok) return;
-      const html = await gRes.text();
-      // Strip tags for easier regex.
-      const text = html.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-      // Look for patterns like "72'", "45+2'", "HT", "FT"
-      let minute: number | null = null;
-      let injury: number | null = null;
-      let status = m.status;
-      const htMatch = /\b(HT|Half[- ]time)\b/i.test(text);
-      const ftMatch = /\b(FT|Full[- ]time)\b/i.test(text);
-      const minMatch = text.match(/(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]/);
-      if (htMatch) { status = "PAUSED"; }
-      else if (ftMatch) { status = "FINISHED"; }
-      else if (minMatch) {
-        const mn = parseInt(minMatch[1], 10);
-        if (mn > 0 && mn <= 130) {
-          minute = mn;
-          if (minMatch[2]) injury = parseInt(minMatch[2], 10);
-          status = "IN_PLAY";
+    await Promise.all(liveIdx.map(async ({ m, i }) => {
+      try {
+        const query = `${m.home.name} vs ${m.away.name} live score`;
+        const fcRes = await fetch("https://api.firecrawl.dev/v2/search", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${fcKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query, limit: 3, sources: ["web"] }),
+        });
+        if (!fcRes.ok) return;
+        const fcJson: any = await fcRes.json();
+        const results: any[] = fcJson?.data?.web ?? fcJson?.data ?? [];
+        // Concat titles + descriptions from top results for parsing.
+        const text = results.map((r: any) => `${r.title ?? ""} ${r.description ?? r.snippet ?? ""}`).join(" ").replace(/\s+/g, " ");
+        if (!text) return;
+
+        let minute: number | null = null;
+        let injury: number | null = null;
+        let status = m.status;
+        const htMatch = /\b(HT|Half[- ]time)\b/i.test(text);
+        const ftMatch = /\b(FT|Full[- ]time|Full Time|Ended)\b/i.test(text);
+        const minMatch = text.match(/(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]/);
+        if (ftMatch) { status = "FINISHED"; }
+        else if (htMatch) { status = "PAUSED"; }
+        else if (minMatch) {
+          const mn = parseInt(minMatch[1], 10);
+          if (mn > 0 && mn <= 130) {
+            minute = mn;
+            if (minMatch[2]) injury = parseInt(minMatch[2], 10);
+            status = "IN_PLAY";
+          }
         }
+        const scoreMatch = text.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
+        let sHome = m.score.full.home;
+        let sAway = m.score.full.away;
+        if (scoreMatch) {
+          sHome = parseInt(scoreMatch[1], 10);
+          sAway = parseInt(scoreMatch[2], 10);
+        }
+        matches[i] = {
+          ...m,
+          status,
+          minute: minute ?? m.minute,
+          injury_time: injury ?? m.injury_time,
+          score: { ...m.score, full: { home: sHome, away: sAway } },
+          minute_source: minute ? "google-firecrawl" : m.minute_source,
+          sources: [...(m.sources ?? []), "google-firecrawl"],
+        };
+      } catch (e) {
+        console.error("firecrawl scrape failed", (e as Error).message);
       }
-      // Score: try to find "X - Y" near team names.
-      const scoreMatch = text.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
-      let sHome = m.score.full.home;
-      let sAway = m.score.full.away;
-      if (scoreMatch) {
-        sHome = parseInt(scoreMatch[1], 10);
-        sAway = parseInt(scoreMatch[2], 10);
-      }
-      matches[i] = {
-        ...m,
-        status,
-        minute: minute ?? m.minute,
-        injury_time: injury ?? m.injury_time,
-        score: { ...m.score, full: { home: sHome, away: sAway } },
-        minute_source: minute ? "google" : m.minute_source,
-      };
-    } catch (_) { /* ignore per-match failures */ }
-  }));
+    }));
+  }
 
   // Final fallback: if still no minute, compute from kickoff time.
   matches = matches.map((m: any) => {
