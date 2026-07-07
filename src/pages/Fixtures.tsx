@@ -99,7 +99,6 @@ export default function Fixtures() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="display text-5xl">Fixtures</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Times in Bangladesh (GMT+6, 12h)</p>
         </div>
         <div className="inline-flex rounded-md border border-border bg-card/40 p-1 text-xs uppercase tracking-[0.15em]">
           {(["list", "focus", "bracket"] as const).map((v) => (
@@ -116,7 +115,7 @@ export default function Fixtures() {
 
       {sorted.length === 0 && (
         <p className="mt-8 rounded-lg border border-border bg-card/40 p-6 text-sm text-muted-foreground">
-          Schedule not loaded yet. Data auto-refreshes hourly.
+          Schedule loading…
         </p>
       )}
 
