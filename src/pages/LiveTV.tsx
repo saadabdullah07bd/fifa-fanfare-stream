@@ -378,8 +378,17 @@ function ModernPlayer({
   const setVol = (val: number) => { const v = videoRef.current; if (v) { v.volume = val; v.muted = val === 0; } };
   const toggleFs = async () => {
     if (!wrapRef.current) return;
-    if (document.fullscreenElement) await document.exitFullscreen();
-    else await wrapRef.current.requestFullscreen();
+    if (document.fullscreenElement) {
+      try { (screen.orientation as any)?.unlock?.(); } catch { /* ignore */ }
+      await document.exitFullscreen();
+    } else {
+      await wrapRef.current.requestFullscreen();
+      // Force landscape on mobile devices for better viewing.
+      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      if (isMobile) {
+        try { await (screen.orientation as any)?.lock?.("landscape"); } catch { /* not supported */ }
+      }
+    }
   };
   const togglePip = async () => {
     const v = videoRef.current as any; if (!v) return;
@@ -388,6 +397,30 @@ function ModernPlayer({
       else await v.requestPictureInPicture();
     } catch { /* not supported */ }
   };
+
+  // Keyboard shortcuts (Space/K play, M mute, F fullscreen, arrows volume/seek, Esc close)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const v = videoRef.current; if (!v) return;
+      switch (e.key.toLowerCase()) {
+        case " ":
+        case "k": e.preventDefault(); toggle(); kick(); break;
+        case "m": e.preventDefault(); v.muted = !v.muted; kick(); break;
+        case "f": e.preventDefault(); toggleFs(); kick(); break;
+        case "p": e.preventDefault(); togglePip(); kick(); break;
+        case "arrowup": e.preventDefault(); setVol(Math.min(1, v.volume + 0.1)); kick(); break;
+        case "arrowdown": e.preventDefault(); setVol(Math.max(0, v.volume - 0.1)); kick(); break;
+        case "arrowright": e.preventDefault(); try { v.currentTime += 10; } catch { /* live */ } kick(); break;
+        case "arrowleft": e.preventDefault(); try { v.currentTime -= 10; } catch { /* live */ } kick(); break;
+        case "escape": if (!document.fullscreenElement) onClose(); break;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channel.id]);
 
   return (
     <div
