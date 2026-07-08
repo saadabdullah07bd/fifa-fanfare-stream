@@ -62,57 +62,60 @@ Deno.serve(async (req) => {
     },
   }));
 
-  // If football-data returned nothing (free-tier gap for e.g. World Cup 2026),
-  // fall back to API-Football fixtures by date across today + tomorrow.
+  // STRICT: only FIFA World Cup 2026 matches.
+  matches = matches.filter((m: any) => /world cup/i.test(m.competition ?? ""));
+
+  // If football-data didn't return World Cup matches (free tier gap),
+  // fall back to API-Football (league=1 = FIFA World Cup, season=2026).
   const afKeyEarly = Deno.env.get("API_FOOTBALL_KEY");
   if (matches.length === 0 && afKeyEarly) {
     try {
-      const dates = [today, dateTo];
       const statusMap: Record<string, string> = {
         "1H": "IN_PLAY", "2H": "IN_PLAY", "ET": "IN_PLAY", "P": "IN_PLAY",
         "HT": "PAUSED", "BT": "PAUSED",
         "FT": "FINISHED", "AET": "FINISHED", "PEN": "FINISHED",
         "NS": "SCHEDULED", "TBD": "SCHEDULED", "PST": "SCHEDULED",
       };
-      const all: any[] = [];
-      for (const d of dates) {
-        const r = await fetch(`https://v3.football.api-sports.io/fixtures?date=${d}`, {
-          headers: { "x-apisports-key": afKeyEarly },
-        });
-        if (!r.ok) continue;
+      const r = await fetch(
+        "https://v3.football.api-sports.io/fixtures?league=1&season=2026",
+        { headers: { "x-apisports-key": afKeyEarly } },
+      );
+      if (r.ok) {
         const j: any = await r.json();
-        for (const f of j?.response ?? []) all.push(f);
+        const all: any[] = j?.response ?? [];
+        // Keep a window: last 3 days finished + all upcoming, sort by date
+        const now = Date.now();
+        const windowStart = now - 3 * 86400_000;
+        const filtered = all.filter((f: any) => {
+          const t = new Date(f.fixture?.date).getTime();
+          return Number.isFinite(t) && t >= windowStart;
+        });
+        filtered.sort((a, b) =>
+          new Date(a.fixture?.date).getTime() - new Date(b.fixture?.date).getTime());
+        matches = filtered.map((f: any) => ({
+          id: f.fixture?.id,
+          competition: f.league?.name ?? "FIFA World Cup",
+          competition_code: "WC",
+          stage: f.league?.round ?? null,
+          status: statusMap[f.fixture?.status?.short] ?? "SCHEDULED",
+          minute: f.fixture?.status?.elapsed ?? null,
+          injury_time: f.fixture?.status?.extra ?? null,
+          utc_date: f.fixture?.date,
+          home: { name: f.teams?.home?.name, tla: (f.teams?.home?.name ?? "").slice(0, 3).toUpperCase(), crest: f.teams?.home?.logo },
+          away: { name: f.teams?.away?.name, tla: (f.teams?.away?.name ?? "").slice(0, 3).toUpperCase(), crest: f.teams?.away?.logo },
+          score: {
+            full: { home: f.goals?.home ?? null, away: f.goals?.away ?? null },
+            half: { home: f.score?.halftime?.home ?? null, away: f.score?.halftime?.away ?? null },
+          },
+          live_source: "api-football-wc2026",
+        }));
       }
-      // Prioritize World Cup and top competitions
-      const priority = (name: string) => {
-        const n = (name ?? "").toLowerCase();
-        if (n.includes("world cup")) return 0;
-        if (n.includes("champions")) return 1;
-        if (n.includes("euro") || n.includes("copa")) return 2;
-        return 5;
-      };
-      all.sort((a, b) => priority(a.league?.name) - priority(b.league?.name));
-      matches = all.slice(0, 40).map((f: any) => ({
-        id: f.fixture?.id,
-        competition: f.league?.name,
-        competition_code: f.league?.id ? String(f.league.id) : "",
-        stage: f.league?.round ?? null,
-        status: statusMap[f.fixture?.status?.short] ?? "SCHEDULED",
-        minute: f.fixture?.status?.elapsed ?? null,
-        injury_time: f.fixture?.status?.extra ?? null,
-        utc_date: f.fixture?.date,
-        home: { name: f.teams?.home?.name, tla: (f.teams?.home?.name ?? "").slice(0, 3).toUpperCase(), crest: f.teams?.home?.logo },
-        away: { name: f.teams?.away?.name, tla: (f.teams?.away?.name ?? "").slice(0, 3).toUpperCase(), crest: f.teams?.away?.logo },
-        score: {
-          full: { home: f.goals?.home ?? null, away: f.goals?.away ?? null },
-          half: { home: f.score?.halftime?.home ?? null, away: f.score?.halftime?.away ?? null },
-        },
-        live_source: "api-football-fallback",
-      }));
     } catch (e) {
-      console.error("api-football fallback failed", (e as Error).message);
+      console.error("api-football WC fallback failed", (e as Error).message);
     }
   }
+
+
 
 
 
