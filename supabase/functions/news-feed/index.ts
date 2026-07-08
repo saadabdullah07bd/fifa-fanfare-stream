@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   const url = new URL(req.url);
-  const q = url.searchParams.get("q") ?? "FIFA World Cup 2026 OR football soccer";
+  const q = url.searchParams.get("q") ?? '"World Cup 2026" OR "FIFA World Cup 2026"';
 
   const hit = cache.get(q);
   if (hit && Date.now() - hit.at < CACHE_MS) {
