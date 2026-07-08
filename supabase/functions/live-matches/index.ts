@@ -65,57 +65,67 @@ Deno.serve(async (req) => {
   // STRICT: only FIFA World Cup 2026 matches.
   matches = matches.filter((m: any) => /world cup/i.test(m.competition ?? ""));
 
-  // If football-data didn't return World Cup matches (free tier gap),
-  // fall back to API-Football (league=1 = FIFA World Cup, season=2026).
-  const afKeyEarly = Deno.env.get("API_FOOTBALL_KEY");
-  if (matches.length === 0 && afKeyEarly) {
+  // Fallback: TheSportsDB free API for FIFA World Cup 2026 (league id 4429).
+  // Free plan API-Football blocks season 2026, so we source WC fixtures from TSDB.
+  if (matches.length === 0) {
     try {
-      const statusMap: Record<string, string> = {
-        "1H": "IN_PLAY", "2H": "IN_PLAY", "ET": "IN_PLAY", "P": "IN_PLAY",
-        "HT": "PAUSED", "BT": "PAUSED",
-        "FT": "FINISHED", "AET": "FINISHED", "PEN": "FINISHED",
-        "NS": "SCHEDULED", "TBD": "SCHEDULED", "PST": "SCHEDULED",
-      };
-      const r = await fetch(
-        "https://v3.football.api-sports.io/fixtures?league=1&season=2026",
-        { headers: { "x-apisports-key": afKeyEarly } },
-      );
-      console.log("api-football WC status", r.status);
-      if (r.ok) {
+      const endpoints = [
+        "https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4429&s=2026",
+        "https://www.thesportsdb.com/api/v1/json/3/eventspastleague.php?id=4429",
+        "https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=4429",
+      ];
+      const seen = new Set<string>();
+      const merged: any[] = [];
+      for (const u of endpoints) {
+        const r = await fetch(u);
+        if (!r.ok) continue;
         const j: any = await r.json();
-        console.log("api-football WC results:", j?.results, "errors:", JSON.stringify(j?.errors));
-        const all: any[] = j?.response ?? [];
-        // Keep a window: last 3 days finished + all upcoming, sort by date
-        const now = Date.now();
-        const windowStart = now - 3 * 86400_000;
-        const filtered = all.filter((f: any) => {
-          const t = new Date(f.fixture?.date).getTime();
-          return Number.isFinite(t) && t >= windowStart;
-        });
-        filtered.sort((a, b) =>
-          new Date(a.fixture?.date).getTime() - new Date(b.fixture?.date).getTime());
-        matches = filtered.map((f: any) => ({
-          id: f.fixture?.id,
-          competition: f.league?.name ?? "FIFA World Cup",
-          competition_code: "WC",
-          stage: f.league?.round ?? null,
-          status: statusMap[f.fixture?.status?.short] ?? "SCHEDULED",
-          minute: f.fixture?.status?.elapsed ?? null,
-          injury_time: f.fixture?.status?.extra ?? null,
-          utc_date: f.fixture?.date,
-          home: { name: f.teams?.home?.name, tla: (f.teams?.home?.name ?? "").slice(0, 3).toUpperCase(), crest: f.teams?.home?.logo },
-          away: { name: f.teams?.away?.name, tla: (f.teams?.away?.name ?? "").slice(0, 3).toUpperCase(), crest: f.teams?.away?.logo },
-          score: {
-            full: { home: f.goals?.home ?? null, away: f.goals?.away ?? null },
-            half: { home: f.score?.halftime?.home ?? null, away: f.score?.halftime?.away ?? null },
-          },
-          live_source: "api-football-wc2026",
-        }));
+        for (const e of (j?.events ?? [])) {
+          if (!e?.idEvent || seen.has(e.idEvent)) continue;
+          seen.add(e.idEvent);
+          merged.push(e);
+        }
       }
+      const parseNum = (v: any) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+      const statusFromTsdb = (s: string | null, progress: string | null): string => {
+        const st = (s ?? "").toUpperCase();
+        if (st === "FT" || st === "AET" || st === "PEN" || st === "MATCH FINISHED") return "FINISHED";
+        if (st === "HT") return "PAUSED";
+        if (progress && /\d/.test(progress)) return "IN_PLAY";
+        if (st === "NS" || st === "" || st === "NOT STARTED") return "SCHEDULED";
+        return "SCHEDULED";
+      };
+      matches = merged
+        .map((e: any) => {
+          const iso = e.strTimestamp
+            ? new Date(e.strTimestamp + "Z").toISOString()
+            : (e.dateEvent ? new Date(`${e.dateEvent}T${e.strTime ?? "00:00:00"}Z`).toISOString() : null);
+          return {
+            id: Number(e.idEvent),
+            competition: "FIFA World Cup",
+            competition_code: "WC",
+            stage: e.strSeason ? `WC ${e.strSeason}` : null,
+            status: statusFromTsdb(e.strStatus, e.strProgress),
+            minute: e.strProgress && /\d/.test(e.strProgress) ? parseInt(e.strProgress, 10) : null,
+            injury_time: null,
+            utc_date: iso,
+            home: { name: e.strHomeTeam, tla: (e.strHomeTeam ?? "").slice(0, 3).toUpperCase(), crest: e.strHomeTeamBadge },
+            away: { name: e.strAwayTeam, tla: (e.strAwayTeam ?? "").slice(0, 3).toUpperCase(), crest: e.strAwayTeamBadge },
+            score: {
+              full: { home: parseNum(e.intHomeScore), away: parseNum(e.intAwayScore) },
+              half: { home: null, away: null },
+            },
+            live_source: "thesportsdb-wc2026",
+          };
+        })
+        .filter((m: any) => m.utc_date)
+        .sort((a: any, b: any) => a.utc_date.localeCompare(b.utc_date));
     } catch (e) {
-      console.error("api-football WC fallback failed", (e as Error).message);
+      console.error("tsdb WC fallback failed", (e as Error).message);
     }
   }
+
+
 
 
 
