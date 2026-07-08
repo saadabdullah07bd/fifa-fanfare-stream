@@ -80,8 +80,10 @@ Deno.serve(async (req) => {
         "https://v3.football.api-sports.io/fixtures?league=1&season=2026",
         { headers: { "x-apisports-key": afKeyEarly } },
       );
+      console.log("api-football WC status", r.status);
       if (r.ok) {
         const j: any = await r.json();
+        console.log("api-football WC results:", j?.results, "errors:", JSON.stringify(j?.errors));
         const all: any[] = j?.response ?? [];
         // Keep a window: last 3 days finished + all upcoming, sort by date
         const now = Date.now();
