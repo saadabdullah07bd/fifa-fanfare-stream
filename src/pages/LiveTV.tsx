@@ -512,6 +512,9 @@ function ModernPlayer({
       <video
         ref={videoRef}
         autoPlay playsInline
+        controlsList="nodownload noremoteplayback noplaybackrate"
+        disablePictureInPicture={false}
+        onContextMenu={(e) => e.preventDefault()}
         onClick={() => { kick(); }}
         style={{ cursor: showUI ? "pointer" : "none" }}
         className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
