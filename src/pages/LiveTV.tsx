@@ -313,24 +313,52 @@ export default function LiveTV() {
           >
             <ModernPlayer videoRef={videoRef} channel={active} onClose={() => setActive(null)} onReload={() => setReloadNonce((n) => n + 1)} />
           </motion.div>
-        ) : isLoading || heroChannel ? (
+        ) : isLoading ? (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="grid aspect-video place-items-center rounded-3xl border border-primary/30 bg-black"
             role="status" aria-live="polite"
           >
             <Loader2 className="h-12 w-12 animate-spin text-primary" aria-hidden="true" />
-            <span className="sr-only">Loading stream…</span>
+            <span className="sr-only">Loading channels…</span>
           </motion.div>
         ) : (
-          <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="rounded-3xl border border-border bg-card/40 p-10 text-center"
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="relative flex aspect-video flex-col items-center justify-center overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-black via-background to-card text-center"
           >
-            <Tv className="mx-auto h-10 w-10 text-primary" aria-hidden="true" />
-            <h2 className="display mt-3 text-2xl">Pick a channel to start watching</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{channels.length} channel{channels.length === 1 ? "" : "s"} available</p>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 opacity-60"
+              style={{
+                background:
+                  "radial-gradient(50% 60% at 50% 40%, hsl(var(--primary) / 0.18), transparent 70%)",
+              }}
+            />
+            <div className="relative flex flex-col items-center px-6">
+              <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 ring-1 ring-primary/40">
+                <Tv className="h-7 w-7 text-primary" aria-hidden="true" />
+              </span>
+              <h2 className="display mt-4 text-2xl sm:text-3xl">Pick a channel to start watching</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {channels.length} channel{channels.length === 1 ? "" : "s"} available · autoplay is off
+              </p>
+              {heroChannel && (
+                <button
+                  type="button"
+                  onClick={() => play(heroChannel)}
+                  className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold uppercase tracking-wider text-primary-foreground shadow-lg transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <Play className="h-4 w-4 fill-current" aria-hidden="true" />
+                  Start with {heroChannel.name}
+                </button>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" role="status" aria-live="polite">
