@@ -141,13 +141,13 @@ export default function MatchDetail() {
           <span>{m.competition}</span>
         </div>
 
-        <div className="relative mt-6 grid grid-cols-3 items-center gap-4">
-          <Link to={`/team/${encodeURIComponent(m.home.name)}`} className="group flex flex-col items-end gap-2 text-right">
+        <div className="relative mt-6 grid grid-cols-3 items-center gap-2 sm:gap-4">
+          <Link to={`/team/${encodeURIComponent(m.home.name)}`} className="group flex flex-col items-end gap-2 text-right min-w-0">
             {m.home.crest && (
               <motion.img whileHover={{ scale: 1.08, rotate: -3 }} transition={{ type: "spring", stiffness: 260 }}
-                src={m.home.crest} alt={m.home.name} className="h-16 w-16 object-contain drop-shadow" />
+                src={m.home.crest} alt={homeName} className="h-10 w-10 sm:h-14 sm:w-14 md:h-16 md:w-16 object-contain drop-shadow" />
             )}
-            <p className="display text-2xl md:text-3xl group-hover:text-primary transition-colors">{m.home.name}</p>
+            <p className="display w-full truncate text-base sm:text-2xl md:text-3xl group-hover:text-primary transition-colors" title={homeName}>{homeName}</p>
           </Link>
           <div className="text-center">
             <AnimatePresence mode="popLayout">
@@ -155,7 +155,7 @@ export default function MatchDetail() {
                 key={`${m.score.full.home}-${m.score.full.away}`}
                 initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.15, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 220, damping: 18 }}
-                className="display text-6xl md:text-7xl text-primary tabular-nums"
+                className="display text-4xl sm:text-6xl md:text-7xl text-primary tabular-nums whitespace-nowrap"
               >
                 {m.score.full.home ?? "–"} : {m.score.full.away ?? "–"}
               </motion.p>
@@ -166,20 +166,64 @@ export default function MatchDetail() {
               </p>
             )}
           </div>
-          <Link to={`/team/${encodeURIComponent(m.away.name)}`} className="group flex flex-col items-start gap-2 text-left">
+          <Link to={`/team/${encodeURIComponent(m.away.name)}`} className="group flex flex-col items-start gap-2 text-left min-w-0">
             {m.away.crest && (
               <motion.img whileHover={{ scale: 1.08, rotate: 3 }} transition={{ type: "spring", stiffness: 260 }}
-                src={m.away.crest} alt={m.away.name} className="h-16 w-16 object-contain drop-shadow" />
+                src={m.away.crest} alt={awayName} className="h-10 w-10 sm:h-14 sm:w-14 md:h-16 md:w-16 object-contain drop-shadow" />
             )}
-            <p className="display text-2xl md:text-3xl group-hover:text-primary transition-colors">{m.away.name}</p>
+            <p className="display w-full truncate text-base sm:text-2xl md:text-3xl group-hover:text-primary transition-colors" title={awayName}>{awayName}</p>
           </Link>
         </div>
-        {(m.venue || m.referees.length > 0) && (
+        {m.venue && (
           <p className="relative mt-4 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            {m.venue}{m.venue && m.referees.length > 0 ? " · " : ""}{m.referees.length > 0 && `Ref ${m.referees[0]}`}
+            {m.venue}
           </p>
         )}
       </motion.div>
+
+      {/* Goals */}
+      <section className="mt-10">
+        <h2 className="display text-2xl text-primary">Goals</h2>
+        {m.goals.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">No goals yet.</p>
+        ) : (
+          <ul className="mt-4 flex flex-col gap-2">
+            <AnimatePresence initial={false}>
+              {m.goals.map((g, i) => (
+                <motion.li
+                  key={`${g.minute}-${g.scorer}-${i}`}
+                  layout
+                  initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i * 0.04, 0.2) }}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/50 p-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 border-primary bg-background text-sm">⚽</span>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">
+                        {g.scorer}
+                        {g.assist && <span className="ml-1 text-xs font-normal text-muted-foreground">· assist {g.assist}</span>}
+                      </p>
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                        {countryName(g.team_tla) || g.team_name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    {g.score && (
+                      <span className="display text-primary tabular-nums">{g.score.home}–{g.score.away}</span>
+                    )}
+                    <span className="display text-sm tabular-nums text-primary">
+                      {g.minute}{g.injury_time ? `+${g.injury_time}` : ""}'
+                    </span>
+                  </div>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        )}
+      </section>
+
 
       {/* Live stats */}
       <section className="mt-10">
