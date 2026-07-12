@@ -79,12 +79,12 @@ export default function Fixtures() {
       />
 
       {/* ─────────── Header + view toggle ─────────── */}
-      <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="display text-5xl leading-none tracking-tight sm:text-6xl md:text-7xl">
+          <h1 className="display text-4xl leading-none tracking-tight sm:text-6xl md:text-7xl">
             Match <span className="text-primary">Fixtures</span>
           </h1>
-          <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+          <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground sm:text-[11px]">
             World Cup 2026 · Road to the Final
           </p>
         </div>
@@ -92,7 +92,7 @@ export default function Fixtures() {
         <div
           role="tablist"
           aria-label="Fixtures view"
-          className="inline-flex rounded-2xl border border-border bg-card p-1 text-xs font-bold uppercase tracking-[0.2em]"
+          className="grid w-full grid-cols-2 rounded-2xl border border-border bg-card p-1 text-xs font-bold uppercase tracking-[0.2em] md:inline-flex md:w-auto"
         >
           {(["all", "knockout"] as const).map((v) => (
             <button
@@ -101,7 +101,7 @@ export default function Fixtures() {
               role="tab"
               aria-selected={view === v}
               onClick={() => setView(v)}
-              className={`rounded-xl px-5 py-2 transition-colors ${
+              className={`tap-target rounded-xl px-4 py-2.5 transition-colors md:px-5 md:py-2 ${
                 view === v ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -110,6 +110,7 @@ export default function Fixtures() {
           ))}
         </div>
       </div>
+
 
       {/* ─────────── Sticky stage-filter chips (All view only) ─────────── */}
       {view === "all" && (
@@ -205,16 +206,16 @@ function AllMatchesView({ matches, stage }: { matches: Wc26Match[]; stage: Stage
   }
 
   return (
-    <div className="mt-8 flex flex-col gap-10">
+    <div className="mt-6 flex flex-col gap-8 sm:mt-8 sm:gap-10">
       {groups.map(([day, list]) => (
         <section key={day} ref={(el) => { dayRefs.current[day] = el; }}>
-          <div className="mb-4 flex items-center gap-4 px-1">
-            <h2 className="display text-2xl tracking-wider text-primary sm:text-3xl">
+          <div className="mb-3 flex items-center gap-3 px-1 sm:mb-4 sm:gap-4">
+            <h2 className="display text-xl tracking-wider text-primary sm:text-3xl">
               {bdShortDate(day + "T00:00:00Z")}
             </h2>
             <div className="h-px flex-1 bg-gradient-to-r from-primary/40 to-transparent" />
           </div>
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-2 sm:gap-3">
             {list.map((m, i) => (
               <motion.li
                 key={m.match_no}
@@ -231,8 +232,9 @@ function AllMatchesView({ matches, stage }: { matches: Wc26Match[]; stage: Stage
 }
 
 /**
- * Premium-broadcast fixture card: home team (right-aligned) · score/time centre
- * · away team (left-aligned), with a venue + stage-chip footer.
+ * Compact, scannable fixture row optimized for mobile thumbs — kick-off/FT
+ * badge on the left, teams stacked centre, chevron affordance right, and a
+ * venue + stage-chip footer below. Expands to a roomier layout on ≥ sm.
  */
 function FixtureCard({ match: m }: { match: Wc26Match }) {
   const homeName = displayName(m.home_code, m.home_name);
@@ -241,90 +243,63 @@ function FixtureCard({ match: m }: { match: Wc26Match }) {
   const played = m.home_score != null && m.away_score != null;
   const homeCrest = flagUrl(m.home_code, 80);
   const awayCrest = flagUrl(m.away_code, 80);
+  const hs = m.home_score;
+  const as = m.away_score;
+  const homeWin = played && (hs as number) > (as as number);
+  const awayWin = played && (as as number) > (hs as number);
+  const kickoff = m.date_utc ? bdTime(m.date_utc) : "TBD";
+  const venueLine = m.venue_city || m.venue_name || "";
 
   return (
     <Link
       to={`/match/${m.match_no}`}
       aria-label={`${homeName} vs ${awayName} — ${stageLabel}`}
-      className="group relative block overflow-hidden rounded-3xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-card/60 md:p-6"
+      className="group relative block rounded-2xl border border-border bg-card p-3 transition-colors hover:border-primary/40 hover:bg-card/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-3xl sm:p-5"
     >
-      <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-[1fr_auto_1fr] md:gap-6">
-        {/* Home team */}
-        <div className="order-2 flex items-center justify-center gap-3 md:order-1 md:justify-end md:gap-4">
-          <span className="display truncate text-lg tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-xl md:text-2xl" title={homeName}>
-            {homeName}
-          </span>
-          {homeCrest ? (
-            <img
-              src={homeCrest}
-              alt=""
-              width={48}
-              height={48}
-              loading="lazy"
-              className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-border md:h-12 md:w-12"
-            />
-          ) : (
-            <span className="h-10 w-10 shrink-0 rounded-full bg-secondary md:h-12 md:w-12" />
-          )}
-        </div>
-
-        {/* Score / Time capsule */}
-        <div className="order-1 flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-black/40 px-6 py-3 md:order-2 md:px-8">
+      <div className="flex items-stretch gap-3 sm:gap-4">
+        {/* Kick-off / FT badge */}
+        <div className="flex w-16 shrink-0 flex-col items-center justify-center rounded-xl border border-border/60 bg-black/40 px-1 py-1.5 sm:w-24 sm:rounded-2xl sm:py-2">
           {played ? (
             <>
-              <span className="display text-2xl tabular-nums tracking-widest sm:text-3xl">
-                {m.home_score}
-                <span className="mx-2 text-primary">-</span>
-                {m.away_score}
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                Full time
+              <span className="display text-base leading-none tabular-nums text-primary sm:text-2xl">FT</span>
+              <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground sm:text-[10px]">
+                Result
               </span>
             </>
           ) : (
             <>
-              <span className="display text-2xl tracking-widest text-primary sm:text-3xl">
-                {m.date_utc ? bdTime(m.date_utc) : "TBD"}
+              <span className="display text-base leading-none text-primary sm:text-2xl">
+                {kickoff}
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground sm:text-[10px]">
                 Kick-off
               </span>
             </>
           )}
         </div>
 
-        {/* Away team */}
-        <div className="order-3 flex items-center justify-center gap-3 md:justify-start md:gap-4">
-          {awayCrest ? (
-            <img
-              src={awayCrest}
-              alt=""
-              width={48}
-              height={48}
-              loading="lazy"
-              className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-border md:h-12 md:w-12"
-            />
-          ) : (
-            <span className="h-10 w-10 shrink-0 rounded-full bg-secondary md:h-12 md:w-12" />
-          )}
-          <span className="display truncate text-lg tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-xl md:text-2xl" title={awayName}>
-            {awayName}
-          </span>
+        {/* Teams stack */}
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 sm:gap-2">
+          <TeamRow crest={homeCrest} name={homeName} score={hs} played={played} winner={homeWin} />
+          <TeamRow crest={awayCrest} name={awayName} score={as} played={played} winner={awayWin} />
         </div>
+
+        <ChevronRight
+          aria-hidden="true"
+          className="my-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+        />
       </div>
 
       {/* Footer: venue + stage chip */}
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
-        {m.venue_name ? (
-          <p className="inline-flex min-w-0 items-center gap-1.5 truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="truncate">
-              {m.venue_name}{m.venue_city ? ` · ${m.venue_city}` : ""}
-            </span>
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-2.5 sm:mt-4 sm:pt-3">
+        {venueLine ? (
+          <p className="inline-flex min-w-0 items-center gap-1.5 truncate text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground sm:text-[11px]">
+            <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{venueLine}</span>
           </p>
         ) : <span />}
         <span
-          className={`rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${
+          className={`shrink-0 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.2em] sm:text-[10px] ${
             m.stage === "GROUP"
               ? "bg-secondary text-muted-foreground"
               : "bg-[var(--trophy-green)] text-white"
@@ -336,6 +311,54 @@ function FixtureCard({ match: m }: { match: Wc26Match }) {
     </Link>
   );
 }
+
+/**
+ * One team row inside a compact FixtureCard.
+ */
+function TeamRow({
+  crest, name, score, played, winner,
+}: {
+  crest: string | null;
+  name: string;
+  score: number | null;
+  played: boolean;
+  winner: boolean;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      {crest ? (
+        <img
+          src={crest}
+          alt=""
+          width={32}
+          height={24}
+          loading="lazy"
+          className={`h-5 w-7 shrink-0 rounded-[3px] object-cover ring-1 sm:h-6 sm:w-9 ${winner ? "ring-primary" : "ring-border"}`}
+        />
+      ) : (
+        <span className="h-5 w-7 shrink-0 rounded-[3px] bg-secondary sm:h-6 sm:w-9" />
+      )}
+      <span
+        className={`display flex-1 truncate text-base leading-tight tracking-tight sm:text-xl ${
+          winner ? "text-primary" : played ? "text-foreground/60" : "text-foreground"
+        }`}
+        title={name}
+      >
+        {name}
+      </span>
+      {played && (
+        <span
+          className={`display shrink-0 text-lg tabular-nums sm:text-2xl ${
+            winner ? "text-primary" : "text-muted-foreground"
+          }`}
+        >
+          {score}
+        </span>
+      )}
+    </div>
+  );
+}
+
 
 /**
  * Horizontal knockout bracket. Broadcast-style with stage jumper, snap
