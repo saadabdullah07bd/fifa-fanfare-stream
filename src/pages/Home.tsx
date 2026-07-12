@@ -168,7 +168,7 @@ export default function Home() {
         <GoldenBootTile scorer={topScorer} />
         <FanZoneTile />
       </motion.div>
-    </main>
+    </div>
   );
 }
 
