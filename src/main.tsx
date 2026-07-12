@@ -14,9 +14,22 @@ import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/700.css";
 import { installTamperGuard } from "./lib/tamper-guard";
+import { Capacitor } from "@capacitor/core";
 
 // Install security protections for the application.
 installTamperGuard();
+
+// Hide the native Android splash screen once the web bundle has mounted.
+// Configured in capacitor.config.ts (launchShowDuration ~2.5s).
+if (Capacitor.isNativePlatform()) {
+  import("@capacitor/splash-screen")
+    .then(({ SplashScreen }) => {
+      // Give the first paint a moment, then fade out.
+      window.setTimeout(() => SplashScreen.hide({ fadeOutDuration: 350 }).catch(() => {}), 800);
+    })
+    .catch(() => {});
+}
+
 
 /**
  * Configure React Query client with persistence and caching policies.
