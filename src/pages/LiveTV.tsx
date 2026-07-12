@@ -218,9 +218,6 @@ export default function LiveTV() {
 
       <div className="flex items-center justify-between">
         <h1 className="display text-5xl">Live TV</h1>
-        <button onClick={signOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors hover:border-primary">
-          <LogOut className="h-4 w-4" /> Sign out
-        </button>
       </div>
 
       <AnimatePresence mode="wait">
@@ -301,6 +298,12 @@ export default function LiveTV() {
           ))}
         </div>
       )}
+
+      <div className="mt-8 flex justify-center border-t border-border/50 pt-8">
+        <button onClick={signOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary px-5 py-3 text-sm font-semibold uppercase tracking-wider transition-colors hover:border-primary hover:text-primary">
+          <LogOut className="h-4 w-4" /> Sign out
+        </button>
+      </div>
     </motion.div>
   );
 }

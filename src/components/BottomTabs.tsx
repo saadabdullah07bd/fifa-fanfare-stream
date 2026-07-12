@@ -6,6 +6,7 @@ export interface TabItem {
   to: string;
   icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
   label: string;
+  featured?: boolean;
 }
 
 interface BottomTabsProps {
@@ -177,6 +178,7 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
           const Icon = t.icon;
           const active = i === safeActive;
           const hovered = i === hoverIndex;
+          const featured = !!t.featured;
           return (
             <Link
               key={t.to}
@@ -202,19 +204,29 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
                 userSelect: "none",
                 WebkitTapHighlightColor: "transparent",
                 touchAction: "none",
+                color: featured && !active ? accentColor : undefined,
               } as React.CSSProperties}
-              className="relative z-10 flex select-none flex-col items-center justify-center gap-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-foreground/70"
+              className={`relative z-10 flex select-none flex-col items-center justify-center gap-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${
+                featured ? "text-foreground" : "text-foreground/70"
+              }`}
               aria-current={active ? "page" : undefined}
             >
+              {featured && !active && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -top-3 h-1.5 w-1.5 rounded-full"
+                  style={{ background: accentColor, boxShadow: `0 0 10px ${accentColor}` }}
+                />
+              )}
               <motion.div
                 animate={{
-                  scale: hovered && pressing ? 1.28 : hovered ? 1.06 : 1,
+                  scale: featured ? (hovered && pressing ? 1.35 : 1.15) : (hovered && pressing ? 1.28 : hovered ? 1.06 : 1),
                   y: hovered && pressing ? -2 : 0,
                 }}
                 transition={{ type: "spring", stiffness: 420, damping: 24 }}
                 className={hovered ? "text-foreground" : ""}
               >
-                <Icon size={20} strokeWidth={hovered ? 2.4 : 1.8} />
+                <Icon size={featured ? 24 : 20} strokeWidth={hovered ? 2.4 : featured ? 2.2 : 1.8} />
               </motion.div>
               <motion.span
                 animate={{
@@ -222,7 +234,7 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
                   y: hovered && pressing ? -1 : 0,
                 }}
                 transition={{ type: "spring", stiffness: 360, damping: 26 }}
-                className={hovered ? "font-bold text-foreground" : ""}
+                className={hovered ? "font-bold text-foreground" : featured ? "font-bold" : ""}
               >
                 {t.label}
               </motion.span>
