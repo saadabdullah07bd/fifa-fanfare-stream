@@ -569,7 +569,7 @@ function ModernPlayer({
         {showUI && (
           <motion.div key="top"
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 bg-gradient-to-b from-black/80 to-transparent p-4"
+            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/80 to-transparent p-4"
           >
             <div className="pointer-events-auto flex items-center gap-3">
               <span className="flex items-center gap-1.5 rounded-full bg-primary/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary-foreground">
