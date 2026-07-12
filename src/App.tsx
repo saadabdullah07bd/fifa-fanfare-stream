@@ -1,7 +1,7 @@
 import { Routes, Route, NavLink, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, type ReactNode } from "react";
 import { Home as HomeIcon, CalendarDays, Trophy, Newspaper, Tv, Settings as SettingsIcon } from "lucide-react";
-import wc26Emblem from "@/assets/wc26-emblem.webp.asset.json";
+import wc26Emblem from "@/assets/wc26-trophy.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/useAuth";
 import Home from "@/pages/Home";
@@ -137,7 +137,7 @@ export default function App() {
       <AuthRedirector />
       <OnboardingModal />
       <header className="sticky top-0 z-40 glass-nav">
-        <div className="tri-ribbon" />
+        
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2.5">
             <img src={wc26Emblem.url} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
