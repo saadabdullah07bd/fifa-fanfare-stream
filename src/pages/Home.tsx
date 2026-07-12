@@ -86,9 +86,11 @@ export default function Home() {
               : ["IN_PLAY", "LIVE"].includes(hero.status)
                 ? <><span className="live-dot mr-2 align-middle" />Live · {hero.minute ?? 0}{hero.injury_time ? `+${hero.injury_time}` : ""}'</>
                 : `Kick-off · ${bdDate(hero.utc_date)} · ${bdTime(hero.utc_date)}`;
+            const wcMatch = findWc26MatchByTeams(hero.home.name, hero.away.name, hero.utc_date);
+            const matchHref = wcMatch ? `/match/${wcMatch.match_no}` : `/fixtures`;
             return (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
-                <Link to={`/match/${hero.id}`}
+                <Link to={matchHref}
                   className={`mt-10 block rounded-xl border border-border bg-card/85 p-6 shadow-2xl transition hover:-translate-y-0.5 hover:border-primary ${isLive ? "live-shimmer" : ""}`}
                 >
                   <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
