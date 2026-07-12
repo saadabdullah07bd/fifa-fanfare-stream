@@ -47,7 +47,9 @@ export default function LiveTV() {
       if (error) throw new Error(error.message);
       const { url, type, fallbackUrl } = data as { url: string; type?: "mpegts" | "hls"; fallbackUrl?: string };
       const v = videoRef.current!;
-      v.muted = true;
+      // Default: sound on at 50% (not muted).
+      v.muted = false;
+      v.volume = 0.5;
       v.removeAttribute("src");
       v.load();
       // Wait until the browser has ~3s of media buffered before starting playback.
