@@ -260,51 +260,14 @@ export default function MatchDetail() {
         )}
       </section>
 
-      {/* Timeline */}
-      <section className="mt-10">
-        <h2 className="display text-2xl text-primary">Timeline</h2>
-        {timeline.length === 0 && <p className="mt-3 text-sm text-muted-foreground">No goals or cards yet.</p>}
-        <ol className="mt-4 relative border-l-2 border-primary/30 pl-6">
-          <AnimatePresence initial={false}>
-            {timeline.map((ev, i) => (
-              <motion.li
-                key={i}
-                layout
-                initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.04 }}
-                className="relative mb-6"
-              >
-                <span className="absolute -left-[33px] grid h-6 w-6 place-items-center rounded-full border-2 border-primary bg-background text-xs">
-                  {ev.kind === "goal" ? "⚽" : (ev.data as Booking).card?.includes("RED") ? "🟥" : "🟨"}
-                </span>
-                <div className="rounded-lg border border-border bg-card/50 p-3">
-                  <p className="text-xs uppercase tracking-[0.2em] text-primary">
-                    {ev.minute}{ev.injury ? `+${ev.injury}` : ""}' · {ev.kind === "goal" ? (ev.data as Goal).team_name : (ev.data as Booking).team_tla}
-                  </p>
-                  {ev.kind === "goal" ? (
-                    <p className="mt-1 font-semibold">
-                      {(ev.data as Goal).scorer}
-                      {(ev.data as Goal).assist && <span className="text-sm font-normal text-muted-foreground"> · assist {(ev.data as Goal).assist}</span>}
-                      {(ev.data as Goal).score && <span className="display ml-2 text-primary">{(ev.data as Goal).score!.home}–{(ev.data as Goal).score!.away}</span>}
-                    </p>
-                  ) : (
-                    <p className="mt-1 font-semibold">
-                      {(ev.data as Booking).player} <span className="text-sm text-muted-foreground">· {(ev.data as Booking).card.replace("_", " ").toLowerCase()}</span>
-                    </p>
-                  )}
-                </div>
+    </motion.div>
+  );
+}
+
 /**
  * Real-time clock component that increments every second.
  */
 
-              </motion.li>
-            ))}
-          </AnimatePresence>
-        </ol>
-      </section>
-    </motion.div>
-  );
-}
 
 // Live minute:seconds ticker. Anchors on the fetched `minute` and ticks forward
 // in real time so users see the clock move between refetches.
