@@ -175,7 +175,9 @@ export default function LiveTV() {
     };
   }, [active, reloadNonce]);
 
-  // Featured channel logic:
+  // Featured channel logic — used for the "start watching" hero button and
+  // channel selection heuristics. Playback does NOT start until the user
+  // explicitly picks a channel (autoplay is intentionally disabled).
   //   1. Admin-selected default (from app_settings)
   //   2. TSN 1 non-4K
   //   3. Any non-4K channel
@@ -189,14 +191,6 @@ export default function LiveTV() {
       ?? channels.find((c) => /\btsn\s*1\b/i.test(c.name));
     return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
   }, [channels, defaultStreamId]);
-
-  // Auto-tune to TSN 1 (or the fallback hero) once channels load.
-  // HLS/MPEGTS stream initialization and playback logic.
-  useEffect(() => {
-    if (autoStarted || active || !heroChannel) return;
-    setAutoStarted(true);
-    setActive(heroChannel);
-  }, [heroChannel, active, autoStarted]);
 
   const rows = useMemo(() => {
     const cats = Array.from(new Set(channels.map((c) => c.category))).sort();
