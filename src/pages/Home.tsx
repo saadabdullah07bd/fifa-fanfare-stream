@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Seo } from "@/lib/seo";
 import LiveTicker, { useLiveMatches } from "@/components/LiveTicker";
+import { findWc26MatchByTeams } from "@/data/wc26-matches";
 
 import heroImg from "@/assets/hero-stadium.jpg";
 import wc26Emblem from "@/assets/wc26-trophy.png.asset.json";
