@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
-import { flagUrl, bdShortDate, bdTime } from "@/lib/flags";
+import { flagUrl, countryName, bdShortDate, bdTime } from "@/lib/flags";
 import { normalizeAppMatchStatus } from "@/lib/match-status";
 
 
