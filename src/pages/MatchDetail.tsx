@@ -37,10 +37,23 @@ export default function MatchDetail() {
   const homeCrest = flagUrl(m.home_code, 160);
   const awayCrest = flagUrl(m.away_code, 160);
 
-  const cards = [
+  // Split goals by scoring team (OG credits to opposite of player's team, already resolved in JSON).
+  const goalSide = (g: { team?: string; type: string }) => {
+    const scorerTeam = g.team ?? m.home_name;
+    const creditedTeam = g.type === "OG"
+      ? (scorerTeam === m.home_name ? m.away_name : m.home_name)
+      : scorerTeam;
+    return creditedTeam === m.home_name ? "home" : "away";
+  };
+  const homeGoals = m.goals.filter((g) => goalSide(g) === "home").sort((a, b) => a.minute - b.minute);
+  const awayGoals = m.goals.filter((g) => goalSide(g) === "away").sort((a, b) => a.minute - b.minute);
+
+  const allCards = [
     ...m.yellow_cards.map((c) => ({ ...c, card: "YELLOW" as const })),
     ...m.red_cards.map((c) => ({ ...c, card: "RED" as const })),
   ].sort((a, b) => a.minute - b.minute);
+  const homeCards = allCards.filter((c) => c.team === m.home_name);
+  const awayCards = allCards.filter((c) => c.team === m.away_name);
 
   return (
     <motion.div
