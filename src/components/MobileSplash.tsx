@@ -101,13 +101,6 @@ export default function MobileSplash() {
           className="h-full w-full object-cover pointer-events-none select-none"
         />
       )}
-      <button
-        type="button"
-        onClick={dismiss}
-        className="absolute right-4 top-4 rounded-full bg-black/60 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-white backdrop-blur"
-      >
-        Skip
-      </button>
     </div>
   );
 }
