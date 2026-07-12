@@ -1,5 +1,17 @@
-// Public read-only proxy for World Cup standings + top scorers via football-data.org.
-// Cached in-memory for 60s to stay well under the 10 req/min free-tier limit.
+/**
+ * Standings & Scorers Function
+ * Purpose: Provides World Cup standings and top scorer data.
+ * HTTP Method: GET
+ * Inputs:
+ *   - kind: "standings" | "scorers" | "all" (default: "standings")
+ *   - debug: "1" to include scraping metadata.
+ * Outputs: JSON object with requested statistics and tournament status.
+ * External APIs:
+ *   - Football-Data.org: Primary standings and basic scorers.
+ *   - WorldCupWiki: Scraped Golden Boot data for 2026.
+ *   - Wikipedia: Scraped qualification scorers from various confederations.
+ */
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -26,7 +38,7 @@ Deno.serve(async (req) => {
       bodyKind = typeof body?.kind === "string" ? body.kind : "";
     } catch { /* no JSON body */ }
   }
-  const kind = (url.searchParams.get("kind") ?? bodyKind) || "standings"; // standings | scorers | all
+  const kind = (url.searchParams.get("kind") ?? bodyKind) || "standings";
   const cacheKey = `v7:${kind}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.at < TTL) return json(cached.body);
@@ -69,8 +81,6 @@ Deno.serve(async (req) => {
     }
 
     if (kind === "scorers" || kind === "all") {
-      // World Cup 2026 is active: prefer current tournament Golden Boot data
-      // scraped from live web articles, then fall back to APIs/qualifier data.
       let scorers: any[] = [];
       let source = "";
       const debug: any = { pages: {} };
@@ -138,6 +148,7 @@ Deno.serve(async (req) => {
   }
 });
 
+/** Standard JSON response helper */
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status, headers: { ...cors, "Content-Type": "application/json" },
@@ -154,21 +165,13 @@ const CONFED_PAGES = [
 ];
 
 const COUNTRY_BY_FLAG: Record<string, string> = {
-  "🇫🇷": "France",
-  "🇦🇷": "Argentina",
-  "🇳🇴": "Norway",
-  "🏴": "England",
-  "🇧🇷": "Brazil",
-  "🇲🇽": "Mexico",
-  "🇩🇪": "Germany",
-  "🇨🇭": "Switzerland",
-  "🇸🇳": "Senegal",
-  "🇳🇱": "Netherlands",
-  "🇨🇩": "DR Congo",
-  "🇨🇦": "Canada",
+  "🇫🇷": "France", "🇦🇷": "Argentina", "🇳🇴": "Norway", "🏴": "England",
+  "🇧🇷": "Brazil", "🇲🇽": "Mexico", "🇩🇪": "Germany", "🇨🇭": "Switzerland",
+  "🇸🇳": "Senegal", "🇳🇱": "Netherlands", "🇨🇩": "DR Congo", "🇨🇦": "Canada",
   "🇲🇦": "Morocco",
 };
 
+/** Scrapes the WorldCupWiki Golden Boot standings */
 async function scrapeWorldCupWikiGoldenBoot(debug: any) {
   const url = "https://worldcupwiki.com/world-cup-2026-golden-boot-standings/";
   const res = await fetch(url, {
@@ -207,6 +210,7 @@ async function scrapeWorldCupWikiGoldenBoot(debug: any) {
   return rows.sort((a, b) => (b.goals - a.goals) || ((b.assists ?? 0) - (a.assists ?? 0))).slice(0, 20);
 }
 
+/** Sanitizes and normalizes country names from messy HTML/Emoji input */
 function cleanCountry(value: string) {
   const stripped = value
     .replace(/[\u{1F1E6}-\u{1F1FF}\u{1F3F4}\u{E0061}-\u{E007A}\u{E007F}]/gu, "")
@@ -219,6 +223,7 @@ function cleanCountry(value: string) {
   return "";
 }
 
+/** Merges scorer data across all confederation Wikipedia pages */
 async function scrapeAllConfederationScorers(debug: any) {
   const merged = new Map<string, any>();
   await Promise.all(CONFED_PAGES.map(async (page) => {
@@ -238,11 +243,12 @@ async function scrapeAllConfederationScorers(debug: any) {
     .slice(0, 20);
 }
 
+/** Scrapes scorer lists from a single Wikipedia qualification page */
 async function scrapePageScorers(page: string, debug: any) {
   const api = "https://en.wikipedia.org/w/api.php";
   const ua = "FanfareBot/1.0 (contact: support@lovable.app)";
 
-  // 1. List sections, find one that looks like "Top scorers"/"Goalscorers".
+  // 1. List sections to find scorers section
   const secRes = await fetch(
     `${api}?action=parse&page=${encodeURIComponent(page)}&prop=sections&format=json&redirects=1`,
     { headers: { "user-agent": ua } },
@@ -258,7 +264,7 @@ async function scrapePageScorers(page: string, debug: any) {
     return [];
   }
 
-  // 2. Fetch that section's HTML.
+  // 2. Fetch section HTML
   const txtRes = await fetch(
     `${api}?action=parse&page=${encodeURIComponent(page)}&prop=text&section=${target.index}&format=json&redirects=1`,
     { headers: { "user-agent": ua } },
@@ -272,13 +278,9 @@ async function scrapePageScorers(page: string, debug: any) {
   return rows;
 }
 
+/** Parses Wikipedia Goalscorers section into structured objects */
 function parseScorerTable(html: string) {
   const rows: any[] = [];
-
-  // Wikipedia's WC qualification "Top scorers" sections use a list format:
-  //   <p><b>16 goals</b></p><div class="div-col"><ul><li>[flag][player]</li>...
-  // Parse each "N goal(s)" heading and then extract player <li>s until the
-  // next heading.
   const headingRe = /<(?:p|h[1-6])[^>]*>[\s\S]*?<b>\s*(\d{1,2})\s+goals?\s*<\/b>/gi;
   const matches = [...html.matchAll(headingRe)];
   for (let i = 0; i < matches.length; i++) {
@@ -291,7 +293,6 @@ function parseScorerTable(html: string) {
     let li: RegExpExecArray | null;
     while ((li = liRe.exec(chunk))) {
       const cell = li[1];
-      // country = title of the flagicon's <a> link
       let country = "";
       const flag = cell.match(/class="[^"]*flagicon[^"]*"[\s\S]*?title="([^"]+)"/i)
         ?? cell.match(/class="[^"]*flagicon[^"]*"[\s\S]*?alt="([^"]+)"/i);
@@ -302,7 +303,6 @@ function parseScorerTable(html: string) {
           .trim();
       }
 
-      // player name = first <a title="..."> whose title isn't the flag country
       let playerName = "";
       for (const a of cell.matchAll(/<a[^>]*title="([^"]+)"[^>]*>([^<]+)<\/a>/gi)) {
         const title = a[1];
@@ -326,7 +326,7 @@ function parseScorerTable(html: string) {
     }
   }
 
-  // Fallback: table-based layout (some confederations may use it).
+  // Fallback: table-based layout
   if (!rows.length) {
     const tblMatch = html.match(/<table[^>]*class="[^"]*wikitable[^"]*"[\s\S]*?<\/table>/i);
     if (tblMatch) {
@@ -370,10 +370,10 @@ function parseScorerTable(html: string) {
       }
     }
   }
-
   return rows;
 }
 
+/** Strips all HTML tags and noise from a string */
 function stripTags(html: string) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -383,6 +383,7 @@ function stripTags(html: string) {
     .replace(/\s+/g, " ");
 }
 
+/** Decodes HTML entities to plain text */
 function decodeEntities(text: string) {
   return text
     .replace(/&nbsp;/g, " ")
@@ -392,4 +393,3 @@ function decodeEntities(text: string) {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">");
 }
-

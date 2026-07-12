@@ -1,5 +1,15 @@
-// Live match statistics via API-Football (v3.football.api-sports.io).
-// Searches fixtures by team names near the given date, then pulls statistics + events.
+/**
+ * Match Statistics Function
+ * Purpose: Fetches live match statistics and event timelines via API-Football.
+ * HTTP Method: GET
+ * Inputs:
+ *   - home: Name of the home team.
+ *   - away: Name of the away team.
+ *   - date: ISO date string of the match.
+ * Outputs: JSON object with detailed match stats (possession, shots, etc.) and events.
+ * External APIs: API-Football (v3.football.api-sports.io)
+ */
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -9,12 +19,17 @@ const cors = {
 const AF = "https://v3.football.api-sports.io";
 const cache = new Map<string, { at: number; body: unknown }>();
 
+/** Normalizes team names for fuzzy matching */
 function norm(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
 }
+
+/** Tokenizes a string for scoring overlaps */
 function tokens(s: string) {
   return new Set(norm(s).split(/\s+/).filter((t) => t.length > 2));
 }
+
+/** Scores the similarity between two team names */
 function score(a: string, b: string) {
   const ta = tokens(a), tb = tokens(b);
   let hit = 0;
@@ -22,6 +37,7 @@ function score(a: string, b: string) {
   return hit;
 }
 
+/** Standardized fetcher for API-Football */
 async function afFetch(path: string, params: Record<string, string>, key: string) {
   const qs = new URLSearchParams(params).toString();
   const r = await fetch(`${AF}${path}?${qs}`, {

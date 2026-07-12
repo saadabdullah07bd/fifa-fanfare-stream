@@ -1,5 +1,14 @@
-// Xtream Codes proxy: save config, get config (sanitized), refresh channels, and proxy streams.
-// Admin-only for writes and refresh. Any signed-in user can request a short-lived proxied stream.
+/**
+ * Xtream Codes Proxy Function
+ * Purpose: Manages Xtream Codes IPTV configuration, channel refreshing, and secure stream proxying.
+ * HTTP Method: GET (proxy), POST (admin actions)
+ * Inputs:
+ *   - action: "get_config" | "save_config" | "refresh_channels" | "stream_url"
+ *   - t: Security token for stream proxying (GET requests)
+ * Outputs: JSON config/status or proxied binary video stream.
+ * External APIs: Xtream Codes IPTV Panel (various hosts)
+ */
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const cors = {
@@ -14,6 +23,7 @@ type SignedPayload = { type: "stream" | "resource"; streamId: string; resource?:
 const STREAM_TTL_SECONDS = 30 * 60;
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
@@ -21,6 +31,7 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
+    // Handle stream proxying (read-only GET with signed token)
     if (req.method === "GET") {
       return await handleStreamProxy(req, admin, serviceKey);
     }
@@ -28,6 +39,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = body.action as string;
 
+    // Generate a signed URL for a specific channel stream
     if (action === "stream_url") {
       const streamId = String(body.streamId || "");
       if (!streamId) return json({ error: "streamId required" }, 400);
@@ -44,26 +56,29 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Verify user session for admin actions
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
     if (!token) return json({ error: "Not signed in" }, 401);
 
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-
     const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
     const { data: userData } = await userClient.auth.getUser();
     if (!userData.user) return json({ error: "Invalid session" }, 401);
     const userId = userData.user.id;
 
+    // Check admin role
     const { data: isAdminData } = await admin.rpc("has_role", { _user_id: userId, _role: "admin" });
     const isAdmin = !!isAdminData;
 
+    // Admin: Fetch current configuration (sanitized)
     if (action === "get_config") {
       if (!isAdmin) return json({ error: "Admin only" }, 403);
       const { data } = await admin.from("xtream_config").select("host, username, updated_at").eq("id", 1).maybeSingle();
       return json(data);
     }
 
+    // Admin: Save new Xtream configuration
     if (action === "save_config") {
       if (!isAdmin) return json({ error: "Admin only" }, 403);
       const host = String(body.host || "").replace(/\/$/, "");
@@ -75,6 +90,7 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    // Admin: Fetch categories/streams from upstream and sync to local DB
     if (action === "refresh_channels") {
       if (!isAdmin) return json({ error: "Admin only" }, 403);
       const { data: cfg } = await admin.from("xtream_config").select("*").eq("id", 1).maybeSingle();
@@ -83,6 +99,7 @@ Deno.serve(async (req) => {
       const catsRes = await fetch(`${base}&action=get_live_categories`);
       if (!catsRes.ok) return json({ error: `Xtream categories failed [${catsRes.status}]` }, 502);
       const cats = await catsRes.json() as Array<{ category_id: string; category_name: string }>;
+      
       const wcRe = /world.?cup|fifa|wc.?2026|coupe.?du.?monde|mundial/i;
       const excludeRe = /bein/i;
       const crRe = /cricket|ipl|t20|test match/i;
@@ -115,15 +132,18 @@ Deno.serve(async (req) => {
   }
 });
 
+/** Helper for JSON responses */
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { ...cors, "Content-Type": "application/json" } });
 }
 
+/** Routes and validates stream proxy requests */
 async function handleStreamProxy(req: Request, admin: ReturnType<typeof createClient>, secret: string) {
   const requestUrl = new URL(req.url);
   const path = requestUrl.pathname;
   const edgeBase = `${requestUrl.origin}/functions/v1/xtream`;
 
+  // Main stream entry point (.m3u8 or .ts)
   const streamMatch = path.match(/\/xtream\/stream\/([^/]+)\.(m3u8|ts)$/);
   if (streamMatch) {
     const streamId = decodeURIComponent(streamMatch[1]);
@@ -137,6 +157,7 @@ async function handleStreamProxy(req: Request, admin: ReturnType<typeof createCl
     return await proxyUpstream(req, cfg, streamId, upstreamUrl, edgeBase, secret);
   }
 
+  // Nested resources (playlist segments)
   if (path.endsWith("/xtream/resource")) {
     const streamId = requestUrl.searchParams.get("streamId") ?? "";
     const resource = requestUrl.searchParams.get("resource") ?? "";
@@ -154,11 +175,13 @@ async function handleStreamProxy(req: Request, admin: ReturnType<typeof createCl
   return json({ error: "Unknown stream route" }, 404);
 }
 
+/** Fetches configuration from database */
 async function getConfig(admin: ReturnType<typeof createClient>): Promise<XtreamConfig | null> {
   const { data } = await admin.from("xtream_config").select("host, username, password").eq("id", 1).maybeSingle();
   return data as XtreamConfig | null;
 }
 
+/** Proxies request to upstream server and rewrites playlists if necessary */
 async function proxyUpstream(req: Request, cfg: XtreamConfig, streamId: string, upstreamUrl: string, edgeBase: string, secret: string) {
   const headers = new Headers();
   const range = req.headers.get("range");
@@ -186,10 +209,12 @@ async function proxyUpstream(req: Request, cfg: XtreamConfig, streamId: string, 
   return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
 }
 
+/** Checks if a response is an HLS playlist */
 function isPlaylist(url: string, contentType: string) {
   return /mpegurl|application\/vnd\.apple/i.test(contentType) || new URL(url).pathname.endsWith(".m3u8");
 }
 
+/** Rewrites upstream .m3u8 playlists to route segments through this function */
 async function rewritePlaylist(text: string, playlistUrl: string, cfg: XtreamConfig, streamId: string, edgeBase: string, secret: string) {
   const lines = text.split(/\r?\n/);
   const out: string[] = [];
@@ -212,6 +237,7 @@ async function rewritePlaylist(text: string, playlistUrl: string, cfg: XtreamCon
   return out.join("\n");
 }
 
+/** Extracts the resource path from an upstream URL */
 function extractResource(lineUrl: string, playlistUrl: string, cfg: XtreamConfig) {
   const resolved = new URL(lineUrl, playlistUrl);
   const parts = resolved.pathname.split("/").map((p) => decodeURIComponent(p));
@@ -224,6 +250,7 @@ function extractResource(lineUrl: string, playlistUrl: string, cfg: XtreamConfig
   return isSafeResource(resource) ? resource : null;
 }
 
+/** Rebuilds the upstream URL using saved credentials */
 function buildUpstreamUrl(cfg: XtreamConfig, resource: string) {
   const queryAt = resource.indexOf("?");
   const path = queryAt >= 0 ? resource.slice(0, queryAt) : resource;
@@ -232,26 +259,31 @@ function buildUpstreamUrl(cfg: XtreamConfig, resource: string) {
   return `${cfg.host}/live/${encodeURIComponent(cfg.username)}/${encodeURIComponent(cfg.password)}/${encodedPath}${query}`;
 }
 
+/** Security check to prevent open proxy exploitation */
 function isSafeResource(resource: string) {
   const path = resource.split("?")[0];
   return !!path && !resource.includes("://") && !path.startsWith("/") && !path.split("/").some((part) => part === ".." || part === "");
 }
 
+/** Generates a signed local URL for a nested stream resource */
 async function signedResourceUrl(edgeBase: string, streamId: string, resource: string, secret: string) {
   const t = await signPayload({ type: "resource", streamId, resource, exp: expiresAt() }, secret);
   return `${edgeBase}/resource?streamId=${encodeURIComponent(streamId)}&resource=${encodeURIComponent(resource)}&t=${encodeURIComponent(t)}`;
 }
 
+/** Returns expiration timestamp for tokens */
 function expiresAt() {
   return Math.floor(Date.now() / 1000) + STREAM_TTL_SECONDS;
 }
 
+/** Signs a payload using HMAC SHA-256 */
 async function signPayload(payload: SignedPayload, secret: string) {
   const body = base64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
   const signature = await hmac(body, secret);
   return `${body}.${signature}`;
 }
 
+/** Verifies a signed token and its expiration */
 async function verifyPayload(token: string, secret: string): Promise<SignedPayload | null> {
   const [body, signature] = token.split(".");
   if (!body || !signature) return null;
@@ -262,24 +294,28 @@ async function verifyPayload(token: string, secret: string): Promise<SignedPaylo
   return payload;
 }
 
+/** HMAC calculation */
 async function hmac(message: string, secret: string) {
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
   return base64UrlEncode(new Uint8Array(sig));
 }
 
+/** URL-safe Base64 encoding */
 function base64UrlEncode(bytes: Uint8Array) {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
+/** URL-safe Base64 decoding */
 function base64UrlDecode(value: string) {
   const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - value.length % 4) % 4);
   const binary = atob(padded);
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
+/** Constant-time string comparison */
 function timingSafeEqual(a: string, b: string) {
   if (a.length !== b.length) return false;
   let result = 0;
