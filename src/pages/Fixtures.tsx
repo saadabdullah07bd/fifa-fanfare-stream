@@ -445,15 +445,16 @@ function BracketCard({ match, index }: { match: MatchRow; index: number }) {
  */
 function BracketRow({ code, score }: { code: string | null; score: number | null }) {
   const url = flagUrl(code, 40);
+  const name = countryName(code);
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 min-w-0">
       {url ? (
-        <img src={url} alt={code ?? ""} className="h-4 w-6 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+        <img src={url} alt={code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
       ) : (
-        <span className="h-4 w-6 rounded-[2px] bg-secondary/40" />
+        <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
       )}
-      <span className="display flex-1 text-lg">{code ?? "TBD"}</span>
-      <span className="display text-primary tabular-nums">{score ?? "–"}</span>
+      <span className="display flex-1 min-w-0 truncate text-sm md:text-base" title={name}>{name || "TBD"}</span>
+      <span className="display shrink-0 text-primary tabular-nums">{score ?? "–"}</span>
     </div>
   );
 }
