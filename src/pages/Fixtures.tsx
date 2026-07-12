@@ -81,7 +81,7 @@ export default function Fixtures() {
                       whileHover={{ y: -3 }}
                     >
                       <Link
-                        to={`/match/${m.id}`}
+                        to={`/match/${(m.external_id ?? "").replace(/^fd_/, "") || m.id}`}
                         className="block rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md hover:border-primary transition-colors"
                       >
                         <BracketRow code={m.home_team_code} score={m.home_score} />

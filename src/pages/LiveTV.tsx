@@ -258,30 +258,6 @@ export default function LiveTV() {
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={query} onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search channels..."
-            className="w-full rounded-md border border-border bg-card/40 py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-primary"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => (
-            <button key={cat} onClick={() => setCategory(cat)}
-              className={`relative rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.15em] transition-colors ${
-                category === cat ? "text-primary-foreground" : "border border-border bg-card/40 text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {category === cat && (
-                <motion.span layoutId="livetv-cat" className="absolute inset-0 rounded-full bg-primary" transition={{ type: "spring", stiffness: 320, damping: 28 }} />
-              )}
-              <span className="relative">{CAT_LABEL[cat] ?? cat}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading channels…</p>
