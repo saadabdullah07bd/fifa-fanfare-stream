@@ -638,7 +638,7 @@ function ModernPlayer({
     >
       <video
         ref={videoRef}
-        autoPlay playsInline
+        playsInline
         controlsList="nodownload noremoteplayback noplaybackrate"
         disablePictureInPicture={false}
         onContextMenu={(e) => e.preventDefault()}
@@ -647,8 +647,8 @@ function ModernPlayer({
         className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
       />
 
-      {/* Right-side vertical volume rocker (mobile only). Constrained so it
-          never swallows taps on the top or bottom control bars. */}
+      {/* Right-side vertical volume rocker (mobile only). Purely a gesture
+          surface — decorative, not a labeled interactive element. */}
       {isMobile && (
         <div
           onTouchStart={onVolTouchStart}
@@ -656,7 +656,7 @@ function ModernPlayer({
           onTouchEnd={onVolTouchEnd}
           className="absolute right-0 top-20 bottom-24 z-10 w-24"
           style={{ touchAction: "none" }}
-          aria-label="Volume rocker"
+          aria-hidden="true"
         />
       )}
 
