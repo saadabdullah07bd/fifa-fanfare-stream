@@ -376,7 +376,7 @@ export default function MatchDetail() {
       {(m.referee || m.attendance) && (
         <section aria-label="Match info" className="mt-8 grid gap-3 sm:grid-cols-2">
           {m.referee && (
-            <InfoCard icon={<Whistle className="h-4 w-4" aria-hidden="true" />} label="Referee" value={m.referee} />
+            <InfoCard icon={<Flag className="h-4 w-4" aria-hidden="true" />} label="Referee" value={m.referee} />
           )}
           {m.attendance && (
             <InfoCard
