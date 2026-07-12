@@ -85,11 +85,9 @@ export default function MatchDetail() {
 
   const { label: statusText, live: isLive } = statusLabel(m.status, m.minute, m.injury_time, m.utc_date);
   const isPlaying = ["IN_PLAY", "LIVE"].includes(m.status);
-  // Combine goals and bookings into a single chronological timeline.
-  const timeline = [
-    ...m.goals.map((g) => ({ kind: "goal" as const, minute: g.minute, injury: g.injury_time, data: g })),
-    ...m.bookings.map((b) => ({ kind: "card" as const, minute: b.minute, injury: null, data: b })),
-  ].sort((a, b) => a.minute - b.minute);
+  const homeName = countryName(m.home.tla) || m.home.name;
+  const awayName = countryName(m.away.tla) || m.away.name;
+
 
   return (
     <motion.div
