@@ -3,6 +3,8 @@ import { Seo } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Users, Search, Medal, Target } from "lucide-react";
+import { flagUrl } from "@/lib/flags";
+
 
 type Row = {
   position: number;
@@ -290,12 +292,16 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
               </td>
               <td className="py-2.5">
                 <div className="flex items-center gap-2 min-w-0">
-                  {r.team.crest ? (
-                    <img src={r.team.crest} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-                  ) : (
-                    <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
-                  )}
+                  {(() => {
+                    const flag = r.team.crest ?? flagUrl(r.team.tla, 80);
+                    return flag ? (
+                      <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                    ) : (
+                      <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
+                    );
+                  })()}
                   <span className="truncate font-medium">{r.team.name}</span>
+
                 </div>
               </td>
               <td className="py-2.5 text-center text-muted-foreground">{r.played}</td>
@@ -327,11 +333,15 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
             >
               {r.position}
             </span>
-            {r.team.crest ? (
-              <img src={r.team.crest} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-            ) : (
-              <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
-            )}
+            {(() => {
+              const flag = r.team.crest ?? flagUrl(r.team.tla, 80);
+              return flag ? (
+                <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+              ) : (
+                <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
+              );
+            })()}
+
             <div className="flex-1 min-w-0">
               <p className="truncate text-sm font-semibold">{r.team.name}</p>
               <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -451,11 +461,15 @@ function ScorersPanel({
                       </td>
                       <td className="hidden py-3 sm:table-cell">
                         <div className="flex items-center gap-2 min-w-0">
-                          {s.team.crest ? (
-                            <img src={s.team.crest} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-                          ) : (
-                            <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
-                          )}
+                          {(() => {
+                            const flag = s.team.crest ?? flagUrl(s.team.tla, 80);
+                            return flag ? (
+                              <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                            ) : (
+                              <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
+                            );
+                          })()}
+
                           <span className="truncate">{s.team.name}</span>
                         </div>
                       </td>
@@ -518,16 +532,15 @@ function PodiumCard({ scorer: s, place, maxGoals }: { scorer: Scorer; place: 1 |
       </div>
 
       <div className="mt-4 flex items-center gap-3">
-        {s.team.crest ? (
-          <img
-            src={s.team.crest}
-            alt=""
-            className="h-8 w-12 shrink-0 rounded-[3px] object-cover ring-1 ring-border"
-            loading="lazy"
-          />
-        ) : (
-          <span className="h-8 w-12 shrink-0 rounded-[3px] bg-secondary/40" aria-hidden="true" />
-        )}
+        {(() => {
+          const flag = s.team.crest ?? flagUrl(s.team.tla, 160);
+          return flag ? (
+            <img src={flag} alt="" className="h-8 w-12 shrink-0 rounded-[3px] object-cover ring-1 ring-border" loading="lazy" />
+          ) : (
+            <span className="h-8 w-12 shrink-0 rounded-[3px] bg-secondary/40" aria-hidden="true" />
+          );
+        })()}
+
         <div className="min-w-0">
           <p className="display truncate text-xl leading-tight sm:text-2xl">{s.player.name}</p>
           <p className="truncate text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
