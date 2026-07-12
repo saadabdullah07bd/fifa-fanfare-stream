@@ -64,7 +64,7 @@ export default function MobileSplash() {
         preload="auto"
         onEnded={dismiss}
         onError={dismiss}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain"
       />
       <button
         type="button"
