@@ -42,7 +42,7 @@ export default function Home() {
         path="/"
       />
       <section className="relative isolate overflow-hidden">
-        <img src={heroImg} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-40" />
+        <img src={heroImg} alt="" width={1920} height={1080} fetchPriority="high" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-40" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/60 via-background/70 to-background" />
         <div className="mx-auto max-w-7xl px-4 pb-12 pt-16 md:pt-24">
           <p className="display text-primary tracking-[0.3em] text-sm">USA · CANADA · MEXICO · 2026</p>

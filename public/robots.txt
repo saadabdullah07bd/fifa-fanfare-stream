@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://pitch26.muhammadsaadabdullah.com/sitemap.xml
+Disallow: /auth
+Disallow: /settings
+Disallow: /live-tv
+Disallow: /predictions
+
+Sitemap: https://fifa-fanfare-stream.lovable.app/sitemap.xml

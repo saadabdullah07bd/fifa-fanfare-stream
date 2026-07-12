@@ -1,0 +1,17 @@
+# Pitch26
+
+> Independent fan hub for the 2026 FIFA World Cup — live fixtures, standings, top scorers, and news across USA, Canada & Mexico.
+
+Pitch26 tracks the 2026 FIFA World Cup in real time: live match scores and timelines, the semi-final and final knockout bracket, group standings, top scorers, and hourly news headlines.
+
+## Pages
+
+- [Home](/): Live football scores, today's fixtures, and the latest World Cup 2026 headlines.
+- [Knockout](/fixtures): Semi-finals and final bracket for the 2026 FIFA World Cup.
+- [Standings](/standings): Group tables and top scorer leaderboard, refreshed continuously.
+- [News](/news): World Cup 2026 news and football headlines, updated hourly.
+
+## Optional
+
+- [Terms](/terms): Site terms of use.
+- [Privacy](/privacy): Privacy policy.

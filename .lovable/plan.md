@@ -1,110 +1,105 @@
-## Pitch26 — full rewrite to Vite SPA + real data sources
 
-### What changes
+# Pitch26 — Complete SEO Plan
 
-**Framework**
-- Remove TanStack Start. Keep Vite + React 19 + Tailwind v4 + shadcn.
-- Replace file-based routing with **React Router v6** (`BrowserRouter`).
-- New entry: `src/main.tsx` → `<App />` with `<Routes>`.
-- Delete `src/routes/`, `src/routeTree.gen.ts`, `src/router.tsx`, `src/server.ts`, `src/start.ts`, `src/lib/*.functions.ts`, `src/lib/*.server.ts`, `src/integrations/supabase/auth-*.ts`, `src/integrations/supabase/client.server.ts`, `src/routes/api/**`.
-- SSR is gone. SEO uses `react-helmet-async` per route (worse than SSR head tags, but acceptable for a fan app).
+Goal: get Pitch26 indexed on the correct project domain (`https://fifa-fanfare-stream.lovable.app`), fix every scanner finding, and ship the per-route metadata, structured data, and performance foundations a live-scores site needs.
 
-**Backend → Supabase Edge Functions**
-All server functions become Deno edge functions under `supabase/functions/`:
+Current problems the scanner and code review found:
+- `robots.txt`, `sitemap.xml`, and `og:url` all point at wrong/stale domains (`pitch26.drmabari.com`, `pitch26.muhammadsaadabdullah.com`).
+- Sitemap lists routes that don't exist (`/groups`, `/teams`, `/scorers`, `/venues`, `/highlights`) and misses real ones (`/standings`, `/news`, `/live-tv`, `/match/:id`, `/team/:name`).
+- No per-route `<title>`/`description`/`canonical`/`og:*` — Home has good static tags but every other route inherits them, so Google sees one page.
+- `TeamDetail` fallback description is under 50 chars.
+- No `/llms.txt` for AI assistants.
+- LCP hero image is not preloaded; no explicit dimensions on several images → layout shift.
+- Match detail page missing an H1 and some inputs miss accessible labels.
+- No Google Search Console verification / sitemap submission.
 
-| Old server fn | New edge function |
-|---|---|
-| `xtream.functions.ts` (save/refresh/get stream URL) | `xtream-config`, `xtream-refresh`, `xtream-stream-url` |
-| `user.functions.ts` (favorites, predictions) | `user-favorites`, `user-predictions` |
-| `leaderboard.functions.ts` | `leaderboard` |
-| `data.functions.ts` (home/matches/groups/teams/…) | **removed** — client reads Supabase directly with anon key + RLS |
-| `refresh.functions.ts` | `refresh-data` (called by pg_cron only) |
+---
 
-Admin check (`saadabdullah07bvd@gmail.com`) stays server-side inside each privileged edge function using `has_role`.
+## Phase 1 — Fix the domain drift (blocks everything else)
 
-**Data sources (replaces Firecrawl-only scraping)**
-- **football-data.org** (competition `WC`): fixtures, results, standings, scorers, teams, venues. Structured JSON, no scraping. Key: `FOOTBALL_DATA_API_TOKEN` (already stored).
-- **NewsAPI** (`everything?q=FIFA World Cup 2026`): news headlines + images. Key: `NEWSAPI_KEY` (already stored).
-- **YouTube oEmbed** on the FIFA official channel: highlights (no key needed).
-- **Firecrawl**: fallback only — venue photos + written highlight recaps when NewsAPI misses.
+1. `public/robots.txt` → `Sitemap: https://fifa-fanfare-stream.lovable.app/sitemap.xml`.
+2. Migrate `public/sitemap.xml` (hand-edited, out of sync) to a generated one:
+   - Add `scripts/generate-sitemap.ts` with `BASE_URL = "https://fifa-fanfare-stream.lovable.app"`.
+   - Static entries: `/`, `/fixtures`, `/standings`, `/news`, `/live-tv`, `/terms`, `/privacy`.
+   - Dynamic: one entry per row in `matches` (`/match/:external-id`) and per distinct team code (`/team/:name`). Fetched via Supabase using the anon key at build time.
+   - Wire `predev` + `prebuild` in `package.json` to run it.
+3. `index.html`: remove the hardcoded `og:url` (per-route Helmet takes over). Keep sitewide title/description as fallback.
 
-**Auto-refresh**
-- Remove the "Refresh now" button and the Xtream refresh UI on admin settings (Xtream refresh stays, but no user-visible manual data refresh).
-- `pg_cron` calls `refresh-data` **every hour** for fixtures/standings/scorers/news.
-- Client polls the `matches` table via Supabase realtime for live scores (already-enabled RLS makes this safe).
+## Phase 2 — Per-route metadata (Helmet)
 
-### Route map (React Router)
+`react-helmet-async` and `Seo` component already exist. Audit and fix each route so `title`, `meta description`, `canonical`, `og:title`, `og:description`, `og:url`, `twitter:*` all self-reference:
 
-```text
-/                → Home (hero + live/next + top scorers + news)
-/fixtures        → All matches
-/groups          → Group tables
-/knockouts       → Bracket
-/teams           → Team grid
-/teams/:code     → Team detail
-/venues          → 16 host cities
-/scorers         → Golden Boot
-/news            → NewsAPI headlines
-/highlights      → NEW — YouTube embeds + Firecrawl recap fallback
-/live-tv         → Xtream channel grid (auth required)
-/live-tv/:id     → HLS player
-/predictions     → Predictions + leaderboard (auth required)
-/favorites       → Favorite teams (auth required)
-/settings        → Admin-only Xtream config (auth + role gate)
-/auth            → Google login
+- `/` — done, keep.
+- `/fixtures` — "2026 World Cup knockout bracket — Pitch26"; description names semi-finals + final.
+- `/standings` — "World Cup 2026 group standings & top scorers — Pitch26".
+- `/news` — "World Cup 2026 news & live headlines — Pitch26".
+- `/live-tv` — noindex (auth-gated, personal content).
+- `/match/:id` — dynamic: `"{Home} vs {Away} — {stage} · Pitch26"`, description built from teams + kickoff time. Add `SportsEvent` JSON-LD per match.
+- `/team/:name` — dynamic: `"{Team} at the 2026 FIFA World Cup — Pitch26"`; rewrite fallback description to 120–150 chars mentioning Pitch26 + tournament so it clears the 50-char minimum.
+- `/terms`, `/privacy` — real titles + noindex is optional.
+
+Add `BreadcrumbList` JSON-LD on `/fixtures`, `/match/:id`, `/team/:name`.
+
+## Phase 3 — AI readiness
+
+Create `public/llms.txt`:
+
+```
+# Pitch26
+
+> Independent fan hub for the 2026 FIFA World Cup — live fixtures, standings, top scorers, and news.
+
+## Pages
+- [Home](/): Live scores and today's fixtures.
+- [Knockout](/fixtures): Semi-finals and final bracket.
+- [Standings](/standings): Group tables + top scorers.
+- [News](/news): Headlines refreshed hourly.
 ```
 
-Auth gate = a `<RequireAuth>` wrapper component that checks `supabase.auth.getSession()`, redirects to `/auth` if missing.
+Exclude `/live-tv`, `/auth`, `/settings`, `/match/*`, `/team/*` (dynamic; keep the file short).
 
-### Files created
+## Phase 4 — Performance (fixes Lighthouse finding)
 
-- `src/App.tsx` — router shell + nav
-- `src/main.tsx` — rewritten entry
-- `src/components/RequireAuth.tsx`, `src/components/RequireAdmin.tsx`
-- `src/hooks/useAuth.ts`, `src/hooks/useMatches.ts` (realtime), `src/hooks/use-*-query.ts` for each data read
-- `src/lib/api/xtream.ts`, `src/lib/api/user.ts`, `src/lib/api/leaderboard.ts` — thin wrappers that `supabase.functions.invoke(...)` the edge functions
-- `src/pages/*.tsx` — one file per route (moved from `src/routes/*.tsx`, stripped of TanStack code)
-- `supabase/functions/{xtream-config,xtream-refresh,xtream-stream-url,user-favorites,user-predictions,leaderboard,refresh-data}/index.ts`
+- Preload the hero image: `<link rel="preload" as="image" href="/src/assets/hero-stadium.jpg" fetchpriority="high">` (or import + preload the built asset).
+- On `Home.tsx` `<img src={heroImg}>`: add explicit `width`/`height` and `fetchpriority="high"`, remove any `loading="lazy"`.
+- On news/fixture cards: ensure every `<img>` has `width`/`height` or an `aspect-*` wrapper (mostly already there).
+- Add `font-display: swap` to the custom `@font-face` in `src/styles.css`.
 
-### Files deleted
+## Phase 5 — Accessibility & content (fixes `agent_content` finding)
 
-Everything under `src/routes/`, `src/lib/*.functions.ts`, `src/lib/*.server.ts`, `src/lib/firecrawl.server.ts`, `src/integrations/supabase/auth-attacher.ts`, `src/integrations/supabase/auth-middleware.ts`, `src/integrations/supabase/client.server.ts`, `src/server.ts`, `src/start.ts`, `src/router.tsx`, `src/routeTree.gen.ts`, `vite.config.ts` TanStack plugins.
+- `MatchDetail.tsx`: add a single `<h1>` (e.g. "{Home} vs {Away}") near the top of the page.
+- Volume slider `<input type="range">` and any unlabeled `<input>` in `LiveTV` / `Settings` get `aria-label`.
+- Wrap each route's primary content in exactly one `<main>` (currently `App.tsx` uses `<main>` — verify no nested `<main>` in child pages).
+- Any icon-only `<button>` gets `aria-label`.
 
-### Migrations
+## Phase 6 — Google Search Console
 
-One new migration:
-- Enable `pg_cron` + `pg_net` (if not already).
-- Schedule hourly job hitting the `refresh-data` edge function with anon key.
-- Enable realtime on `public.matches` for live scoreline updates.
+1. Connect via `standard_connectors--connect` for `google_search_console`.
+2. Request a META verification token for `https://fifa-fanfare-stream.lovable.app/`.
+3. Drop the returned `<meta name="google-site-verification" content="…">` into `index.html`, publish.
+4. Call the verify endpoint, then add the property and submit `/sitemap.xml`.
 
-### Technical details (for reference)
+## Phase 7 — Off-page (ongoing)
 
-- `vite.config.ts` reduced to React plugin + path alias. No `@tanstack/router-plugin`, no `nitro`.
-- `package.json` remove: `@tanstack/react-start`, `@tanstack/react-router`, `@tanstack/react-router-devtools`, `@tanstack/router-plugin`. Add: `react-router-dom`, `react-helmet-async`.
-- Edge functions store secrets via Supabase (not `process.env` — they use `Deno.env.get`). NEWSAPI_KEY, FOOTBALL_DATA_API_TOKEN, FIRECRAWL_API_KEY need to be added as Supabase edge function secrets too (they're currently only Lovable-runtime).
-- Xtream credentials keep living in the `xtream_config` table (already there), read by edge functions with service role.
+- Publish the site (required — Semrush and GSC only see live URLs).
+- After ~2 weeks of indexing, run `semrush--domain_analysis` on `fifa-fanfare-stream.lovable.app` and `semrush--serp_analysis` on target terms ("world cup 2026 fixtures", "world cup 2026 standings", "world cup 2026 top scorers") to see where the pages land and what to double down on.
+- Link from any existing social profiles to seed crawl discovery.
 
-### Trade-offs you're accepting
+---
 
-1. **No SSR** → slower first paint, weaker OG/Twitter previews (Helmet writes tags after JS runs; some crawlers won't wait).
-2. **Still not a Node.js app** — Vite build output is static HTML/JS/CSS. Hostinger's Node.js hosting can't run it. You'd upload `dist/` to Hostinger **static** hosting, or keep publishing via Lovable.
-3. **All backend runs on Supabase Edge Functions** — you're now paying/rate-limited on Supabase's function invocations instead of Lovable's edge.
-4. **Rebuild time** — ~30 files touched, one migration, ~7 new edge functions. Higher chance of a broken step needing follow-up fixes.
-5. **The manual refresh button goes away** — data updates hourly. If football-data.org is slow to publish a result, users wait up to 60 min. Realtime scores during a live match still poll every ~30s.
+## What ships in code (Phases 1–5)
 
-### Order I'll build in
+- `public/robots.txt` — corrected Sitemap directive.
+- `public/sitemap.xml` — replaced by generator output.
+- `scripts/generate-sitemap.ts` — new; queries Supabase for match + team rows.
+- `package.json` — new `predev` / `prebuild` scripts.
+- `index.html` — drop `og:url`, keep the rest.
+- `src/lib/seo.tsx` — ensure canonical + og:url self-reference the current route.
+- `src/pages/Fixtures.tsx`, `Standings.tsx`, `News.tsx`, `MatchDetail.tsx`, `TeamDetail.tsx`, `LiveTV.tsx` — per-route `<Seo>` calls; MatchDetail also gets `<h1>` + `SportsEvent` JSON-LD; TeamDetail fallback description extended.
+- `src/pages/Home.tsx` — hero `<img>` gets width/height + `fetchpriority`.
+- `src/styles.css` — `font-display: swap`.
+- `public/llms.txt` — new.
 
-1. Add edge-function secrets (NEWSAPI_KEY, FOOTBALL_DATA_API_TOKEN, FIRECRAWL_API_KEY) to Supabase.
-2. Write all 7 edge functions.
-3. Migration: pg_cron hourly job + realtime on matches.
-4. Rewrite `vite.config.ts` + `package.json` + `src/main.tsx` + `src/App.tsx`.
-5. Port every route to `src/pages/` as plain React components using React Router.
-6. Wire auth gate + admin gate.
-7. Delete TanStack scaffolding.
-8. Smoke-test: home, fixtures, auth, admin settings, live TV.
+Phase 6 (GSC) needs one round-trip through the connector + a publish; Phase 7 is post-launch measurement, not code.
 
-### Confirm before I start
-
-- [ ] You accept SSR loss + Hostinger will still not run this as a "Node.js app".
-- [ ] You're OK with all backend moving to Supabase Edge Functions (billing/limits shift).
-- [ ] Remove the refresh button entirely (hourly auto only), or keep an admin-only "force refresh" button?
+Approve and I'll ship Phases 1–5 in one pass, then run the GSC verification flow.
