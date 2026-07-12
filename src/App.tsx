@@ -143,8 +143,14 @@ export default function App() {
           <div className="flex items-center gap-2">
             {admin && (
               <Link to="/settings" aria-label="Admin settings"
-                className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 px-3 py-2 text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/10">
-                <SettingsIcon size={14} /> <span className="hidden sm:inline">Admin</span>
+                className="hidden lg:inline-flex items-center gap-2 rounded-md bg-secondary/70 border border-border px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground/80 hover:text-primary hover:border-primary/60 transition-colors">
+                <SettingsIcon size={14} /> Admin
+              </Link>
+            )}
+            {admin && (
+              <Link to="/settings" aria-label="Admin settings"
+                className="lg:hidden grid h-9 w-9 place-items-center rounded-md bg-secondary/70 border border-border text-foreground/80 hover:text-primary hover:border-primary/60 transition-colors">
+                <SettingsIcon size={16} />
               </Link>
             )}
             <Link to="/live-tv" className="hidden lg:inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow hover:bg-primary/90 transition-colors">

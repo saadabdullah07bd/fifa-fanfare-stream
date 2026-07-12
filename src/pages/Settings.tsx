@@ -73,6 +73,26 @@ export default function Settings() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [manualName, setManualName] = useState("");
+  const [manualUrl, setManualUrl] = useState("");
+  const [manualCategory, setManualCategory] = useState("wc2026");
+  const addManual = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("xtream", {
+        body: { action: "add_manual_channel", name: manualName, url: manualUrl, category: manualCategory },
+      });
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    onSuccess: async () => {
+      toast.success("Manual channel added");
+      setManualName(""); setManualUrl("");
+      await qc.invalidateQueries({ queryKey: ["channels-admin"] });
+      await qc.invalidateQueries({ queryKey: ["channels"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const refresh = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("xtream", { body: { action: "refresh_channels" } });

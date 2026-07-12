@@ -88,8 +88,19 @@ Deno.serve(async (req) => {
     if (action === "stream_url") {
       const streamId = String(body.streamId || "");
       if (!streamId) return json({ error: "streamId required" }, 400);
-      const { data: channel } = await admin.from("channels").select("stream_id").eq("stream_id", streamId).maybeSingle();
+      const { data: channel } = await admin
+        .from("channels")
+        .select("stream_id, direct_url")
+        .eq("stream_id", streamId)
+        .maybeSingle();
       if (!channel) return json({ error: "Channel not found" }, 404);
+      // Manual channel: play the admin-provided m3u8/ts URL directly.
+      const directUrl = (channel as { direct_url?: string | null }).direct_url ?? null;
+      if (directUrl) {
+        const lower = directUrl.toLowerCase();
+        const type = lower.includes(".m3u8") ? "hls" : lower.includes(".ts") ? "mpegts" : "hls";
+        return json({ url: directUrl, type });
+      }
       const { data: cfg } = await admin.from("xtream_config").select("id").eq("id", 1).maybeSingle();
       if (!cfg) return json({ error: "No Xtream config" }, 400);
       const edgeBase = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/xtream`;
@@ -99,6 +110,33 @@ Deno.serve(async (req) => {
         type: "mpegts",
         fallbackUrl: `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`,
       });
+    }
+
+    // Admin: add a manual channel that plays a direct m3u8/HLS/TS URL.
+    if (action === "add_manual_channel") {
+      // Auth check happens below; hoist admin ID resolution first.
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const token = authHeader.replace("Bearer ", "");
+      if (!token) return json({ error: "Not signed in" }, 401);
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+      const { data: userData } = await userClient.auth.getUser();
+      if (!userData.user) return json({ error: "Invalid session" }, 401);
+      const { data: isAdminData } = await admin.rpc("has_role", { _user_id: userData.user.id, _role: "admin" });
+      if (!isAdminData) return json({ error: "Admin only" }, 403);
+
+      const name = String(body.name || "").trim();
+      const url = String(body.url || "").trim();
+      const category = (String(body.category || "wc2026").trim() || "wc2026").slice(0, 32);
+      if (!name || name.length > 128) return json({ error: "Invalid name" }, 400);
+      if (!/^https?:\/\//i.test(url) || url.length > 1024) return json({ error: "URL must start with http(s)://" }, 400);
+
+      const streamId = `manual-${crypto.randomUUID()}`;
+      const { error } = await admin.from("channels").insert({
+        category, stream_id: streamId, name, direct_url: url, logo_url: null, epg_channel_id: null,
+      } as never);
+      if (error) return json({ error: error.message }, 500);
+      return json({ ok: true, stream_id: streamId });
     }
 
     // ---- Admin-only actions from here down ----
