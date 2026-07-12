@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { bdTime } from "@/lib/flags";
+import { findWc26MatchByTeams } from "@/data/wc26-matches";
+
+const wcHref = (m: LiveMatch) => {
+  const w = findWc26MatchByTeams(m.home.name, m.away.name, m.utc_date);
+  return w ? `/match/${w.match_no}` : `/fixtures`;
+};
 
 /**
  * Represents a match currently in progress or recently finished.
@@ -80,7 +86,7 @@ function LiveCard({ m }: { m: LiveMatch }) {
     : m.minute ? `${m.minute}${m.injury_time ? `+${m.injury_time}` : ""}'`
     : "LIVE";
   return (
-    <Link to={`/match/${m.id}`} className="live-shimmer block rounded-xl border border-primary/40 bg-card/70 p-4 shadow-lg transition hover:-translate-y-0.5 hover:border-primary">
+    <Link to={wcHref(m)} className="live-shimmer block rounded-xl border border-primary/40 bg-card/70 p-4 shadow-lg transition hover:-translate-y-0.5 hover:border-primary">
       <div className="flex items-center justify-between text-xs uppercase tracking-wider">
         <span className="text-primary font-bold">
           <span className="live-dot mr-2 align-middle" />{min}
@@ -119,7 +125,7 @@ function MiniList({ title, items, showTime }: { title: string; items: LiveMatch[
       <ul className="mt-2 divide-y divide-border">
         {items.map((m) => (
           <li key={m.id} className="py-2 text-sm">
-            <Link to={`/match/${m.id}`} className="flex items-center gap-3 hover:text-primary">
+            <Link to={wcHref(m)} className="flex items-center gap-3 hover:text-primary">
               <span className="w-20 text-xs uppercase tracking-wider text-muted-foreground">
                 {showTime ? bdTime(m.utc_date) : "FT"}
               </span>
