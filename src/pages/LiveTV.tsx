@@ -54,12 +54,15 @@ export default function LiveTV() {
     let hls: Hls | undefined;
     let mts: ReturnType<typeof mpegts.createPlayer> | undefined;
     (async () => {
+      const v = await waitForVideo();
+      if (cancelled) return;
       const { data, error } = await supabase.functions.invoke("xtream", {
         body: { action: "stream_url", streamId: active.stream_id },
       });
+      if (cancelled) return;
       if (error) throw new Error(error.message);
       const { url, type, fallbackUrl } = data as { url: string; type?: "mpegts" | "hls"; fallbackUrl?: string };
-      const v = videoRef.current!;
+      // Default: sound on at 50% (not muted).
       // Default: sound on at 50% (not muted).
       v.muted = false;
       v.volume = 0.5;
