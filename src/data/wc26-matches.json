@@ -1,0 +1,3720 @@
+[
+  {
+    "match_no": 1,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-11T19:00:00Z",
+    "home_name": "Mexico",
+    "away_name": "South Africa",
+    "home_code": "MEX",
+    "away_code": "RSA",
+    "home_score": 2,
+    "away_score": 0,
+    "venue_name": "Estadio Azteca (Mexico City Stadium)",
+    "venue_city": "Mexico City",
+    "venue_country": "Mexico",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Julián Quiñones",
+        "minute": 9,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Raúl Jiménez",
+        "minute": 67,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": "Opening match of the tournament"
+  },
+  {
+    "match_no": 2,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-12T02:00:00Z",
+    "home_name": "Korea Republic",
+    "away_name": "Czechia",
+    "home_code": "KOR",
+    "away_code": "CZE",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": "Estadio Akron (Guadalajara Stadium)",
+    "venue_city": "Guadalajara (Zapopan)",
+    "venue_country": "Mexico",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Czechia",
+        "team_code": "CZE",
+        "player": "Krejčí",
+        "minute": 59,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Korea Republic",
+        "team_code": "KOR",
+        "player": "Hwang In-beom",
+        "minute": 67,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Korea Republic",
+        "team_code": "KOR",
+        "player": "Oh Hyeon-gyu",
+        "minute": 80,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 25,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-18T16:00:00Z",
+    "home_name": "Czechia",
+    "away_name": "South Africa",
+    "home_code": "CZE",
+    "away_code": "RSA",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Czechia",
+        "team_code": "CZE",
+        "player": "Michal Sadílek",
+        "minute": 6,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "South Africa",
+        "team_code": "RSA",
+        "player": "Teboho Mokoena",
+        "minute": 83,
+        "injury": null,
+        "type": "PEN"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 28,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-19T01:00:00Z",
+    "home_name": "Mexico",
+    "away_name": "Korea Republic",
+    "home_code": "MEX",
+    "away_code": "KOR",
+    "home_score": 1,
+    "away_score": 0,
+    "venue_name": "Estadio Akron (Guadalajara Stadium)",
+    "venue_city": "Guadalajara (Zapopan)",
+    "venue_country": "Mexico",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Luis Romo",
+        "minute": 50,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 53,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-25T01:00:00Z",
+    "home_name": "Czechia",
+    "away_name": "Mexico",
+    "home_code": "CZE",
+    "away_code": "MEX",
+    "home_score": 0,
+    "away_score": 3,
+    "venue_name": "Estadio BBVA (Estadio Monterrey)",
+    "venue_city": "Monterrey (Guadalupe)",
+    "venue_country": "Mexico",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Mateo Chávez",
+        "minute": 55,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Julián Quiñones",
+        "minute": 61,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Álvaro Fidalgo",
+        "minute": 90,
+        "injury": 4,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 54,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-25T01:00:00Z",
+    "home_name": "South Africa",
+    "away_name": "Korea Republic",
+    "home_code": "RSA",
+    "away_code": "KOR",
+    "home_score": 1,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "South Africa",
+        "team_code": "RSA",
+        "player": "Thapelo Maseko",
+        "minute": 63,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 3,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-12T19:00:00Z",
+    "home_name": "Canada",
+    "away_name": "Bosnia and Herzegovina",
+    "home_code": "CAN",
+    "away_code": "BIH",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": "BMO Field (Toronto Stadium)",
+    "venue_city": "Toronto",
+    "venue_country": "Canada",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Bosnia and Herzegovina",
+        "team_code": "BIH",
+        "player": "Jovo Lukić",
+        "minute": 21,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Canada",
+        "team_code": "CAN",
+        "player": "Cyle Larin",
+        "minute": 78,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 8,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-13T19:00:00Z",
+    "home_name": "Qatar",
+    "away_name": "Switzerland",
+    "home_code": "QAT",
+    "away_code": "SUI",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Switzerland",
+        "team_code": "SUI",
+        "player": "Breel Embolo",
+        "minute": 17,
+        "injury": null,
+        "type": "PEN"
+      },
+      {
+        "team": "Qatar",
+        "team_code": "QAT",
+        "player": "Miro Muheim",
+        "minute": 90,
+        "injury": 4,
+        "type": "OG"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 26,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-18T19:00:00Z",
+    "home_name": "Switzerland",
+    "away_name": "Bosnia and Herzegovina",
+    "home_code": "SUI",
+    "away_code": "BIH",
+    "home_score": 4,
+    "away_score": 1,
+    "venue_name": "BC Place (Vancouver Stadium)",
+    "venue_city": "Vancouver",
+    "venue_country": "Canada",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Switzerland",
+        "team_code": "SUI",
+        "player": "Ruben Vargas",
+        "minute": 84,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Switzerland",
+        "team_code": "SUI",
+        "player": "Granit Xhaka",
+        "minute": 90,
+        "injury": 7,
+        "type": "PEN"
+      },
+      {
+        "team": "Bosnia and Herzegovina",
+        "team_code": "BIH",
+        "player": "Ermin Mahmić",
+        "minute": 90,
+        "injury": 3,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 27,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-18T22:00:00Z",
+    "home_name": "Canada",
+    "away_name": "Qatar",
+    "home_code": "CAN",
+    "away_code": "QAT",
+    "home_score": 6,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Canada",
+        "team_code": "CAN",
+        "player": "Cyle Larin",
+        "minute": 16,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Canada",
+        "team_code": "CAN",
+        "player": "Nathan Saliba",
+        "minute": 64,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Canada",
+        "team_code": "CAN",
+        "player": "Mohammed Manei",
+        "minute": 75,
+        "injury": null,
+        "type": "OG"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 51,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-24T19:00:00Z",
+    "home_name": "Switzerland",
+    "away_name": "Canada",
+    "home_code": "SUI",
+    "away_code": "CAN",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Switzerland",
+        "team_code": "SUI",
+        "player": "Ruben Vargas",
+        "minute": 46,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Switzerland",
+        "team_code": "SUI",
+        "player": "Johan Manzambi",
+        "minute": 57,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Canada",
+        "team_code": "CAN",
+        "player": "Promise David",
+        "minute": 76,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 52,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-24T19:00:00Z",
+    "home_name": "Bosnia and Herzegovina",
+    "away_name": "Qatar",
+    "home_code": "BIH",
+    "away_code": "QAT",
+    "home_score": 3,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Bosnia and Herzegovina",
+        "team_code": "BIH",
+        "player": "Kerim Alajbegović",
+        "minute": 29,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Bosnia and Herzegovina",
+        "team_code": "BIH",
+        "player": "Mahmoud Abunada",
+        "minute": 34,
+        "injury": null,
+        "type": "OG"
+      },
+      {
+        "team": "Bosnia and Herzegovina",
+        "team_code": "BIH",
+        "player": "Ermin Mahmić",
+        "minute": 80,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Qatar",
+        "team_code": "QAT",
+        "player": "Hassan Al Haydos",
+        "minute": 42,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 5,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-14T01:00:00Z",
+    "home_name": "Haiti",
+    "away_name": "Scotland",
+    "home_code": "HAI",
+    "away_code": "SCO",
+    "home_score": 0,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Scotland",
+        "team_code": "SCO",
+        "player": "John McGinn",
+        "minute": 28,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 7,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-13T22:00:00Z",
+    "home_name": "Brazil",
+    "away_name": "Morocco",
+    "home_code": "BRA",
+    "away_code": "MAR",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Morocco",
+        "team_code": "MAR",
+        "player": "Ismael Saibari",
+        "minute": 21,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Brazil",
+        "team_code": "BRA",
+        "player": "Vinícius Júnior",
+        "minute": 32,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 29,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-20T00:30:00Z",
+    "home_name": "Brazil",
+    "away_name": "Haiti",
+    "home_code": "BRA",
+    "away_code": "HAI",
+    "home_score": 3,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Brazil",
+        "team_code": "BRA",
+        "player": "Vinícius Júnior",
+        "minute": 45,
+        "injury": 3,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 30,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-19T22:00:00Z",
+    "home_name": "Scotland",
+    "away_name": "Morocco",
+    "home_code": "SCO",
+    "away_code": "MAR",
+    "home_score": 0,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Morocco",
+        "team_code": "MAR",
+        "player": "Ismael Saibari",
+        "minute": 2,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 49,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-24T22:00:00Z",
+    "home_name": "Scotland",
+    "away_name": "Brazil",
+    "home_code": "SCO",
+    "away_code": "BRA",
+    "home_score": 0,
+    "away_score": 3,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Brazil",
+        "team_code": "BRA",
+        "player": "Matheus Cunha",
+        "minute": 60,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 50,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-24T22:00:00Z",
+    "home_name": "Morocco",
+    "away_name": "Haiti",
+    "home_code": "MAR",
+    "away_code": "HAI",
+    "home_score": 4,
+    "away_score": 2,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Haiti",
+        "team_code": "HAI",
+        "player": "Yassine Bounou",
+        "minute": 10,
+        "injury": null,
+        "type": "OG"
+      },
+      {
+        "team": "Haiti",
+        "team_code": "HAI",
+        "player": "Wilson Isidor",
+        "minute": 43,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Morocco",
+        "team_code": "MAR",
+        "player": "Achraf Hakimi",
+        "minute": 39,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Morocco",
+        "team_code": "MAR",
+        "player": "Ismael Saibari",
+        "minute": 45,
+        "injury": 1,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Morocco",
+        "team_code": "MAR",
+        "player": "Soufiane Rahimi",
+        "minute": 78,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Morocco",
+        "team_code": "MAR",
+        "player": "Gessime Yassine",
+        "minute": 89,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 4,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-13T01:00:00Z",
+    "home_name": "USA",
+    "away_name": "Paraguay",
+    "home_code": "USA",
+    "away_code": "PAR",
+    "home_score": 4,
+    "away_score": 1,
+    "venue_name": "SoFi Stadium (Los Angeles Stadium)",
+    "venue_city": "Inglewood",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Paraguay",
+        "team_code": "PAR",
+        "player": "Damián Bobadilla",
+        "minute": 7,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "USA",
+        "team_code": "USA",
+        "player": "Mauricio",
+        "minute": 73,
+        "injury": null,
+        "type": "OG"
+      },
+      {
+        "team": "USA",
+        "team_code": "USA",
+        "player": "Giovanni Reyna",
+        "minute": 90,
+        "injury": 8,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 6,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-14T04:00:00Z",
+    "home_name": "Australia",
+    "away_name": "Türkiye",
+    "home_code": "AUS",
+    "away_code": "TUR",
+    "home_score": 2,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Australia",
+        "team_code": "AUS",
+        "player": "Nestory Irankunda",
+        "minute": 27,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Australia",
+        "team_code": "AUS",
+        "player": "Connor Metcalfe",
+        "minute": 75,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 31,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-20T03:00:00Z",
+    "home_name": "Türkiye",
+    "away_name": "Paraguay",
+    "home_code": "TUR",
+    "away_code": "PAR",
+    "home_score": 0,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Paraguay",
+        "team_code": "PAR",
+        "player": "Miguel Almirón",
+        "minute": 45,
+        "injury": 3,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 32,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-19T19:00:00Z",
+    "home_name": "USA",
+    "away_name": "Australia",
+    "home_code": "USA",
+    "away_code": "AUS",
+    "home_score": 2,
+    "away_score": 0,
+    "venue_name": "SoFi Stadium (Los Angeles Stadium)",
+    "venue_city": "Inglewood",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "USA",
+        "team_code": "USA",
+        "player": "Cameron Burgess",
+        "minute": 11,
+        "injury": null,
+        "type": "OG"
+      },
+      {
+        "team": "USA",
+        "team_code": "USA",
+        "player": "Alex Freeman",
+        "minute": 43,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 59,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-26T02:00:00Z",
+    "home_name": "Türkiye",
+    "away_name": "USA",
+    "home_code": "TUR",
+    "away_code": "USA",
+    "home_score": 3,
+    "away_score": 2,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Türkiye",
+        "team_code": "TUR",
+        "player": "Arda Güler",
+        "minute": 10,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Türkiye",
+        "team_code": "TUR",
+        "player": "Barış Alper Yılmaz",
+        "minute": 31,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Türkiye",
+        "team_code": "TUR",
+        "player": "Kaan Ayhan",
+        "minute": 90,
+        "injury": 8,
+        "type": "REGULAR"
+      },
+      {
+        "team": "USA",
+        "team_code": "USA",
+        "player": "Auston Trusty",
+        "minute": 3,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "USA",
+        "team_code": "USA",
+        "player": "Sebastian Berhalter",
+        "minute": 49,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 60,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-26T02:00:00Z",
+    "home_name": "Paraguay",
+    "away_name": "Australia",
+    "home_code": "PAR",
+    "away_code": "AUS",
+    "home_score": 0,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": "San Francisco Bay Area",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 9,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-14T23:00:00Z",
+    "home_name": "Côte d'Ivoire",
+    "away_name": "Ecuador",
+    "home_code": "CIV",
+    "away_code": "ECU",
+    "home_score": 1,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Côte d'Ivoire",
+        "team_code": "CIV",
+        "player": "Amad Diallo",
+        "minute": 90,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 10,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-14T17:00:00Z",
+    "home_name": "Germany",
+    "away_name": "Curaçao",
+    "home_code": "GER",
+    "away_code": "CUW",
+    "home_score": 7,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Germany",
+        "team_code": "GER",
+        "player": "Felix Nmecha",
+        "minute": 6,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Germany",
+        "team_code": "GER",
+        "player": "Nico Schlotterbeck",
+        "minute": 38,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Germany",
+        "team_code": "GER",
+        "player": "Jamal Musiala",
+        "minute": 47,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Germany",
+        "team_code": "GER",
+        "player": "Nathaniel Brown",
+        "minute": 68,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Germany",
+        "team_code": "GER",
+        "player": "Deniz Undav",
+        "minute": 78,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Curaçao",
+        "team_code": "CUW",
+        "player": "Livano Comenencia",
+        "minute": 21,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 33,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-20T20:00:00Z",
+    "home_name": "Germany",
+    "away_name": "Côte d'Ivoire",
+    "home_code": "GER",
+    "away_code": "CIV",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Côte d'Ivoire",
+        "team_code": "CIV",
+        "player": "Franck Kessié",
+        "minute": 30,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 34,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-21T00:00:00Z",
+    "home_name": "Ecuador",
+    "away_name": "Curaçao",
+    "home_code": "ECU",
+    "away_code": "CUW",
+    "home_score": 0,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 55,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-25T20:00:00Z",
+    "home_name": "Curaçao",
+    "away_name": "Côte d'Ivoire",
+    "home_code": "CUW",
+    "away_code": "CIV",
+    "home_score": 0,
+    "away_score": 2,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": "Result per post-match reports (Ivory Coast won 2-0 to finish Group E runner-up); goal scorer detail not independently confirmed in sources reviewed"
+  },
+  {
+    "match_no": 56,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-25T20:00:00Z",
+    "home_name": "Ecuador",
+    "away_name": "Germany",
+    "home_code": "ECU",
+    "away_code": "GER",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Germany",
+        "team_code": "GER",
+        "player": "Leroy Sané",
+        "minute": 2,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Ecuador",
+        "team_code": "ECU",
+        "player": "Nilson Angulo",
+        "minute": 9,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Ecuador",
+        "team_code": "ECU",
+        "player": "Gonzalo Plata",
+        "minute": 77,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 11,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-14T20:00:00Z",
+    "home_name": "Netherlands",
+    "away_name": "Japan",
+    "home_code": "NED",
+    "away_code": "JPN",
+    "home_score": 2,
+    "away_score": 2,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Netherlands",
+        "team_code": "NED",
+        "player": "Virgil van Dijk",
+        "minute": 50,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Netherlands",
+        "team_code": "NED",
+        "player": "Crysencio Summerville",
+        "minute": 64,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Japan",
+        "team_code": "JPN",
+        "player": "Keito Nakamura",
+        "minute": 57,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Japan",
+        "team_code": "JPN",
+        "player": "Daichi Kamada",
+        "minute": 88,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 12,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-15T02:00:00Z",
+    "home_name": "Sweden",
+    "away_name": "Tunisia",
+    "home_code": "SWE",
+    "away_code": "TUN",
+    "home_score": 5,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Sweden",
+        "team_code": "SWE",
+        "player": "Alexander Isak",
+        "minute": 30,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Sweden",
+        "team_code": "SWE",
+        "player": "Viktor Gyökeres",
+        "minute": 59,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Sweden",
+        "team_code": "SWE",
+        "player": "Mattias Svanberg",
+        "minute": 84,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Tunisia",
+        "team_code": "TUN",
+        "player": "Omar Rekik",
+        "minute": 43,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 35,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-20T17:00:00Z",
+    "home_name": "Netherlands",
+    "away_name": "Sweden",
+    "home_code": "NED",
+    "away_code": "SWE",
+    "home_score": 5,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Netherlands",
+        "team_code": "NED",
+        "player": "Crysencio Summerville",
+        "minute": 89,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Sweden",
+        "team_code": "SWE",
+        "player": "Anthony Elanga",
+        "minute": 59,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 36,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-21T04:00:00Z",
+    "home_name": "Tunisia",
+    "away_name": "Japan",
+    "home_code": "TUN",
+    "away_code": "JPN",
+    "home_score": 0,
+    "away_score": 4,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Japan",
+        "team_code": "JPN",
+        "player": "Daichi Kamada",
+        "minute": 4,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Japan",
+        "team_code": "JPN",
+        "player": "Junya Ito",
+        "minute": 69,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 57,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-25T23:00:00Z",
+    "home_name": "Japan",
+    "away_name": "Sweden",
+    "home_code": "JPN",
+    "away_code": "SWE",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Japan",
+        "team_code": "JPN",
+        "player": "Daizen Maeda",
+        "minute": 56,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Sweden",
+        "team_code": "SWE",
+        "player": "Anthony Elanga",
+        "minute": 62,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 58,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-25T23:00:00Z",
+    "home_name": "Tunisia",
+    "away_name": "Netherlands",
+    "home_code": "TUN",
+    "away_code": "NED",
+    "home_score": 1,
+    "away_score": 3,
+    "venue_name": "Estadio Monterrey",
+    "venue_city": "Monterrey",
+    "venue_country": "Mexico",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Netherlands",
+        "team_code": "NED",
+        "player": "Ellyes Skhiri",
+        "minute": 3,
+        "injury": null,
+        "type": "OG"
+      },
+      {
+        "team": "Netherlands",
+        "team_code": "NED",
+        "player": "Brian Brobbey",
+        "minute": 7,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Netherlands",
+        "team_code": "NED",
+        "player": "Jan Paul van Hecke",
+        "minute": 62,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Tunisia",
+        "team_code": "TUN",
+        "player": "Hazem Mastouri",
+        "minute": 54,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 16,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-15T19:00:00Z",
+    "home_name": "Belgium",
+    "away_name": "Egypt",
+    "home_code": "BEL",
+    "away_code": "EGY",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Egypt",
+        "team_code": "EGY",
+        "player": "Emam Ashour",
+        "minute": 19,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Belgium",
+        "team_code": "BEL",
+        "player": "Mohamed Hany",
+        "minute": 66,
+        "injury": null,
+        "type": "OG"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 15,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": null,
+    "home_name": "IR Iran",
+    "away_name": "New Zealand",
+    "home_code": "IRN",
+    "away_code": "NZL",
+    "home_score": 2,
+    "away_score": 2,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "IR Iran",
+        "team_code": "IRN",
+        "player": "Ramin Rezaeian",
+        "minute": 32,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "IR Iran",
+        "team_code": "IRN",
+        "player": "Mohammad Mohebbi",
+        "minute": 64,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": "Exact kickoff time not confirmed in sources reviewed"
+  },
+  {
+    "match_no": 39,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-21T19:00:00Z",
+    "home_name": "Belgium",
+    "away_name": "IR Iran",
+    "home_code": "BEL",
+    "away_code": "IRN",
+    "home_score": 0,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 40,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-22T01:00:00Z",
+    "home_name": "New Zealand",
+    "away_name": "Egypt",
+    "home_code": "NZL",
+    "away_code": "EGY",
+    "home_score": 1,
+    "away_score": 3,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "New Zealand",
+        "team_code": "NZL",
+        "player": "Finn Surman",
+        "minute": 15,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Egypt",
+        "team_code": "EGY",
+        "player": "Mostafa Zico",
+        "minute": 58,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Egypt",
+        "team_code": "EGY",
+        "player": "Mohamed Salah",
+        "minute": 67,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Egypt",
+        "team_code": "EGY",
+        "player": "Trezeguet",
+        "minute": 82,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 63,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-27T03:00:00Z",
+    "home_name": "Egypt",
+    "away_name": "IR Iran",
+    "home_code": "EGY",
+    "away_code": "IRN",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": "Lumen Field (Seattle Stadium)",
+    "venue_city": "Seattle",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Egypt",
+        "team_code": "EGY",
+        "player": "Mahmoud Saber",
+        "minute": 5,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "IR Iran",
+        "team_code": "IRN",
+        "player": "Ramin Rezaeian",
+        "minute": 14,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 64,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-27T03:00:00Z",
+    "home_name": "New Zealand",
+    "away_name": "Belgium",
+    "home_code": "NZL",
+    "away_code": "BEL",
+    "home_score": 1,
+    "away_score": 5,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "New Zealand",
+        "team_code": "NZL",
+        "player": "Elijah Just",
+        "minute": 84,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Belgium",
+        "team_code": "BEL",
+        "player": "Kevin De Bruyne",
+        "minute": 66,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Belgium",
+        "team_code": "BEL",
+        "player": "Romelu Lukaku",
+        "minute": 86,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Belgium",
+        "team_code": "BEL",
+        "player": "Alexis Saelemaekers",
+        "minute": 90,
+        "injury": 4,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 13,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-15T22:00:00Z",
+    "home_name": "Saudi Arabia",
+    "away_name": "Uruguay",
+    "home_code": "KSA",
+    "away_code": "URU",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Saudi Arabia",
+        "team_code": "KSA",
+        "player": "Abdulelah Al-Amri",
+        "minute": 41,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Uruguay",
+        "team_code": "URU",
+        "player": "Maxi Araújo",
+        "minute": 80,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 14,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-15T16:00:00Z",
+    "home_name": "Spain",
+    "away_name": "Cabo Verde",
+    "home_code": "ESP",
+    "away_code": "CPV",
+    "home_score": 0,
+    "away_score": 0,
+    "venue_name": "Mercedes-Benz Stadium (Atlanta Stadium)",
+    "venue_city": "Atlanta",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 37,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-21T22:00:00Z",
+    "home_name": "Uruguay",
+    "away_name": "Cabo Verde",
+    "home_code": "URU",
+    "away_code": "CPV",
+    "home_score": 2,
+    "away_score": 2,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Uruguay",
+        "team_code": "URU",
+        "player": "Maxi Araújo",
+        "minute": 44,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Uruguay",
+        "team_code": "URU",
+        "player": "Agustín Canobbio",
+        "minute": 45,
+        "injury": 6,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Cabo Verde",
+        "team_code": "CPV",
+        "player": "Kevin Pina",
+        "minute": 21,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Cabo Verde",
+        "team_code": "CPV",
+        "player": "Hélio Varela",
+        "minute": 61,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 38,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-21T16:00:00Z",
+    "home_name": "Spain",
+    "away_name": "Saudi Arabia",
+    "home_code": "ESP",
+    "away_code": "KSA",
+    "home_score": 4,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Spain",
+        "team_code": "ESP",
+        "player": "Lamine Yamal",
+        "minute": 10,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Spain",
+        "team_code": "ESP",
+        "player": "Hassan Al Tambakti",
+        "minute": 49,
+        "injury": null,
+        "type": "OG"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 65,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-27T00:00:00Z",
+    "home_name": "Cabo Verde",
+    "away_name": "Saudi Arabia",
+    "home_code": "CPV",
+    "away_code": "KSA",
+    "home_score": 0,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 66,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-27T00:00:00Z",
+    "home_name": "Uruguay",
+    "away_name": "Spain",
+    "home_code": "URU",
+    "away_code": "ESP",
+    "home_score": 0,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Spain",
+        "team_code": "ESP",
+        "player": "Alex Baena",
+        "minute": 42,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 17,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-16T19:00:00Z",
+    "home_name": "France",
+    "away_name": "Senegal",
+    "home_code": "FRA",
+    "away_code": "SEN",
+    "home_score": 3,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": "New York/New Jersey",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "France",
+        "team_code": "FRA",
+        "player": "Bradley Barcola",
+        "minute": 82,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Senegal",
+        "team_code": "SEN",
+        "player": "Ibrahim Mbaye",
+        "minute": 90,
+        "injury": 5,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 18,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": null,
+    "home_name": "Iraq",
+    "away_name": "Norway",
+    "home_code": "IRQ",
+    "away_code": "NOR",
+    "home_score": 1,
+    "away_score": 4,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Norway",
+        "team_code": "NOR",
+        "player": "Leo Østigård",
+        "minute": 76,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Norway",
+        "team_code": "NOR",
+        "player": "Aymen Hussein",
+        "minute": 90,
+        "injury": 6,
+        "type": "OG"
+      },
+      {
+        "team": "Iraq",
+        "team_code": "IRQ",
+        "player": "Aymen Hussein",
+        "minute": 39,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": "Exact kickoff time not confirmed in sources reviewed; only match in Group I held outside the United States"
+  },
+  {
+    "match_no": 41,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-23T00:00:00Z",
+    "home_name": "Norway",
+    "away_name": "Senegal",
+    "home_code": "NOR",
+    "away_code": "SEN",
+    "home_score": 3,
+    "away_score": 2,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Norway",
+        "team_code": "NOR",
+        "player": "Marcus Holmgren Pedersen",
+        "minute": 43,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 42,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-22T21:00:00Z",
+    "home_name": "France",
+    "away_name": "Iraq",
+    "home_code": "FRA",
+    "away_code": "IRQ",
+    "home_score": 3,
+    "away_score": 0,
+    "venue_name": "Lincoln Financial Field (Philadelphia Stadium)",
+    "venue_city": "Philadelphia",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "France",
+        "team_code": "FRA",
+        "player": "Ousmane Dembélé",
+        "minute": 66,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 61,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-26T19:00:00Z",
+    "home_name": "Norway",
+    "away_name": "France",
+    "home_code": "NOR",
+    "away_code": "FRA",
+    "home_score": 1,
+    "away_score": 4,
+    "venue_name": "Gillette Stadium (Boston Stadium)",
+    "venue_city": "Foxborough",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Norway",
+        "team_code": "NOR",
+        "player": "Thelo Aasgaard",
+        "minute": 21,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "France",
+        "team_code": "FRA",
+        "player": "Désiré Doué",
+        "minute": 90,
+        "injury": 4,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": "Ousmane Dembélé scored a first-half hat-trick"
+  },
+  {
+    "match_no": 62,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-26T19:00:00Z",
+    "home_name": "Senegal",
+    "away_name": "Iraq",
+    "home_code": "SEN",
+    "away_code": "IRQ",
+    "home_score": 5,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": "New York/New Jersey",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Senegal",
+        "team_code": "SEN",
+        "player": "Habib Diarra",
+        "minute": 4,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Senegal",
+        "team_code": "SEN",
+        "player": "Ismaïla Sarr",
+        "minute": 56,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Senegal",
+        "team_code": "SEN",
+        "player": "Iliman Ndiaye",
+        "minute": 82,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 19,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": null,
+    "home_name": "Argentina",
+    "away_name": "Algeria",
+    "home_code": "ARG",
+    "away_code": "ALG",
+    "home_score": 3,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": "Messi hat-trick; exact kickoff time not confirmed in sources reviewed"
+  },
+  {
+    "match_no": 20,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-17T04:00:00Z",
+    "home_name": "Austria",
+    "away_name": "Jordan",
+    "home_code": "AUT",
+    "away_code": "JOR",
+    "home_score": 3,
+    "away_score": 1,
+    "venue_name": "Levi's Stadium (San Francisco Bay Area Stadium)",
+    "venue_city": "Santa Clara",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Austria",
+        "team_code": "AUT",
+        "player": "Romano Schmid",
+        "minute": 20,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Austria",
+        "team_code": "AUT",
+        "player": "Yazan Al-Arab",
+        "minute": 76,
+        "injury": null,
+        "type": "OG"
+      },
+      {
+        "team": "Austria",
+        "team_code": "AUT",
+        "player": "Marko Arnautović",
+        "minute": 90,
+        "injury": 12,
+        "type": "PEN"
+      },
+      {
+        "team": "Jordan",
+        "team_code": "JOR",
+        "player": "Ali Olwan",
+        "minute": 50,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 43,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-22T17:00:00Z",
+    "home_name": "Argentina",
+    "away_name": "Austria",
+    "home_code": "ARG",
+    "away_code": "AUT",
+    "home_score": 2,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 44,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-23T03:00:00Z",
+    "home_name": "Jordan",
+    "away_name": "Algeria",
+    "home_code": "JOR",
+    "away_code": "ALG",
+    "home_score": 1,
+    "away_score": 2,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Jordan",
+        "team_code": "JOR",
+        "player": "Nizar Alrashdan",
+        "minute": 36,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Algeria",
+        "team_code": "ALG",
+        "player": "Nadhir Benbouali",
+        "minute": 69,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Algeria",
+        "team_code": "ALG",
+        "player": "Amine Gouiri",
+        "minute": 82,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 69,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-28T02:00:00Z",
+    "home_name": "Algeria",
+    "away_name": "Austria",
+    "home_code": "ALG",
+    "away_code": "AUT",
+    "home_score": 3,
+    "away_score": 3,
+    "venue_name": "Arrowhead Stadium (Kansas City Stadium)",
+    "venue_city": "Kansas City",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Algeria",
+        "team_code": "ALG",
+        "player": "Rafik Belghali",
+        "minute": 45,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Austria",
+        "team_code": "AUT",
+        "player": "Marko Arnautović",
+        "minute": 28,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Austria",
+        "team_code": "AUT",
+        "player": "Marcel Sabitzer",
+        "minute": 55,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Austria",
+        "team_code": "AUT",
+        "player": "Saša Kalajdžić",
+        "minute": 90,
+        "injury": 6,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 70,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-28T02:00:00Z",
+    "home_name": "Jordan",
+    "away_name": "Argentina",
+    "home_code": "JOR",
+    "away_code": "ARG",
+    "home_score": 1,
+    "away_score": 3,
+    "venue_name": "AT&T Stadium (Dallas Stadium)",
+    "venue_city": "Arlington",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Jordan",
+        "team_code": "JOR",
+        "player": "Mousa Al-Tamari",
+        "minute": 55,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Argentina",
+        "team_code": "ARG",
+        "player": "Giovani Lo Celso",
+        "minute": 19,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Argentina",
+        "team_code": "ARG",
+        "player": "Lautaro Martínez",
+        "minute": 31,
+        "injury": null,
+        "type": "PEN"
+      },
+      {
+        "team": "Argentina",
+        "team_code": "ARG",
+        "player": "Lionel Messi",
+        "minute": 80,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 23,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-17T17:00:00Z",
+    "home_name": "Portugal",
+    "away_name": "DR Congo",
+    "home_code": "POR",
+    "away_code": "COD",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": "NRG Stadium (Houston Stadium)",
+    "venue_city": "Houston",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Portugal",
+        "team_code": "POR",
+        "player": "João Neves",
+        "minute": 6,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "DR Congo",
+        "team_code": "COD",
+        "player": "Yoane Wissa",
+        "minute": 45,
+        "injury": 5,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 24,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-18T02:00:00Z",
+    "home_name": "Uzbekistan",
+    "away_name": "Colombia",
+    "home_code": "UZB",
+    "away_code": "COL",
+    "home_score": 1,
+    "away_score": 3,
+    "venue_name": "Estadio Azteca (Mexico City Stadium)",
+    "venue_city": "Mexico City",
+    "venue_country": "Mexico",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Colombia",
+        "team_code": "COL",
+        "player": "Daniel Muñoz",
+        "minute": 40,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Colombia",
+        "team_code": "COL",
+        "player": "Luis Díaz",
+        "minute": 65,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Colombia",
+        "team_code": "COL",
+        "player": "Jaminton Campaz",
+        "minute": 90,
+        "injury": 9,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Uzbekistan",
+        "team_code": "UZB",
+        "player": "Abbosbek Fayzullayev",
+        "minute": 60,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 47,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-23T17:00:00Z",
+    "home_name": "Portugal",
+    "away_name": "Uzbekistan",
+    "home_code": "POR",
+    "away_code": "UZB",
+    "home_score": 5,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Portugal",
+        "team_code": "POR",
+        "player": "Nuno Mendes",
+        "minute": 17,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Portugal",
+        "team_code": "POR",
+        "player": "Rafael Leão",
+        "minute": 87,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Portugal",
+        "team_code": "POR",
+        "player": "Abduvohid Nematov",
+        "minute": 60,
+        "injury": null,
+        "type": "OG"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 48,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-24T02:00:00Z",
+    "home_name": "Colombia",
+    "away_name": "DR Congo",
+    "home_code": "COL",
+    "away_code": "COD",
+    "home_score": 1,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Colombia",
+        "team_code": "COL",
+        "player": "Daniel Muñoz",
+        "minute": 76,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 71,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-27T23:30:00Z",
+    "home_name": "Colombia",
+    "away_name": "Portugal",
+    "home_code": "COL",
+    "away_code": "POR",
+    "home_score": 0,
+    "away_score": 0,
+    "venue_name": null,
+    "venue_city": "Miami",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 72,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-27T23:30:00Z",
+    "home_name": "DR Congo",
+    "away_name": "Uzbekistan",
+    "home_code": "COD",
+    "away_code": "UZB",
+    "home_score": 3,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": "Atlanta",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "DR Congo",
+        "team_code": "COD",
+        "player": "Fiston Mayele",
+        "minute": 78,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Uzbekistan",
+        "team_code": "UZB",
+        "player": "Eldor Shomurodov",
+        "minute": 10,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 21,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-17T23:00:00Z",
+    "home_name": "Ghana",
+    "away_name": "Panama",
+    "home_code": "GHA",
+    "away_code": "PAN",
+    "home_score": 1,
+    "away_score": 0,
+    "venue_name": "BMO Field (Toronto Stadium)",
+    "venue_city": "Toronto",
+    "venue_country": "Canada",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Ghana",
+        "team_code": "GHA",
+        "player": "Caleb Yirenkyi",
+        "minute": 90,
+        "injury": 5,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 22,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-17T20:00:00Z",
+    "home_name": "England",
+    "away_name": "Croatia",
+    "home_code": "ENG",
+    "away_code": "CRO",
+    "home_score": 4,
+    "away_score": 2,
+    "venue_name": "AT&T Stadium (Dallas Stadium)",
+    "venue_city": "Arlington",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "England",
+        "team_code": "ENG",
+        "player": "Jude Bellingham",
+        "minute": 47,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "England",
+        "team_code": "ENG",
+        "player": "Marcus Rashford",
+        "minute": 85,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Croatia",
+        "team_code": "CRO",
+        "player": "Martin Baturina",
+        "minute": 36,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Croatia",
+        "team_code": "CRO",
+        "player": "Petar Musa",
+        "minute": 45,
+        "injury": 5,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 45,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-23T20:00:00Z",
+    "home_name": "England",
+    "away_name": "Ghana",
+    "home_code": "ENG",
+    "away_code": "GHA",
+    "home_score": 0,
+    "away_score": 0,
+    "venue_name": "Gillette Stadium (Boston Stadium)",
+    "venue_city": "Foxborough",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 46,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-23T23:00:00Z",
+    "home_name": "Panama",
+    "away_name": "Croatia",
+    "home_code": "PAN",
+    "away_code": "CRO",
+    "home_score": 0,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": null,
+    "venue_country": null,
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Croatia",
+        "team_code": "CRO",
+        "player": "Ante Budimir",
+        "minute": 54,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 67,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-27T21:00:00Z",
+    "home_name": "Panama",
+    "away_name": "England",
+    "home_code": "PAN",
+    "away_code": "ENG",
+    "home_score": 0,
+    "away_score": 2,
+    "venue_name": null,
+    "venue_city": "New York/New Jersey",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "England",
+        "team_code": "ENG",
+        "player": "Jude Bellingham",
+        "minute": 62,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "England",
+        "team_code": "ENG",
+        "player": "Harry Kane",
+        "minute": 67,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 68,
+    "stage": "GROUP",
+    "stage_label": "Group Stage",
+    "date_utc": "2026-06-27T21:00:00Z",
+    "home_name": "Croatia",
+    "away_name": "Ghana",
+    "home_code": "CRO",
+    "away_code": "GHA",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": null,
+    "venue_city": "Philadelphia",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Croatia",
+        "team_code": "CRO",
+        "player": "Petar Sučić",
+        "minute": 31,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Croatia",
+        "team_code": "CRO",
+        "player": "Nikola Vlašić",
+        "minute": 83,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Ghana",
+        "team_code": "GHA",
+        "player": "Derrick Luckassen",
+        "minute": 73,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 73,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-06-28T19:00:00Z",
+    "home_name": "South Africa",
+    "away_name": "Canada",
+    "home_code": "RSA",
+    "away_code": "CAN",
+    "home_score": 0,
+    "away_score": 1,
+    "venue_name": "SoFi Stadium (Los Angeles Stadium)",
+    "venue_city": "Inglewood",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Canada",
+        "team_code": "CAN",
+        "player": "Stephen Eustáquio",
+        "minute": 90,
+        "injury": 2,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 74,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-06-29T20:30:00Z",
+    "home_name": "Germany",
+    "away_name": "Paraguay",
+    "home_code": "GER",
+    "away_code": "PAR",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": "Gillette Stadium (Boston Stadium)",
+    "venue_city": "Foxborough",
+    "venue_country": "United States",
+    "penalty_shootout": "Paraguay win 4-3 on penalties",
+    "extra_time": true,
+    "goals": [
+      {
+        "team": "Germany",
+        "team_code": "GER",
+        "player": "Kai Havertz",
+        "minute": 54,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Paraguay",
+        "team_code": "PAR",
+        "player": "Julio Enciso",
+        "minute": 42,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 75,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-06-30T01:00:00Z",
+    "home_name": "Netherlands",
+    "away_name": "Morocco",
+    "home_code": "NED",
+    "away_code": "MAR",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": "Estadio BBVA (Estadio Monterrey)",
+    "venue_city": "Monterrey (Guadalupe)",
+    "venue_country": "Mexico",
+    "penalty_shootout": "Morocco win 3-2 on penalties",
+    "extra_time": true,
+    "goals": [
+      {
+        "team": "Netherlands",
+        "team_code": "NED",
+        "player": "Cody Gakpo",
+        "minute": 72,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Morocco",
+        "team_code": "MAR",
+        "player": "Issa Diop",
+        "minute": 90,
+        "injury": 1,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 76,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-06-29T17:00:00Z",
+    "home_name": "Brazil",
+    "away_name": "Japan",
+    "home_code": "BRA",
+    "away_code": "JPN",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": "NRG Stadium (Houston Stadium)",
+    "venue_city": "Houston",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Brazil",
+        "team_code": "BRA",
+        "player": "Casemiro",
+        "minute": 56,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Brazil",
+        "team_code": "BRA",
+        "player": "Gabriel Martinelli",
+        "minute": 90,
+        "injury": 5,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Japan",
+        "team_code": "JPN",
+        "player": "Kaishu Sano",
+        "minute": 29,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 77,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-06-30T21:00:00Z",
+    "home_name": "France",
+    "away_name": "Sweden",
+    "home_code": "FRA",
+    "away_code": "SWE",
+    "home_score": 3,
+    "away_score": 0,
+    "venue_name": "MetLife Stadium (New York New Jersey Stadium)",
+    "venue_city": "East Rutherford",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "France",
+        "team_code": "FRA",
+        "player": "Bradley Barcola",
+        "minute": 53,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 78,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-06-30T17:00:00Z",
+    "home_name": "Côte d'Ivoire",
+    "away_name": "Norway",
+    "home_code": "CIV",
+    "away_code": "NOR",
+    "home_score": 1,
+    "away_score": 2,
+    "venue_name": "AT&T Stadium (Dallas Stadium)",
+    "venue_city": "Arlington",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Côte d'Ivoire",
+        "team_code": "CIV",
+        "player": "Amad Diallo",
+        "minute": 74,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Norway",
+        "team_code": "NOR",
+        "player": "Antonio Nusa",
+        "minute": 39,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Norway",
+        "team_code": "NOR",
+        "player": "Erling Haaland",
+        "minute": 86,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 79,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-01T02:00:00Z",
+    "home_name": "Mexico",
+    "away_name": "Ecuador",
+    "home_code": "MEX",
+    "away_code": "ECU",
+    "home_score": 2,
+    "away_score": 0,
+    "venue_name": "Estadio Azteca (Mexico City Stadium)",
+    "venue_city": "Mexico City",
+    "venue_country": "Mexico",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Julián Quiñones",
+        "minute": 22,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Raúl Jiménez",
+        "minute": 31,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": "Kickoff delayed by one hour due to adverse weather conditions"
+  },
+  {
+    "match_no": 80,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-01T16:00:00Z",
+    "home_name": "England",
+    "away_name": "DR Congo",
+    "home_code": "ENG",
+    "away_code": "COD",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": "Mercedes-Benz Stadium (Atlanta Stadium)",
+    "venue_city": "Atlanta",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "DR Congo",
+        "team_code": "COD",
+        "player": "Brian Cipenga",
+        "minute": 7,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 81,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-02T00:00:00Z",
+    "home_name": "USA",
+    "away_name": "Bosnia and Herzegovina",
+    "home_code": "USA",
+    "away_code": "BIH",
+    "home_score": 2,
+    "away_score": 0,
+    "venue_name": "Levi's Stadium (San Francisco Bay Area Stadium)",
+    "venue_city": "Santa Clara",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "USA",
+        "team_code": "USA",
+        "player": "Folarin Balogun",
+        "minute": 45,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "USA",
+        "team_code": "USA",
+        "player": "Malik Tillman",
+        "minute": 82,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 82,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-01T20:00:00Z",
+    "home_name": "Belgium",
+    "away_name": "Senegal",
+    "home_code": "BEL",
+    "away_code": "SEN",
+    "home_score": 3,
+    "away_score": 2,
+    "venue_name": "Lumen Field (Seattle Stadium)",
+    "venue_city": "Seattle",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": true,
+    "goals": [
+      {
+        "team": "Belgium",
+        "team_code": "BEL",
+        "player": "Romelu Lukaku",
+        "minute": 86,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Senegal",
+        "team_code": "SEN",
+        "player": "Habib Diarra",
+        "minute": 24,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Senegal",
+        "team_code": "SEN",
+        "player": "Ismaïla Sarr",
+        "minute": 51,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 83,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-02T23:00:00Z",
+    "home_name": "Portugal",
+    "away_name": "Croatia",
+    "home_code": "POR",
+    "away_code": "CRO",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": "BMO Field (Toronto Stadium)",
+    "venue_city": "Toronto",
+    "venue_country": "Canada",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Portugal",
+        "team_code": "POR",
+        "player": "Cristiano Ronaldo",
+        "minute": 68,
+        "injury": null,
+        "type": "PEN"
+      },
+      {
+        "team": "Portugal",
+        "team_code": "POR",
+        "player": "Gonçalo Ramos",
+        "minute": 90,
+        "injury": 4,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Croatia",
+        "team_code": "CRO",
+        "player": "Ivan Perišić",
+        "minute": 53,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 84,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-02T19:00:00Z",
+    "home_name": "Spain",
+    "away_name": "Austria",
+    "home_code": "ESP",
+    "away_code": "AUT",
+    "home_score": 3,
+    "away_score": 0,
+    "venue_name": "SoFi Stadium (Los Angeles Stadium)",
+    "venue_city": "Inglewood",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Spain",
+        "team_code": "ESP",
+        "player": "Pedro Porro",
+        "minute": 66,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 85,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-03T03:00:00Z",
+    "home_name": "Switzerland",
+    "away_name": "Algeria",
+    "home_code": "SUI",
+    "away_code": "ALG",
+    "home_score": 2,
+    "away_score": 0,
+    "venue_name": "BC Place (Vancouver Stadium)",
+    "venue_city": "Vancouver",
+    "venue_country": "Canada",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Switzerland",
+        "team_code": "SUI",
+        "player": "Breel Embolo",
+        "minute": 10,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Switzerland",
+        "team_code": "SUI",
+        "player": "Dan Ndoye",
+        "minute": 46,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 86,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-03T22:00:00Z",
+    "home_name": "Argentina",
+    "away_name": "Cabo Verde",
+    "home_code": "ARG",
+    "away_code": "CPV",
+    "home_score": 3,
+    "away_score": 2,
+    "venue_name": "Hard Rock Stadium (Miami Stadium)",
+    "venue_city": "Miami Gardens",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": true,
+    "goals": [
+      {
+        "team": "Argentina",
+        "team_code": "ARG",
+        "player": "Lionel Messi",
+        "minute": 29,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Argentina",
+        "team_code": "ARG",
+        "player": "Lisandro Martínez",
+        "minute": 92,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Argentina",
+        "team_code": "ARG",
+        "player": "Diney Borges",
+        "minute": 111,
+        "injury": null,
+        "type": "OG"
+      },
+      {
+        "team": "Cabo Verde",
+        "team_code": "CPV",
+        "player": "Deroy Duarte",
+        "minute": 59,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Cabo Verde",
+        "team_code": "CPV",
+        "player": "Sidny Lopes Cabral",
+        "minute": 103,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 87,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-04T01:30:00Z",
+    "home_name": "Colombia",
+    "away_name": "Ghana",
+    "home_code": "COL",
+    "away_code": "GHA",
+    "home_score": 1,
+    "away_score": 0,
+    "venue_name": "Arrowhead Stadium (Kansas City Stadium)",
+    "venue_city": "Kansas City",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Colombia",
+        "team_code": "COL",
+        "player": "Jhon Arias",
+        "minute": 14,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 88,
+    "stage": "LAST_32",
+    "stage_label": "Round of 32",
+    "date_utc": "2026-07-03T18:00:00Z",
+    "home_name": "Australia",
+    "away_name": "Egypt",
+    "home_code": "AUS",
+    "away_code": "EGY",
+    "home_score": 1,
+    "away_score": 1,
+    "venue_name": "AT&T Stadium (Dallas Stadium)",
+    "venue_city": "Arlington",
+    "venue_country": "United States",
+    "penalty_shootout": "Egypt win 4-2 on penalties",
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Australia",
+        "team_code": "AUS",
+        "player": "Mohamed Hany",
+        "minute": 55,
+        "injury": null,
+        "type": "OG"
+      },
+      {
+        "team": "Egypt",
+        "team_code": "EGY",
+        "player": "Emam Ashour",
+        "minute": 13,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 89,
+    "stage": "LAST_16",
+    "stage_label": "Round of 16",
+    "date_utc": "2026-07-04T21:00:00Z",
+    "home_name": "Paraguay",
+    "away_name": "France",
+    "home_code": "PAR",
+    "away_code": "FRA",
+    "home_score": 0,
+    "away_score": 1,
+    "venue_name": "Lincoln Financial Field (Philadelphia Stadium)",
+    "venue_city": "Philadelphia",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "France",
+        "team_code": "FRA",
+        "player": "Kylian Mbappé",
+        "minute": 70,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 90,
+    "stage": "LAST_16",
+    "stage_label": "Round of 16",
+    "date_utc": "2026-07-04T17:00:00Z",
+    "home_name": "Canada",
+    "away_name": "Morocco",
+    "home_code": "CAN",
+    "away_code": "MAR",
+    "home_score": 0,
+    "away_score": 3,
+    "venue_name": "NRG Stadium (Houston Stadium)",
+    "venue_city": "Houston",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Morocco",
+        "team_code": "MAR",
+        "player": "Soufiane Rahimi",
+        "minute": 90,
+        "injury": 8,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 91,
+    "stage": "LAST_16",
+    "stage_label": "Round of 16",
+    "date_utc": "2026-07-05T20:00:00Z",
+    "home_name": "Brazil",
+    "away_name": "Norway",
+    "home_code": "BRA",
+    "away_code": "NOR",
+    "home_score": 1,
+    "away_score": 2,
+    "venue_name": "MetLife Stadium (New York New Jersey Stadium)",
+    "venue_city": "East Rutherford",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Brazil",
+        "team_code": "BRA",
+        "player": "Neymar Jr",
+        "minute": 90,
+        "injury": 10,
+        "type": "PEN"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 92,
+    "stage": "LAST_16",
+    "stage_label": "Round of 16",
+    "date_utc": "2026-07-06T01:00:00Z",
+    "home_name": "Mexico",
+    "away_name": "England",
+    "home_code": "MEX",
+    "away_code": "ENG",
+    "home_score": 2,
+    "away_score": 3,
+    "venue_name": "Estadio Azteca (Mexico City Stadium)",
+    "venue_city": "Mexico City",
+    "venue_country": "Mexico",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Julian Quiñones",
+        "minute": 42,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Mexico",
+        "team_code": "MEX",
+        "player": "Raul Jimenez",
+        "minute": 69,
+        "injury": null,
+        "type": "PEN"
+      },
+      {
+        "team": "England",
+        "team_code": "ENG",
+        "player": "Jarell Quansah",
+        "minute": 54,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "England",
+        "team_code": "ENG",
+        "player": "Harry Kane",
+        "minute": 60,
+        "injury": null,
+        "type": "PEN"
+      }
+    ],
+    "notes": "Bellingham scored twice in two first-half minutes; England reduced to 10 men"
+  },
+  {
+    "match_no": 93,
+    "stage": "LAST_16",
+    "stage_label": "Round of 16",
+    "date_utc": "2026-07-06T19:00:00Z",
+    "home_name": "Portugal",
+    "away_name": "Spain",
+    "home_code": "POR",
+    "away_code": "ESP",
+    "home_score": 0,
+    "away_score": 1,
+    "venue_name": "AT&T Stadium (Dallas Stadium)",
+    "venue_city": "Arlington",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Spain",
+        "team_code": "ESP",
+        "player": "Mikel Merino",
+        "minute": 90,
+        "injury": 1,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 94,
+    "stage": "LAST_16",
+    "stage_label": "Round of 16",
+    "date_utc": "2026-07-07T00:00:00Z",
+    "home_name": "USA",
+    "away_name": "Belgium",
+    "home_code": "USA",
+    "away_code": "BEL",
+    "home_score": 1,
+    "away_score": 4,
+    "venue_name": "Lumen Field (Seattle Stadium)",
+    "venue_city": "Seattle",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "USA",
+        "team_code": "USA",
+        "player": "Malik Tillman",
+        "minute": 31,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Belgium",
+        "team_code": "BEL",
+        "player": "Hans Vanaken",
+        "minute": 57,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Belgium",
+        "team_code": "BEL",
+        "player": "Romelu Lukaku",
+        "minute": 90,
+        "injury": 3,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 95,
+    "stage": "LAST_16",
+    "stage_label": "Round of 16",
+    "date_utc": null,
+    "home_name": "Argentina",
+    "away_name": "Egypt",
+    "home_code": "ARG",
+    "away_code": "EGY",
+    "home_score": 3,
+    "away_score": 2,
+    "venue_name": "Mercedes-Benz Stadium (Atlanta Stadium)",
+    "venue_city": "Atlanta",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": "Argentina came back from 2-0 down (as late as the 77th minute); VAR disallowed a second-half Egypt goal - subject of an unsuccessful protest by the Egyptian FA"
+  },
+  {
+    "match_no": 96,
+    "stage": "LAST_16",
+    "stage_label": "Round of 16",
+    "date_utc": null,
+    "home_name": "Switzerland",
+    "away_name": "Colombia",
+    "home_code": "SUI",
+    "away_code": "COL",
+    "home_score": 0,
+    "away_score": 0,
+    "venue_name": "BC Place (Vancouver Stadium)",
+    "venue_city": "Vancouver",
+    "venue_country": "Canada",
+    "penalty_shootout": "Switzerland win 4-3 on penalties",
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 97,
+    "stage": "QUARTER_FINALS",
+    "stage_label": "Quarter Final",
+    "date_utc": "2026-07-09T20:00:00Z",
+    "home_name": "France",
+    "away_name": "Morocco",
+    "home_code": "FRA",
+    "away_code": "MAR",
+    "home_score": 2,
+    "away_score": 0,
+    "venue_name": "Gillette Stadium (Boston Stadium)",
+    "venue_city": "Foxborough",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": "Mbappé missed a first-half penalty before scoring; rematch of the 2022 World Cup semi-final"
+  },
+  {
+    "match_no": 98,
+    "stage": "QUARTER_FINALS",
+    "stage_label": "Quarter Final",
+    "date_utc": "2026-07-10T19:00:00Z",
+    "home_name": "Spain",
+    "away_name": "Belgium",
+    "home_code": "ESP",
+    "away_code": "BEL",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": "SoFi Stadium (Los Angeles Stadium)",
+    "venue_city": "Inglewood",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [
+      {
+        "team": "Spain",
+        "team_code": "ESP",
+        "player": "Fabian Ruiz",
+        "minute": 30,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Spain",
+        "team_code": "ESP",
+        "player": "Mikel Merino",
+        "minute": 88,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Belgium",
+        "team_code": "BEL",
+        "player": "Charles De Ketelaere",
+        "minute": 41,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": null
+  },
+  {
+    "match_no": 99,
+    "stage": "QUARTER_FINALS",
+    "stage_label": "Quarter Final",
+    "date_utc": "2026-07-11T21:00:00Z",
+    "home_name": "England",
+    "away_name": "Norway",
+    "home_code": "ENG",
+    "away_code": "NOR",
+    "home_score": 2,
+    "away_score": 1,
+    "venue_name": "Hard Rock Stadium (Miami Stadium)",
+    "venue_city": "Miami Gardens",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": true,
+    "goals": [],
+    "notes": "England won in extra time after a 1-1 scoreline after 90 minutes"
+  },
+  {
+    "match_no": 100,
+    "stage": "QUARTER_FINALS",
+    "stage_label": "Quarter Final",
+    "date_utc": "2026-07-12T01:00:00Z",
+    "home_name": "Argentina",
+    "away_name": "Switzerland",
+    "home_code": "ARG",
+    "away_code": "SUI",
+    "home_score": 3,
+    "away_score": 1,
+    "venue_name": "Arrowhead Stadium (Kansas City Stadium)",
+    "venue_city": "Kansas City",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": true,
+    "goals": [
+      {
+        "team": "Argentina",
+        "team_code": "ARG",
+        "player": "Alexis Mac Allister",
+        "minute": 10,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Argentina",
+        "team_code": "ARG",
+        "player": "Julián Álvarez",
+        "minute": 112,
+        "injury": null,
+        "type": "REGULAR"
+      },
+      {
+        "team": "Switzerland",
+        "team_code": "SUI",
+        "player": "Dan Ndoye",
+        "minute": 67,
+        "injury": null,
+        "type": "REGULAR"
+      }
+    ],
+    "notes": "Defending champions Argentina advanced to a sixth straight World Cup semi-final"
+  },
+  {
+    "match_no": 101,
+    "stage": "SEMI_FINALS",
+    "stage_label": "Semi Final",
+    "date_utc": "2026-07-14T19:00:00Z",
+    "home_name": "France",
+    "away_name": "Spain",
+    "home_code": "FRA",
+    "away_code": "ESP",
+    "home_score": null,
+    "away_score": null,
+    "venue_name": "AT&T Stadium (Dallas Stadium)",
+    "venue_city": "Arlington",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 102,
+    "stage": "SEMI_FINALS",
+    "stage_label": "Semi Final",
+    "date_utc": "2026-07-15T19:00:00Z",
+    "home_name": "England",
+    "away_name": "Argentina",
+    "home_code": "ENG",
+    "away_code": "ARG",
+    "home_score": null,
+    "away_score": null,
+    "venue_name": "Mercedes-Benz Stadium (Atlanta Stadium)",
+    "venue_city": "Atlanta",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 103,
+    "stage": "THIRD_PLACE",
+    "stage_label": "Third Place Match",
+    "date_utc": "2026-07-18T21:00:00Z",
+    "home_name": "Loser SF1",
+    "away_name": "Loser SF2",
+    "home_code": null,
+    "away_code": null,
+    "home_score": null,
+    "away_score": null,
+    "venue_name": "Hard Rock Stadium (Miami Stadium)",
+    "venue_city": "Miami Gardens",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  },
+  {
+    "match_no": 104,
+    "stage": "FINAL",
+    "stage_label": "Final",
+    "date_utc": "2026-07-19T19:00:00Z",
+    "home_name": "Winner SF1",
+    "away_name": "Winner SF2",
+    "home_code": null,
+    "away_code": null,
+    "home_score": null,
+    "away_score": null,
+    "venue_name": "MetLife Stadium (New York New Jersey Stadium)",
+    "venue_city": "East Rutherford",
+    "venue_country": "United States",
+    "penalty_shootout": null,
+    "extra_time": false,
+    "goals": [],
+    "notes": null
+  }
+]

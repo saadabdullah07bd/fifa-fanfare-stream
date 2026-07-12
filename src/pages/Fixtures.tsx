@@ -1,24 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { flagUrl, countryName, bdShortDate, bdTime } from "@/lib/flags";
-import { normalizeAppMatchStatus } from "@/lib/match-status";
+import { WC26_MATCHES, type Wc26Match } from "@/data/wc26-matches";
 
 
 // Knockout stages ordered earliest → latest. Third-place playoff intentionally
 // omitted so the bracket squeezes cleanly from Round of 32 into the Final.
 const KO_STAGES = ["LAST_32", "LAST_16", "QUARTER_FINALS", "SEMI_FINALS", "FINAL"] as const;
-const KO_LEGACY: Record<string, string> = {
-  "last-32": "LAST_32",
-  "last-16": "LAST_16",
-  "quarter-finals": "QUARTER_FINALS",
-  "semi-finals": "SEMI_FINALS",
-  "final": "FINAL",
-};
 const KO_LABEL: Record<string, string> = {
   LAST_32: "Round of 32",
   LAST_16: "Round of 16",
@@ -27,43 +18,22 @@ const KO_LABEL: Record<string, string> = {
   FINAL: "Final",
 };
 
-type MatchRow = {
-  id: string;
-  external_id: string | null;
-  stage: string | null;
-  date_utc: string;
-  home_team_code: string | null;
-  away_team_code: string | null;
-  home_score: number | null;
-  away_score: number | null;
-  status: string | null;
-  venues: { name: string | null; city: string | null } | null;
-};
-
 type ViewMode = "all" | "knockout";
 
 /**
- * Fixtures page — full match list (default) and knockout bracket view.
+ * Fixtures page — full match list (default) and knockout bracket view. All
+ * data is sourced from the bundled FIFA World Cup 2026 workbook (see
+ * `src/data/wc26-matches.json`), never from live APIs.
  */
 export default function Fixtures() {
   const [params, setParams] = useSearchParams();
   const view: ViewMode = params.get("view") === "knockout" ? "knockout" : "all";
 
-  const { data = [] } = useQuery<MatchRow[]>({
-    queryKey: ["matches-with-venues"],
-    refetchInterval: 60_000,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("matches")
-        .select("*, venues(name, city)")
-        .order("date_utc");
-      return (data as MatchRow[] | null) ?? [];
-    },
-  });
-
   const sorted = useMemo(
-    () => [...data].sort((a, b) => a.date_utc.localeCompare(b.date_utc)),
-    [data],
+    () => [...WC26_MATCHES]
+      .filter((m) => m.date_utc)
+      .sort((a, b) => (a.date_utc ?? "").localeCompare(b.date_utc ?? "")),
+    [],
   );
 
   const setView = (v: ViewMode) => {
@@ -110,24 +80,23 @@ export default function Fixtures() {
         </div>
       </div>
 
-      {sorted.length === 0 && (
-        <p className="mt-8 rounded-lg border border-border bg-card/40 p-6 text-sm text-muted-foreground">
-          Schedule loading…
-        </p>
-      )}
-
       {view === "all" ? <AllMatchesView matches={sorted} /> : <KnockoutView matches={sorted} />}
     </motion.div>
   );
 }
 
+/** Prefer full country name from FIFA code; fall back to the raw name in the
+ * workbook (used for knockout placeholders like "Winner SF1"). */
+function displayName(code: string | null, fallback: string): string {
+  return countryName(code) || fallback || "TBD";
+}
+
 /**
- * Full fixture list grouped by calendar date (Asia/Dhaka, GMT+6),
- * from the opening match through to the Final.
+ * Full fixture list grouped by calendar date (Asia/Dhaka, GMT+6).
  */
-function AllMatchesView({ matches }: { matches: MatchRow[] }) {
+function AllMatchesView({ matches }: { matches: Wc26Match[] }) {
   const groups = useMemo(() => {
-    const map = new Map<string, MatchRow[]>();
+    const map = new Map<string, Wc26Match[]>();
     for (const m of matches) {
       const key = (m.date_utc ?? "").slice(0, 10);
       if (!map.has(key)) map.set(key, []);
@@ -136,8 +105,6 @@ function AllMatchesView({ matches }: { matches: MatchRow[] }) {
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [matches]);
 
-  // Pick the "current" day: first group whose date is today or in the future.
-  // Falls back to the last group so historic-only data still lands near the end.
   const focusKey = useMemo(() => {
     const todayIso = new Date().toISOString().slice(0, 10);
     const upcoming = groups.find(([day]) => day >= todayIso);
@@ -152,7 +119,6 @@ function AllMatchesView({ matches }: { matches: MatchRow[] }) {
     const el = dayRefs.current[focusKey];
     if (!el) return;
     scrolledRef.current = true;
-    // Delay one frame so sticky headers + layout settle before we jump.
     requestAnimationFrame(() => {
       const y = el.getBoundingClientRect().top + window.scrollY - 96;
       window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
@@ -169,67 +135,66 @@ function AllMatchesView({ matches }: { matches: MatchRow[] }) {
             {bdShortDate(day + "T00:00:00Z")}
           </h2>
           <ul className="flex flex-col gap-2">
-            {list.map((m, i) => (
-              <motion.li
-                key={m.id}
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.2) }}
-              >
-                <Link
-                  to={`/match/${(m.external_id ?? "").replace(/^fd_/, "") || m.id}`}
-                  className="flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-card/70 px-4 py-3 shadow-sm transition-colors hover:border-primary"
+            {list.map((m, i) => {
+              const homeName = displayName(m.home_code, m.home_name);
+              const awayName = displayName(m.away_code, m.away_name);
+              const stageLabel = KO_LABEL[m.stage] ?? (m.stage === "GROUP" ? "Group" : m.stage_label);
+              return (
+                <motion.li
+                  key={m.match_no}
+                  initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.2) }}
                 >
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
-                    {/* Home team — name on the far left, flag hugs the score. */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 justify-end min-w-0">
-                      <span className="display truncate text-right text-sm sm:text-base md:text-lg" title={countryName(m.home_team_code)}>
-                        {countryName(m.home_team_code) || "TBD"}
-                      </span>
-                      {flagUrl(m.home_team_code, 40) ? (
-                        <img src={flagUrl(m.home_team_code, 40)!} alt={m.home_team_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-                      ) : (
-                        <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
-                      )}
-                    </div>
-                    {/* Centered scoreline / kickoff. */}
-                    <div className="flex min-w-[72px] sm:min-w-[92px] flex-col items-center gap-0.5">
-                      {(m.home_score != null || m.away_score != null) ? (
-                        <span className="display text-xl sm:text-2xl tabular-nums text-primary">
-                          {m.home_score ?? "–"} : {m.away_score ?? "–"}
+                  <Link
+                    to={`/match/${m.match_no}`}
+                    className="flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-card/70 px-4 py-3 shadow-sm transition-colors hover:border-primary"
+                  >
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2 justify-end min-w-0">
+                        <span className="display truncate text-right text-sm sm:text-base md:text-lg" title={homeName}>
+                          {homeName}
                         </span>
-                      ) : (
-                        <span className="display text-xs sm:text-sm tabular-nums text-foreground/80">{bdTime(m.date_utc)}</span>
-                      )}
-                      <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                        {normalizeAppMatchStatus(m.status) === "live"
-                          ? <><span className="live-dot mr-1 align-middle" />Live</>
-                          : (KO_LABEL[KO_LEGACY[(m.stage ?? "").toString()] ?? ""] ?? "Group")}
-                      </span>
+                        {flagUrl(m.home_code, 40) ? (
+                          <img src={flagUrl(m.home_code, 40)!} alt={m.home_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                        ) : (
+                          <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
+                        )}
+                      </div>
+                      <div className="flex min-w-[72px] sm:min-w-[92px] flex-col items-center gap-0.5">
+                        {(m.home_score != null || m.away_score != null) ? (
+                          <span className="display text-xl sm:text-2xl tabular-nums text-primary">
+                            {m.home_score ?? "–"} : {m.away_score ?? "–"}
+                          </span>
+                        ) : (
+                          <span className="display text-xs sm:text-sm tabular-nums text-foreground/80">{m.date_utc ? bdTime(m.date_utc) : "TBD"}</span>
+                        )}
+                        <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                          {stageLabel}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 sm:gap-2 justify-start min-w-0">
+                        {flagUrl(m.away_code, 40) ? (
+                          <img src={flagUrl(m.away_code, 40)!} alt={m.away_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                        ) : (
+                          <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
+                        )}
+                        <span className="display truncate text-sm sm:text-base md:text-lg" title={awayName}>
+                          {awayName}
+                        </span>
+                      </div>
                     </div>
-                    {/* Away team — flag hugs the score, name to the far right. */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 justify-start min-w-0">
-                      {flagUrl(m.away_team_code, 40) ? (
-                        <img src={flagUrl(m.away_team_code, 40)!} alt={m.away_team_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-                      ) : (
-                        <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
-                      )}
-                      <span className="display truncate text-sm sm:text-base md:text-lg" title={countryName(m.away_team_code)}>
-                        {countryName(m.away_team_code) || "TBD"}
-                      </span>
-                    </div>
-                  </div>
 
-                  {/* Stadium footer — hidden entirely when we don't have venue data. */}
-                  {m.venues?.name && (
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3" aria-hidden="true" />
-                        {m.venues.name}{m.venues.city ? ` · ${m.venues.city}` : ""}
-                      </span>
-                    </div>
-                  )}
-                </Link>
-              </motion.li>
-            ))}
+                    {m.venue_name && (
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5">
+                          <MapPin className="h-3 w-3" aria-hidden="true" />
+                          {m.venue_name}{m.venue_city ? ` · ${m.venue_city}` : ""}
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+                </motion.li>
+              );
+            })}
           </ul>
         </section>
       ))}
@@ -238,21 +203,13 @@ function AllMatchesView({ matches }: { matches: MatchRow[] }) {
 }
 
 /**
- * Horizontal knockout bracket — each round holds half the matches of the
- * previous, so the layout narrows into the Final. Vertical connectors on the
- * right edge of every card indicate how sides progress into the next round.
+ * Horizontal knockout bracket.
  */
-function KnockoutView({ matches }: { matches: MatchRow[] }) {
-  // For each round, pad the match list up to its expected slot count so the
-  // bracket keeps its shape (16 → 8 → 4 → 2 → 1) even before every fixture
-  // is confirmed.
+function KnockoutView({ matches }: { matches: Wc26Match[] }) {
   const rounds = KO_STAGES.map((stage, i) => {
     const slots = Math.max(1, 16 / Math.pow(2, i));
-    const found = matches.filter((m) => {
-      const s = (m.stage ?? "").toString();
-      return s === stage || KO_LEGACY[s] === stage;
-    });
-    const filled: (MatchRow | null)[] = [];
+    const found = matches.filter((m) => m.stage === stage);
+    const filled: (Wc26Match | null)[] = [];
     for (let j = 0; j < slots; j++) filled.push(found[j] ?? null);
     return { stage, slots, items: filled };
   });
@@ -289,9 +246,7 @@ function KnockoutView({ matches }: { matches: MatchRow[] }) {
         <div className="flex min-w-max items-stretch gap-3 pb-4 md:gap-6">
           {rounds.map(({ stage, items }, idx) => {
             const isLast = idx === rounds.length - 1;
-            // Chunk items into pairs so we can draw the classic bracket
-            // connector between each sibling and its round-N+1 parent.
-            const pairs: (MatchRow | null)[][] = [];
+            const pairs: (Wc26Match | null)[][] = [];
             for (let i = 0; i < items.length; i += 2) {
               pairs.push(items.slice(i, i + 2));
             }
@@ -305,7 +260,7 @@ function KnockoutView({ matches }: { matches: MatchRow[] }) {
                     <BracketPair key={pi} isLast={isLast} single={pair.length === 1}>
                       {pair.map((m, ii) =>
                         m ? (
-                          <BracketCard key={m.id} match={m} index={pi * 2 + ii} />
+                          <BracketCard key={m.match_no} match={m} index={pi * 2 + ii} />
                         ) : (
                           <BracketPlaceholder key={ii} />
                         ),
@@ -349,12 +304,6 @@ function KnockoutView({ matches }: { matches: MatchRow[] }) {
   );
 }
 
-/**
- * A pair of match cards sharing a bracket connector. The connector draws a
- * horizontal stub from each card's right edge, a vertical spine linking the
- * two stubs, and a horizontal outlet at the pair's midpoint feeding into the
- * next round — the classic Google Sports / ESPN bracket shape.
- */
 function BracketPair({
   children,
   isLast,
@@ -372,13 +321,9 @@ function BracketPair({
           aria-hidden
           className="pointer-events-none absolute -right-3 top-[25%] bottom-[25%] w-3 md:-right-6 md:w-6"
         >
-          {/* horizontal stub — top card */}
           <span className="absolute left-0 top-0 h-px w-1/2 bg-border" />
-          {/* horizontal stub — bottom card */}
           <span className="absolute left-0 bottom-0 h-px w-1/2 bg-border" />
-          {/* vertical spine linking the two stubs */}
           <span className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-border" />
-          {/* horizontal outlet feeding the next round */}
           <span className="absolute left-1/2 top-1/2 h-px w-1/2 -translate-y-1/2 bg-border" />
         </span>
       )}
@@ -392,9 +337,6 @@ function BracketPair({
   );
 }
 
-/**
- * Empty slot shown while a knockout round is still to be decided.
- */
 function BracketPlaceholder() {
   return (
     <div className="rounded-lg border border-dashed border-border bg-card/20 px-3 py-4 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -403,10 +345,7 @@ function BracketPlaceholder() {
   );
 }
 
-/**
- * Single match card inside the bracket.
- */
-function BracketCard({ match, index }: { match: MatchRow; index: number }) {
+function BracketCard({ match, index }: { match: Wc26Match; index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -415,24 +354,19 @@ function BracketCard({ match, index }: { match: MatchRow; index: number }) {
       whileHover={{ y: -2 }}
     >
       <Link
-        to={`/match/${(match.external_id ?? "").replace(/^fd_/, "") || match.id}`}
+        to={`/match/${match.match_no}`}
         className="block cursor-pointer rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md transition-colors hover:border-primary"
       >
-        <BracketRow code={match.home_team_code} score={match.home_score} />
+        <BracketRow code={match.home_code} fallback={match.home_name} score={match.home_score} />
         <div className="my-1 h-px bg-border/60" />
-        <BracketRow code={match.away_team_code} score={match.away_score} />
+        <BracketRow code={match.away_code} fallback={match.away_name} score={match.away_score} />
         <p className="mt-2 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          <span>{bdShortDate(match.date_utc)} · {bdTime(match.date_utc)}</span>
-          <span>
-            {normalizeAppMatchStatus(match.status) === "live"
-              ? <><span className="live-dot mr-1 align-middle" />Live</>
-              : normalizeAppMatchStatus(match.status)}
-          </span>
+          <span>{match.date_utc ? `${bdShortDate(match.date_utc)} · ${bdTime(match.date_utc)}` : "TBD"}</span>
         </p>
-        {match.venues?.name && (
+        {match.venue_name && (
           <p className="mt-1 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             <MapPin className="h-3 w-3" aria-hidden="true" />
-            <span className="truncate">{match.venues.name}{match.venues.city ? ` · ${match.venues.city}` : ""}</span>
+            <span className="truncate">{match.venue_name}{match.venue_city ? ` · ${match.venue_city}` : ""}</span>
           </p>
         )}
       </Link>
@@ -440,12 +374,9 @@ function BracketCard({ match, index }: { match: MatchRow; index: number }) {
   );
 }
 
-/**
- * Individual team row within a bracket card.
- */
-function BracketRow({ code, score }: { code: string | null; score: number | null }) {
+function BracketRow({ code, fallback, score }: { code: string | null; fallback: string; score: number | null }) {
   const url = flagUrl(code, 40);
-  const name = countryName(code);
+  const name = displayName(code, fallback);
   return (
     <div className="flex items-center gap-2 min-w-0">
       {url ? (
@@ -453,7 +384,7 @@ function BracketRow({ code, score }: { code: string | null; score: number | null
       ) : (
         <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
       )}
-      <span className="display flex-1 min-w-0 truncate text-sm md:text-base" title={name}>{name || "TBD"}</span>
+      <span className="display flex-1 min-w-0 truncate text-sm md:text-base" title={name}>{name}</span>
       <span className="display shrink-0 text-primary tabular-nums">{score ?? "–"}</span>
     </div>
   );
