@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Trophy, CircleDot } from "lucide-react";
 import { Seo } from "@/lib/seo";
 import { flagUrl, countryName, bdShortDate, bdTime } from "@/lib/flags";
 import { WC26_MATCHES, type Wc26Match } from "@/data/wc26-matches";
@@ -338,7 +338,8 @@ function FixtureCard({ match: m }: { match: Wc26Match }) {
 }
 
 /**
- * Horizontal knockout bracket. Structure preserved from the previous design.
+ * Horizontal knockout bracket. Broadcast-style with stage jumper, snap
+ * scrolling, winner highlighting and elegant connectors.
  */
 function KnockoutView({ matches }: { matches: Wc26Match[] }) {
   const rounds = KO_STAGES.map((stage, i) => {
@@ -346,12 +347,15 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
     const found = matches.filter((m) => m.stage === stage);
     const filled: (Wc26Match | null)[] = [];
     for (let j = 0; j < slots; j++) filled.push(found[j] ?? null);
-    return { stage, slots, items: filled };
+    const played = found.filter((m) => m.home_score != null && m.away_score != null).length;
+    return { stage, slots, items: filled, total: found.length, played };
   });
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const columnRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
+  const [activeStage, setActiveStage] = useState<string>(KO_STAGES[0]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -359,6 +363,17 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
     const check = () => {
       setCanLeft(el.scrollLeft > 8);
       setCanRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+      // Determine most-visible column
+      const mid = el.scrollLeft + el.clientWidth / 2;
+      let best: { stage: string; d: number } | null = null;
+      for (const stage of KO_STAGES) {
+        const col = columnRefs.current[stage];
+        if (!col) continue;
+        const c = col.offsetLeft + col.offsetWidth / 2;
+        const d = Math.abs(c - mid);
+        if (!best || d < best.d) best = { stage, d };
+      }
+      if (best) setActiveStage(best.stage);
     };
     check();
     el.addEventListener("scroll", check, { passive: true });
@@ -372,69 +387,128 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
   const scrollBy = (dir: 1 | -1) =>
     scrollRef.current?.scrollBy({ left: dir * 360, behavior: "smooth" });
 
+  const jumpTo = (stage: string) => {
+    const col = columnRefs.current[stage];
+    const el = scrollRef.current;
+    if (!col || !el) return;
+    el.scrollTo({ left: col.offsetLeft - 16, behavior: "smooth" });
+  };
+
   return (
-    <div className="relative mt-8">
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    <div className="mt-6">
+      {/* Stage jumper */}
+      <nav
+        aria-label="Jump to knockout stage"
+        className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        <div className="flex min-w-max items-stretch gap-3 pb-4 md:gap-6">
-          {rounds.map(({ stage, items }, idx) => {
-            const isLast = idx === rounds.length - 1;
-            const pairs: (Wc26Match | null)[][] = [];
-            for (let i = 0; i < items.length; i += 2) {
-              pairs.push(items.slice(i, i + 2));
-            }
-            return (
-              <div key={stage} className="flex min-w-[220px] flex-col md:min-w-[260px]">
-                <h3 className="display mb-3 text-center text-xs uppercase tracking-[0.24em] text-primary md:text-sm">
-                  {KO_LABEL[stage]}
-                </h3>
-                <div className="flex flex-1 flex-col justify-around gap-4">
-                  {pairs.map((pair, pi) => (
-                    <BracketPair key={pi} isLast={isLast} single={pair.length === 1}>
-                      {pair.map((m, ii) =>
-                        m ? (
-                          <BracketCard key={m.match_no} match={m} index={pi * 2 + ii} />
-                        ) : (
-                          <BracketPlaceholder key={ii} />
-                        ),
-                      )}
-                    </BracketPair>
-                  ))}
+        {rounds.map(({ stage, total, played }) => {
+          const on = activeStage === stage;
+          return (
+            <button
+              key={stage}
+              type="button"
+              onClick={() => jumpTo(stage)}
+              aria-current={on ? "true" : undefined}
+              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[11px] uppercase tracking-[0.2em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                on
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background/50 text-muted-foreground hover:border-primary/60 hover:text-foreground"
+              }`}
+            >
+              {stage === "FINAL" && <Trophy className="mr-1 inline h-3 w-3" aria-hidden="true" />}
+              {KO_LABEL[stage]}
+              {total > 0 && (
+                <span className={`ml-1.5 tabular-nums ${on ? "text-primary-foreground/80" : "text-muted-foreground/70"}`}>
+                  {played}/{total}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="relative">
+        {/* Fade edges */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent" />
+
+        <div
+          ref={scrollRef}
+          role="region"
+          aria-label="Knockout bracket"
+          tabIndex={0}
+          className="overflow-x-auto snap-x snap-mandatory md:snap-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="flex min-w-max items-stretch gap-4 px-2 pb-4 pt-1 md:gap-8">
+            {rounds.map(({ stage, items }, idx) => {
+              const isLast = idx === rounds.length - 1;
+              const pairs: (Wc26Match | null)[][] = [];
+              for (let i = 0; i < items.length; i += 2) {
+                pairs.push(items.slice(i, i + 2));
+              }
+              return (
+                <div
+                  key={stage}
+                  ref={(el) => { columnRefs.current[stage] = el; }}
+                  className="flex min-w-[240px] snap-center flex-col md:min-w-[280px] md:snap-align-none"
+                >
+                  <div className="mb-4 flex items-center justify-center gap-2">
+                    {isLast && <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+                    <h3 className="display text-xs uppercase tracking-[0.28em] text-primary md:text-sm">
+                      {KO_LABEL[stage]}
+                    </h3>
+                  </div>
+                  <div className="flex flex-1 flex-col justify-around gap-4">
+                    {pairs.map((pair, pi) => (
+                      <BracketPair key={pi} isLast={isLast} single={pair.length === 1}>
+                        {pair.map((m, ii) =>
+                          m ? (
+                            <BracketCard key={m.match_no} match={m} index={pi * 2 + ii} isFinal={isLast} />
+                          ) : (
+                            <BracketPlaceholder key={ii} />
+                          ),
+                        )}
+                      </BracketPair>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
+
+        <AnimatePresence>
+          {canLeft && (
+            <motion.button
+              key="left"
+              type="button"
+              onClick={() => scrollBy(-1)}
+              initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
+              className="pointer-events-auto absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:grid"
+              aria-label="Scroll bracket left"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </motion.button>
+          )}
+          {canRight && (
+            <motion.button
+              key="right"
+              type="button"
+              onClick={() => scrollBy(1)}
+              initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}
+              className="pointer-events-auto absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:grid"
+              aria-label="Scroll bracket right"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
-      <AnimatePresence>
-        {canLeft && (
-          <motion.button
-            key="left"
-            type="button"
-            onClick={() => scrollBy(-1)}
-            initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
-            className="pointer-events-auto absolute left-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground md:grid"
-            aria-label="Scroll bracket left"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </motion.button>
-        )}
-        {canRight && (
-          <motion.button
-            key="right"
-            type="button"
-            onClick={() => scrollBy(1)}
-            initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}
-            className="pointer-events-auto absolute right-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground md:grid"
-            aria-label="Scroll bracket right"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Mobile hint */}
+      <p className="mt-2 text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground md:hidden">
+        Swipe to explore rounds →
+      </p>
     </div>
   );
 }
@@ -454,18 +528,18 @@ function BracketPair({
       {!isLast && !single && (
         <span
           aria-hidden
-          className="pointer-events-none absolute -right-3 top-[25%] bottom-[25%] w-3 md:-right-6 md:w-6"
+          className="pointer-events-none absolute -right-4 top-[25%] bottom-[25%] w-4 md:-right-8 md:w-8"
         >
-          <span className="absolute left-0 top-0 h-px w-1/2 bg-border" />
-          <span className="absolute left-0 bottom-0 h-px w-1/2 bg-border" />
-          <span className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-border" />
-          <span className="absolute left-1/2 top-1/2 h-px w-1/2 -translate-y-1/2 bg-border" />
+          <span className="absolute left-0 top-0 h-px w-1/2 bg-primary/30" />
+          <span className="absolute left-0 bottom-0 h-px w-1/2 bg-primary/30" />
+          <span className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-primary/30" />
+          <span className="absolute left-1/2 top-1/2 h-px w-1/2 -translate-y-1/2 bg-primary/30" />
         </span>
       )}
       {!isLast && single && (
         <span
           aria-hidden
-          className="pointer-events-none absolute -right-3 top-1/2 h-px w-3 -translate-y-1/2 bg-border md:-right-6 md:w-6"
+          className="pointer-events-none absolute -right-4 top-1/2 h-px w-4 -translate-y-1/2 bg-primary/30 md:-right-8 md:w-8"
         />
       )}
     </div>
@@ -474,13 +548,23 @@ function BracketPair({
 
 function BracketPlaceholder() {
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/20 px-3 py-5 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-      TBD
+    <div
+      role="presentation"
+      className="flex h-[92px] items-center justify-center rounded-2xl border border-dashed border-border bg-card/20 px-3 text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground"
+    >
+      To be determined
     </div>
   );
 }
 
-function BracketCard({ match, index }: { match: Wc26Match; index: number }) {
+function BracketCard({ match, index, isFinal }: { match: Wc26Match; index: number; isFinal?: boolean }) {
+  const hs = match.home_score;
+  const as = match.away_score;
+  const decided = hs != null && as != null;
+  const homeWin = decided && hs! > as!;
+  const awayWin = decided && as! > hs!;
+  const isLive = !decided && match.date_utc ? isMatchLive(match.date_utc) : false;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -490,13 +574,25 @@ function BracketCard({ match, index }: { match: Wc26Match; index: number }) {
     >
       <Link
         to={`/match/${match.match_no}`}
-        className="block cursor-pointer rounded-2xl border border-border bg-card p-3 text-sm shadow-md transition-colors hover:border-primary"
+        aria-label={`${displayName(match.home_code, match.home_name)} vs ${displayName(match.away_code, match.away_name)}${decided ? `, final score ${hs}-${as}` : ""}`}
+        className={`group relative block cursor-pointer overflow-hidden rounded-2xl border bg-card p-3 text-sm shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          isFinal ? "border-primary/60 bg-gradient-to-br from-card to-primary/5" : "border-border hover:border-primary/60"
+        }`}
       >
-        <BracketRow code={match.home_code} fallback={match.home_name} score={match.home_score} />
-        <div className="my-1 h-px bg-border/60" />
-        <BracketRow code={match.away_code} fallback={match.away_name} score={match.away_score} />
-        <p className="mt-2 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+        {isFinal && (
+          <span aria-hidden="true" className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-primary/10 blur-2xl" />
+        )}
+        {isLive && (
+          <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-destructive/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-destructive">
+            <CircleDot className="h-2.5 w-2.5 animate-pulse" aria-hidden="true" /> Live
+          </span>
+        )}
+        <BracketRow code={match.home_code} fallback={match.home_name} score={hs} winner={homeWin} loser={awayWin} />
+        <div className="my-1.5 h-px bg-border/60" />
+        <BracketRow code={match.away_code} fallback={match.away_name} score={as} winner={awayWin} loser={homeWin} />
+        <p className="mt-2.5 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
           <span>{match.date_utc ? `${bdShortDate(match.date_utc)} · ${bdTime(match.date_utc)}` : "TBD"}</span>
+          <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100">View →</span>
         </p>
         {match.venue_name && (
           <p className="mt-1 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -509,18 +605,52 @@ function BracketCard({ match, index }: { match: Wc26Match; index: number }) {
   );
 }
 
-function BracketRow({ code, fallback, score }: { code: string | null; fallback: string; score: number | null }) {
+function BracketRow({
+  code,
+  fallback,
+  score,
+  winner,
+  loser,
+}: {
+  code: string | null;
+  fallback: string;
+  score: number | null;
+  winner?: boolean;
+  loser?: boolean;
+}) {
   const url = flagUrl(code, 40);
   const name = displayName(code, fallback);
   return (
-    <div className="flex items-center gap-2 min-w-0">
+    <div
+      className={`flex items-center gap-2 min-w-0 transition-opacity ${loser ? "opacity-55" : ""}`}
+    >
       {url ? (
-        <img src={url} alt={code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+        <img
+          src={url}
+          alt=""
+          className={`h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ${winner ? "ring-primary" : "ring-border"}`}
+          loading="lazy"
+        />
       ) : (
         <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
       )}
-      <span className="display flex-1 min-w-0 truncate text-sm md:text-base" title={name}>{name}</span>
-      <span className="display shrink-0 text-primary tabular-nums">{score ?? "–"}</span>
+      <span
+        className={`display flex-1 min-w-0 truncate text-sm md:text-base ${winner ? "text-primary" : ""}`}
+        title={name}
+      >
+        {name}
+      </span>
+      <span className={`display shrink-0 tabular-nums ${winner ? "text-primary" : "text-muted-foreground"}`}>
+        {score ?? "–"}
+      </span>
     </div>
   );
+}
+
+// A knockout match is considered "live" from kickoff to +2h if not yet decided.
+function isMatchLive(dateUtc: string) {
+  const t = new Date(dateUtc).getTime();
+  if (Number.isNaN(t)) return false;
+  const now = Date.now();
+  return now >= t && now <= t + 2 * 60 * 60 * 1000;
 }
