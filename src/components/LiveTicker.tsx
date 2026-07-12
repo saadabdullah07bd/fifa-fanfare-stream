@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { bdTime } from "@/lib/flags";
+import { findWc26MatchByTeams } from "@/data/wc26-matches";
+
+const wcHref = (m: LiveMatch) => {
+  const w = findWc26MatchByTeams(m.home.name, m.away.name, m.utc_date);
+  return w ? `/match/${w.match_no}` : `/fixtures`;
+};
 
 /**
  * Represents a match currently in progress or recently finished.
