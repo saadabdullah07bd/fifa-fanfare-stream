@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          default_stream_id: string | null
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          default_stream_id?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          default_stream_id?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       channels: {
         Row: {
           category: string
