@@ -47,6 +47,13 @@ function toNum(v: string | number): number {
 
 export default function MatchDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  // Prefer going back in history so users return to the fixtures/knockout tab
+  // they came from. Fall back to home when there's no previous entry.
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/");
+  };
 
   const { data: m, isLoading } = useQuery({
     // Fetch core match information (teams, score, timeline).
