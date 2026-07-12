@@ -17,13 +17,13 @@
     "extra_time": false,
     "goals": [
       {
-        "player": "JuliÃ¡n AndrÃ©s Quinones",
+        "player": "Julián Andrés Quinones",
         "minute": 9,
         "injury": null,
         "type": "REGULAR"
       },
       {
-        "player": "RaÃºl Alonso Jimenez",
+        "player": "Raúl Alonso Jimenez",
         "minute": 67,
         "injury": null,
         "type": "REGULAR"
@@ -63,7 +63,7 @@
         "injury": null
       },
       {
-        "player": "CÃ©sar Jasib Montes",
+        "player": "César Jasib Montes",
         "team": "Mexico",
         "minute": 86,
         "injury": null
@@ -207,7 +207,7 @@
     "extra_time": false,
     "goals": [
       {
-        "player": "DamiÃ¡n Josue Bobadilla",
+        "player": "Damián Josue Bobadilla",
         "minute": 7,
         "injury": null,
         "type": "OG"
@@ -269,7 +269,7 @@
         "injury": null
       },
       {
-        "player": "JÃºnior Osmar Ignacio Alonso",
+        "player": "Júnior Osmar Ignacio Alonso",
         "team": "Paraguay",
         "minute": 90,
         "injury": null
@@ -331,7 +331,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "ClÃ©ment Turpin",
+    "referee": "Clément Turpin",
     "attendance": 65463,
     "notes": "Contains own goal(s)."
   },
@@ -359,7 +359,7 @@
         "type": "REGULAR"
       },
       {
-        "player": "JosÃ© Vinicius",
+        "player": "José Vinicius",
         "minute": 32,
         "injury": null,
         "type": "REGULAR"
@@ -435,7 +435,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "JesÃºs Valenzuela",
+    "referee": "Jesús Valenzuela",
     "attendance": 68897,
     "notes": null
   },
@@ -445,9 +445,9 @@
     "stage_label": "Group Stage",
     "date_utc": "2026-06-13T23:59:00Z",
     "home_name": "Australia",
-    "away_name": "TÃ¼rkiye",
+    "away_name": "Türkiye",
     "home_code": "AUS",
-    "away_code": null,
+    "away_code": "TUR",
     "home_score": 2,
     "away_score": 0,
     "venue_name": "Seattle Stadium (Lumen Field)",
@@ -472,7 +472,7 @@
     "yellow_cards": [
       {
         "player": "Yunus Akgun",
-        "team": "TÃ¼rkiye",
+        "team": "Türkiye",
         "minute": 86,
         "injury": null
       }
@@ -488,9 +488,9 @@
     "stage_label": "Group Stage",
     "date_utc": "2026-06-14T15:00:00Z",
     "home_name": "Germany",
-    "away_name": "CuraÃ§ao",
+    "away_name": "Curaçao",
     "home_code": "GER",
-    "away_code": null,
+    "away_code": "CUW",
     "home_score": 7,
     "away_score": 1,
     "venue_name": "Atlanta Stadium (Mercedes-Benz Stadium)",
@@ -512,7 +512,7 @@
         "type": "REGULAR"
       },
       {
-        "player": "Nico CÃ©dric Schlotterbeck",
+        "player": "Nico Cédric Schlotterbeck",
         "minute": 38,
         "injury": null,
         "type": "REGULAR"
@@ -550,7 +550,7 @@
     ],
     "yellow_cards": [],
     "red_cards": [],
-    "referee": "CÃ©sar Arturo Ramos",
+    "referee": "César Arturo Ramos",
     "attendance": 70303,
     "notes": null
   },
@@ -626,9 +626,9 @@
     "stage": "GROUP",
     "stage_label": "Group Stage",
     "date_utc": "2026-06-14T21:00:00Z",
-    "home_name": "CÃ´te d'Ivoire",
+    "home_name": "Côte d'Ivoire",
     "away_name": "Ecuador",
-    "home_code": null,
+    "home_code": "CIV",
     "away_code": "ECU",
     "home_score": 1,
     "away_score": 0,
@@ -648,19 +648,19 @@
     "yellow_cards": [
       {
         "player": "Seko Mohamed Fofana",
-        "team": "CÃ´te d'Ivoire",
+        "team": "Côte d'Ivoire",
         "minute": 28,
         "injury": null
       },
       {
         "player": "Franck Yannick Kessie",
-        "team": "CÃ´te d'Ivoire",
+        "team": "Côte d'Ivoire",
         "minute": 38,
         "injury": null
       },
       {
         "player": "Guela Maho-Lewis Doue",
-        "team": "CÃ´te d'Ivoire",
+        "team": "Côte d'Ivoire",
         "minute": 40,
         "injury": null
       },
@@ -1065,19 +1065,19 @@
     "extra_time": false,
     "goals": [
       {
-        "player": "Lionel AndrÃ©s Messi",
+        "player": "Lionel Andrés Messi",
         "minute": 17,
         "injury": null,
         "type": "REGULAR"
       },
       {
-        "player": "Lionel AndrÃ©s Messi",
+        "player": "Lionel Andrés Messi",
         "minute": 60,
         "injury": null,
         "type": "REGULAR"
       },
       {
-        "player": "Lionel AndrÃ©s Messi",
+        "player": "Lionel Andrés Messi",
         "minute": 76,
         "injury": null,
         "type": "REGULAR"
@@ -1152,7 +1152,7 @@
     "home_name": "Portugal",
     "away_name": "Congo DR",
     "home_code": "POR",
-    "away_code": null,
+    "away_code": "COD",
     "home_score": 1,
     "away_score": 1,
     "venue_name": "Atlanta Stadium (Mercedes-Benz Stadium)",
@@ -1188,20 +1188,20 @@
         "injury": null
       },
       {
-        "player": "SEMEDONÃ©lson Nelson",
+        "player": "SEMEDONélson Nelson",
         "team": "Portugal",
         "minute": 88,
         "injury": null
       },
       {
-        "player": "TomÃ¡s Tomas Araujo",
+        "player": "Tomás Tomas Araujo",
         "team": "Portugal",
         "minute": 90,
         "injury": null
       }
     ],
     "red_cards": [],
-    "referee": "ClÃ©ment Turpin",
+    "referee": "Clément Turpin",
     "attendance": 69837,
     "notes": null
   },
@@ -1310,7 +1310,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "JesÃºs Valenzuela",
+    "referee": "Jesús Valenzuela",
     "attendance": 72220,
     "notes": null
   },
@@ -1358,7 +1358,7 @@
     ],
     "yellow_cards": [
       {
-        "player": "Johan AndrÃ©s Mojica",
+        "player": "Johan Andrés Mojica",
         "team": "Colombia",
         "minute": 7,
         "injury": null
@@ -1414,7 +1414,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "CÃ©sar Arturo Ramos",
+    "referee": "César Arturo Ramos",
     "attendance": 70168,
     "notes": null
   },
@@ -1669,7 +1669,7 @@
         "type": "REGULAR"
       },
       {
-        "player": "JosÃ© Vinicius",
+        "player": "José Vinicius",
         "minute": 45,
         "injury": null,
         "type": "REGULAR"
@@ -1833,9 +1833,9 @@
     "stage": "GROUP",
     "stage_label": "Group Stage",
     "date_utc": "2026-06-19T23:59:00Z",
-    "home_name": "TÃ¼rkiye",
+    "home_name": "Türkiye",
     "away_name": "Paraguay",
-    "home_code": null,
+    "home_code": "TUR",
     "away_code": "PAR",
     "home_score": 0,
     "away_score": 1,
@@ -1861,7 +1861,7 @@
       },
       {
         "player": "Evren Eren Elmali",
-        "team": "TÃ¼rkiye",
+        "team": "Türkiye",
         "minute": 71,
         "injury": null
       }
@@ -1884,9 +1884,9 @@
     "stage_label": "Group Stage",
     "date_utc": "2026-06-20T15:00:00Z",
     "home_name": "Germany",
-    "away_name": "CÃ´te d'Ivoire",
+    "away_name": "Côte d'Ivoire",
     "home_code": "GER",
-    "away_code": null,
+    "away_code": "CIV",
     "home_score": 2,
     "away_score": 1,
     "venue_name": "Boston Stadium (Gillette Stadium)",
@@ -1926,9 +1926,9 @@
     "stage_label": "Group Stage",
     "date_utc": "2026-06-20T18:00:00Z",
     "home_name": "Ecuador",
-    "away_name": "CuraÃ§ao",
+    "away_name": "Curaçao",
     "home_code": "ECU",
-    "away_code": null,
+    "away_code": "CUW",
     "home_score": 0,
     "away_score": 0,
     "venue_name": "Kansas City Stadium (Arrowhead Stadium)",
@@ -1946,31 +1946,31 @@
       },
       {
         "player": "Leandro Jones Johan Bacuna",
-        "team": "CuraÃ§ao",
+        "team": "Curaçao",
         "minute": 39,
         "injury": null
       },
       {
         "player": "Juninho Gracielo Bacuna",
-        "team": "CuraÃ§ao",
+        "team": "Curaçao",
         "minute": 53,
         "injury": null
       },
       {
         "player": "Livano Shyron Liomar Comenencia",
-        "team": "CuraÃ§ao",
+        "team": "Curaçao",
         "minute": 56,
         "injury": null
       },
       {
-        "player": "JuriÃ«n Godfried Juan Gaari",
-        "team": "CuraÃ§ao",
+        "player": "Juriën Godfried Juan Gaari",
+        "team": "Curaçao",
         "minute": 75,
         "injury": null
       },
       {
         "player": "Gervane Zjandric Adonnis Kastaneer",
-        "team": "CuraÃ§ao",
+        "team": "Curaçao",
         "minute": 90,
         "injury": null
       }
@@ -2010,13 +2010,13 @@
         "type": "REGULAR"
       },
       {
-        "player": "Cody MathÃ¨s Gakpo",
+        "player": "Cody Mathès Gakpo",
         "minute": 47,
         "injury": null,
         "type": "REGULAR"
       },
       {
-        "player": "Cody MathÃ¨s Gakpo",
+        "player": "Cody Mathès Gakpo",
         "minute": 54,
         "injury": null,
         "type": "REGULAR"
@@ -2146,7 +2146,7 @@
         "injury": null
       }
     ],
-    "referee": "ClÃ©ment Turpin",
+    "referee": "Clément Turpin",
     "attendance": 71859,
     "notes": null
   },
@@ -2274,7 +2274,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "JesÃºs Valenzuela",
+    "referee": "Jesús Valenzuela",
     "attendance": 67446,
     "notes": "Contains own goal(s)."
   },
@@ -2334,7 +2334,7 @@
         "injury": null
       },
       {
-        "player": "MathÃ­as Olivera",
+        "player": "Mathías Olivera",
         "team": "Uruguay",
         "minute": 58,
         "injury": null
@@ -2396,7 +2396,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "CÃ©sar Arturo Ramos",
+    "referee": "César Arturo Ramos",
     "attendance": 79070,
     "notes": null
   },
@@ -2472,13 +2472,13 @@
     "extra_time": false,
     "goals": [
       {
-        "player": "Lionel AndrÃ©s Messi",
+        "player": "Lionel Andrés Messi",
         "minute": 38,
         "injury": null,
         "type": "REGULAR"
       },
       {
-        "player": "Lionel AndrÃ©s Messi",
+        "player": "Lionel Andrés Messi",
         "minute": 90,
         "injury": null,
         "type": "REGULAR"
@@ -2645,7 +2645,7 @@
     "home_name": "Colombia",
     "away_name": "Congo DR",
     "home_code": "COL",
-    "away_code": null,
+    "away_code": "COD",
     "home_score": 1,
     "away_score": 0,
     "venue_name": "Philadelphia Stadium (Lincoln Financial Field)",
@@ -2669,7 +2669,7 @@
         "injury": null
       },
       {
-        "player": "Jefferson AndrÃ©s Lerma",
+        "player": "Jefferson Andrés Lerma",
         "team": "Colombia",
         "minute": 90,
         "injury": null
@@ -2789,13 +2789,13 @@
         "type": "REGULAR"
       },
       {
-        "player": "JuliÃ¡n AndrÃ©s Quinones",
+        "player": "Julián Andrés Quinones",
         "minute": 61,
         "injury": null,
         "type": "REGULAR"
       },
       {
-        "player": "Ãlvaro Fidalgo",
+        "player": "Álvaro Fidalgo",
         "minute": 90,
         "injury": null,
         "type": "REGULAR"
@@ -2997,13 +2997,13 @@
     "extra_time": false,
     "goals": [
       {
-        "player": "JosÃ© Vinicius",
+        "player": "José Vinicius",
         "minute": 7,
         "injury": null,
         "type": "REGULAR"
       },
       {
-        "player": "JosÃ© Vinicius",
+        "player": "José Vinicius",
         "minute": 45,
         "injury": null,
         "type": "REGULAR"
@@ -3036,7 +3036,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "ClÃ©ment Turpin",
+    "referee": "Clément Turpin",
     "attendance": 81970,
     "notes": null
   },
@@ -3124,9 +3124,9 @@
     "stage": "GROUP",
     "stage_label": "Group Stage",
     "date_utc": "2026-06-25T22:00:00Z",
-    "home_name": "TÃ¼rkiye",
+    "home_name": "Türkiye",
     "away_name": "USA",
-    "home_code": null,
+    "home_code": "TUR",
     "away_code": "USA",
     "home_score": 3,
     "away_score": 2,
@@ -3176,7 +3176,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "JesÃºs Valenzuela",
+    "referee": "Jesús Valenzuela",
     "attendance": 69025,
     "notes": null
   },
@@ -3279,7 +3279,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "CÃ©sar Arturo Ramos",
+    "referee": "César Arturo Ramos",
     "attendance": 69646,
     "notes": null
   },
@@ -3288,10 +3288,10 @@
     "stage": "GROUP",
     "stage_label": "Group Stage",
     "date_utc": "2026-06-26T18:00:00Z",
-    "home_name": "CuraÃ§ao",
-    "away_name": "CÃ´te d'Ivoire",
-    "home_code": null,
-    "away_code": null,
+    "home_name": "Curaçao",
+    "away_name": "Côte d'Ivoire",
+    "home_code": "CUW",
+    "away_code": "CIV",
     "home_score": 0,
     "away_score": 2,
     "venue_name": "Houston Stadium (NRG Stadium)",
@@ -3316,19 +3316,19 @@
     "yellow_cards": [
       {
         "player": "Nicolas Pepe",
-        "team": "CÃ´te d'Ivoire",
+        "team": "Côte d'Ivoire",
         "minute": 34,
         "injury": null
       },
       {
         "player": "Juninho Gracielo Bacuna",
-        "team": "CuraÃ§ao",
+        "team": "Curaçao",
         "minute": 75,
         "injury": null
       },
       {
         "player": "Gervane Zjandric Adonnis Kastaneer",
-        "team": "CuraÃ§ao",
+        "team": "Curaçao",
         "minute": 83,
         "injury": null
       }
@@ -3637,7 +3637,7 @@
         "injury": null
       },
       {
-        "player": "Diego NicolÃ¡s De La Cruz",
+        "player": "Diego Nicolás De La Cruz",
         "team": "Uruguay",
         "minute": 90,
         "injury": null
@@ -3738,7 +3738,7 @@
         "type": "REGULAR"
       },
       {
-        "player": "DÃ©sirÃ© Nonka-Maho Doue",
+        "player": "Désiré Nonka-Maho Doue",
         "minute": 90,
         "injury": null,
         "type": "REGULAR"
@@ -3752,7 +3752,7 @@
         "injury": null
       },
       {
-        "player": "AurÃ©lien Djani Tchouameni",
+        "player": "Aurélien Djani Tchouameni",
         "team": "France",
         "minute": 74,
         "injury": null
@@ -3885,7 +3885,7 @@
         "type": "REGULAR"
       },
       {
-        "player": "Lionel AndrÃ©s Messi",
+        "player": "Lionel Andrés Messi",
         "minute": 80,
         "injury": null,
         "type": "REGULAR"
@@ -4009,7 +4009,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "ClÃ©ment Turpin",
+    "referee": "Clément Turpin",
     "attendance": 64446,
     "notes": null
   },
@@ -4020,7 +4020,7 @@
     "date_utc": "2026-06-28T18:00:00Z",
     "home_name": "Congo DR",
     "away_name": "Uzbekistan",
-    "home_code": null,
+    "home_code": "COD",
     "away_code": "UZB",
     "home_score": 3,
     "away_score": 1,
@@ -4069,7 +4069,7 @@
         "injury": null
       },
       {
-        "player": "NathanaÃ«l Mbuku",
+        "player": "Nathanaël Mbuku",
         "team": "Congo DR",
         "minute": 45,
         "injury": null
@@ -4143,7 +4143,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "JesÃºs Valenzuela",
+    "referee": "Jesús Valenzuela",
     "attendance": 81437,
     "notes": null
   },
@@ -4241,7 +4241,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "JoÃ£o Pinheiro",
+    "referee": "João Pinheiro",
     "attendance": 69424,
     "notes": null
   },
@@ -4356,7 +4356,7 @@
     ],
     "yellow_cards": [
       {
-        "player": "AdriÃ¡n AndrÃ©s Cubas",
+        "player": "Adrián Andrés Cubas",
         "team": "Paraguay",
         "minute": 65,
         "injury": null
@@ -4386,7 +4386,7 @@
         "injury": null
       },
       {
-        "player": "JÃºnior Osmar Ignacio Alonso",
+        "player": "Júnior Osmar Ignacio Alonso",
         "team": "Paraguay",
         "minute": 120,
         "injury": null
@@ -4415,7 +4415,7 @@
     "extra_time": true,
     "goals": [
       {
-        "player": "Cody MathÃ¨s Gakpo",
+        "player": "Cody Mathès Gakpo",
         "minute": 72,
         "injury": null,
         "type": "REGULAR"
@@ -4451,9 +4451,9 @@
     "stage": "LAST_32",
     "stage_label": "Round of 32",
     "date_utc": "2026-06-30T23:00:00Z",
-    "home_name": "CÃ´te d'Ivoire",
+    "home_name": "Côte d'Ivoire",
     "away_name": "Norway",
-    "home_code": null,
+    "home_code": "CIV",
     "away_code": "NOR",
     "home_score": 1,
     "away_score": 2,
@@ -4491,7 +4491,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "JesÃºs Valenzuela",
+    "referee": "Jesús Valenzuela",
     "attendance": 79806,
     "notes": null
   },
@@ -4555,13 +4555,13 @@
     "extra_time": false,
     "goals": [
       {
-        "player": "JuliÃ¡n AndrÃ©s Quinones",
+        "player": "Julián Andrés Quinones",
         "minute": 22,
         "injury": null,
         "type": "REGULAR"
       },
       {
-        "player": "RaÃºl Alonso Jimenez",
+        "player": "Raúl Alonso Jimenez",
         "minute": 31,
         "injury": null,
         "type": "REGULAR"
@@ -4575,7 +4575,7 @@
         "injury": null
       },
       {
-        "player": "MoisÃ©s Isaac Caicedo",
+        "player": "Moisés Isaac Caicedo",
         "team": "Ecuador",
         "minute": 90,
         "injury": null
@@ -4607,7 +4607,7 @@
     "home_name": "England",
     "away_name": "Congo DR",
     "home_code": "ENG",
-    "away_code": null,
+    "away_code": "COD",
     "home_score": 2,
     "away_score": 1,
     "venue_name": "Atlanta Stadium (Mercedes-Benz Stadium)",
@@ -4717,7 +4717,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "SaÃ­d MartÃ­nez",
+    "referee": "Saíd Martínez",
     "attendance": 68388,
     "notes": "Match went to extra time."
   },
@@ -4850,7 +4850,7 @@
         "type": "PEN"
       },
       {
-        "player": "RAMOSGonÃ§alo Goncalo",
+        "player": "RAMOSGonçalo Goncalo",
         "minute": 90,
         "injury": null,
         "type": "REGULAR"
@@ -4858,7 +4858,7 @@
     ],
     "yellow_cards": [
       {
-        "player": "RÃºben Ruben Dias",
+        "player": "Rúben Ruben Dias",
         "team": "Portugal",
         "minute": 17,
         "injury": null
@@ -4877,7 +4877,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "Espen EskÃ¥s",
+    "referee": "Espen Eskås",
     "attendance": 44330,
     "notes": null
   },
@@ -4926,7 +4926,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "Yael FalcÃ³n",
+    "referee": "Yael Falcón",
     "attendance": 53649,
     "notes": null
   },
@@ -4984,7 +4984,7 @@
     "extra_time": true,
     "goals": [
       {
-        "player": "Lionel AndrÃ©s Messi",
+        "player": "Lionel Andrés Messi",
         "minute": 29,
         "injury": null,
         "type": "REGULAR"
@@ -5046,7 +5046,7 @@
     ],
     "yellow_cards": [],
     "red_cards": [],
-    "referee": "ClÃ©ment Turpin",
+    "referee": "Clément Turpin",
     "attendance": 75555,
     "notes": null
   },
@@ -5201,7 +5201,7 @@
         "type": "REGULAR"
       },
       {
-        "player": "JuliÃ¡n AndrÃ©s Quinones",
+        "player": "Julián Andrés Quinones",
         "minute": 42,
         "injury": null,
         "type": "REGULAR"
@@ -5213,7 +5213,7 @@
         "type": "PEN"
       },
       {
-        "player": "RaÃºl Alonso Jimenez",
+        "player": "Raúl Alonso Jimenez",
         "minute": 69,
         "injury": null,
         "type": "REGULAR"
@@ -5381,7 +5381,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "CÃ©sar Arturo Ramos",
+    "referee": "César Arturo Ramos",
     "attendance": 67954,
     "notes": null
   },
@@ -5415,13 +5415,13 @@
         "type": "REGULAR"
       },
       {
-        "player": "Lionel AndrÃ©s Messi",
+        "player": "Lionel Andrés Messi",
         "minute": 40,
         "injury": null,
         "type": "REGULAR"
       },
       {
-        "player": "JuliÃ¡n Alvarez",
+        "player": "Julián Alvarez",
         "minute": 55,
         "injury": null,
         "type": "REGULAR"
@@ -5466,7 +5466,7 @@
       }
     ],
     "red_cards": [],
-    "referee": "FranÃ§ois Letexier",
+    "referee": "François Letexier",
     "attendance": 76165,
     "notes": null
   },
@@ -5652,7 +5652,7 @@
     "extra_time": true,
     "goals": [
       {
-        "player": "Andreas RÃ¦dergÃ¥rd Schjelderup",
+        "player": "Andreas Rædergård Schjelderup",
         "minute": 36,
         "injury": null,
         "type": "REGULAR"
@@ -5672,14 +5672,14 @@
     ],
     "yellow_cards": [
       {
-        "player": "Kristoffer Vassbakk KÃ¶pp Ajer",
+        "player": "Kristoffer Vassbakk Köpp Ajer",
         "team": "Norway",
         "minute": 117,
         "injury": null
       }
     ],
     "red_cards": [],
-    "referee": "ClÃ©ment Turpin",
+    "referee": "Clément Turpin",
     "attendance": 64047,
     "notes": "Match went to extra time."
   },
@@ -5713,7 +5713,7 @@
         "type": "REGULAR"
       },
       {
-        "player": "JuliÃ¡n Alvarez",
+        "player": "Julián Alvarez",
         "minute": 112,
         "injury": null,
         "type": "REGULAR"
@@ -5759,7 +5759,7 @@
         "injury": null
       }
     ],
-    "referee": "JoÃ£o Pinheiro",
+    "referee": "João Pinheiro",
     "attendance": 75132,
     "notes": "Match went to extra time."
   },
@@ -5782,7 +5782,7 @@
     "goals": [],
     "yellow_cards": [],
     "red_cards": [],
-    "referee": "ClÃ©ment Turpin",
+    "referee": "Clément Turpin",
     "attendance": null,
     "notes": "Upcoming match. Fixture scheduled."
   },
@@ -5828,7 +5828,7 @@
     "goals": [],
     "yellow_cards": [],
     "red_cards": [],
-    "referee": "JesÃºs Valenzuela",
+    "referee": "Jesús Valenzuela",
     "attendance": null,
     "notes": "Upcoming match. Fixture scheduled."
   },
