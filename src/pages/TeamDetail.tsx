@@ -35,9 +35,10 @@ export default function TeamDetail() {
     <div className="mx-auto max-w-4xl px-4 py-12">
       <Seo
         title={`${decoded} — Pitch26`}
-        description={data?.description ?? `${decoded} — football team profile.`}
+        description={data?.description ?? `${decoded} at the 2026 FIFA World Cup — squad, fixtures, live results and news on Pitch26, the independent World Cup 2026 fan hub.`}
         path={`/team/${encodeURIComponent(decoded)}`}
       />
+
       <Link to="/" className="text-xs uppercase tracking-wider text-primary">← Home</Link>
       <h1 className="display mt-2 text-5xl">{decoded}</h1>
       {data?.description && <p className="mt-1 text-muted-foreground">{data.description}</p>}

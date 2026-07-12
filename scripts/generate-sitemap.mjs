@@ -1,23 +1,19 @@
 // Runs before `vite dev` and `vite build`; writes public/sitemap.xml.
-// Pulls dynamic venue IDs from Supabase so /venues/:id routes are indexed.
+// Pulls dynamic match IDs and team names from Supabase so per-row routes are indexed.
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
-const BASE_URL = process.env.VITE_SITE_URL || "https://pitch26.drmabari.com";
-
+const BASE_URL = process.env.VITE_SITE_URL || "https://fifa-fanfare-stream.lovable.app";
 const today = new Date().toISOString().slice(0, 10);
 
 const staticEntries = [
   { path: "/", changefreq: "hourly", priority: "1.0", lastmod: today },
   { path: "/fixtures", changefreq: "hourly", priority: "0.9", lastmod: today },
-  { path: "/groups", changefreq: "hourly", priority: "0.9", lastmod: today },
-  { path: "/teams", changefreq: "daily", priority: "0.8", lastmod: today },
-  { path: "/scorers", changefreq: "hourly", priority: "0.8", lastmod: today },
-  { path: "/venues", changefreq: "weekly", priority: "0.8", lastmod: today },
-  { path: "/news", changefreq: "hourly", priority: "0.7", lastmod: today },
-  { path: "/highlights", changefreq: "daily", priority: "0.7", lastmod: today },
-  { path: "/predictions", changefreq: "weekly", priority: "0.5", lastmod: today },
+  { path: "/standings", changefreq: "hourly", priority: "0.9", lastmod: today },
+  { path: "/news", changefreq: "hourly", priority: "0.8", lastmod: today },
+  { path: "/terms", changefreq: "yearly", priority: "0.2", lastmod: today },
+  { path: "/privacy", changefreq: "yearly", priority: "0.2", lastmod: today },
 ];
 
 async function fetchDynamic() {
@@ -26,13 +22,42 @@ async function fetchDynamic() {
   if (!url || !key) return [];
   try {
     const sb = createClient(url, key);
-    const { data } = await sb.from("venues").select("id");
-    return (data ?? []).map((v) => ({
-      path: `/venues/${v.id}`,
-      changefreq: "monthly",
-      priority: "0.6",
-      lastmod: today,
-    }));
+    const entries = [];
+
+    const { data: matches } = await sb
+      .from("matches")
+      .select("external_id, id, utc_date")
+      .limit(2000);
+    for (const m of matches ?? []) {
+      const id = (m.external_id ?? "").toString().replace(/^fd_/, "") || m.id;
+      if (!id) continue;
+      entries.push({
+        path: `/match/${id}`,
+        changefreq: "hourly",
+        priority: "0.7",
+        lastmod: today,
+      });
+    }
+
+    const { data: teams } = await sb
+      .from("matches")
+      .select("home_team_name, away_team_name")
+      .limit(2000);
+    const teamNames = new Set();
+    for (const t of teams ?? []) {
+      if (t.home_team_name) teamNames.add(t.home_team_name);
+      if (t.away_team_name) teamNames.add(t.away_team_name);
+    }
+    for (const name of teamNames) {
+      entries.push({
+        path: `/team/${encodeURIComponent(name)}`,
+        changefreq: "weekly",
+        priority: "0.5",
+        lastmod: today,
+      });
+    }
+
+    return entries;
   } catch {
     return [];
   }

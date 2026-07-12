@@ -6,7 +6,8 @@ function withSiteOrigin(path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
   const origin =
     import.meta.env.VITE_SITE_URL ??
-    (typeof window !== "undefined" ? window.location.origin : "https://pitch26.drmabari.com");
+    (typeof window !== "undefined" ? window.location.origin : "https://fifa-fanfare-stream.lovable.app");
+
   return `${origin.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
