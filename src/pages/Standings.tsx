@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -68,10 +68,12 @@ export default function Standings() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <Helmet>
-        <title>Standings & Stats · Pitch26 World Cup 2026</title>
-        <meta name="description" content="Live FIFA World Cup 2026 group standings and top scorer stats, refreshed every minute." />
-      </Helmet>
+      <Seo
+        title="Standings & Top Scorers — Pitch26 World Cup 2026"
+        description="Live 2026 FIFA World Cup group standings and top scorer leaderboard on Pitch26, refreshed continuously throughout the tournament."
+        path="/standings"
+      />
+
 
       <motion.h1
         initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}

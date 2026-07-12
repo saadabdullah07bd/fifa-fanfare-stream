@@ -87,10 +87,23 @@ export default function MatchDetail() {
     >
       <Seo
         title={`${m.home.name} vs ${m.away.name} — Live | Pitch26`}
-        description={`${m.competition} · ${m.home.name} vs ${m.away.name} live score, stats and timeline.`}
+        description={`${m.competition} · ${m.home.name} vs ${m.away.name} live score, stats and timeline on Pitch26, the 2026 FIFA World Cup fan hub.`}
         path={`/match/${m.id}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "SportsEvent",
+          name: `${m.home.name} vs ${m.away.name}`,
+          startDate: m.utc_date,
+          sport: "Association football",
+          competitor: [
+            { "@type": "SportsTeam", name: m.home.name },
+            { "@type": "SportsTeam", name: m.away.name },
+          ],
+        }}
       />
+      <h1 className="sr-only">{m.home.name} vs {m.away.name} — {m.competition}</h1>
       <Link to="/" className="text-xs uppercase tracking-[0.2em] text-primary hover:underline">← Home</Link>
+
 
       <motion.div
         layout
