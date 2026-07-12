@@ -139,7 +139,7 @@ export default function LiveTV() {
       hls?.destroy();
       try { mts?.pause(); mts?.unload(); mts?.detachMediaElement(); mts?.destroy(); } catch { /* ignore */ }
     };
-  }, [active]);
+  }, [active, reloadNonce]);
 
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(channels.map((c) => c.category))).sort()],
