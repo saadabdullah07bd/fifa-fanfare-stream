@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Trophy, CircleDot } from "lucide-react";
 import { Seo } from "@/lib/seo";
 import { flagUrl, countryName, bdShortDate, bdTime } from "@/lib/flags";
 import { WC26_MATCHES, type Wc26Match } from "@/data/wc26-matches";
