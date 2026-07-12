@@ -468,6 +468,32 @@ function ModernPlayer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel.id]);
 
+  const isMobile = useIsMobile();
+
+  // Right-side vertical drag = volume rocker (mobile).
+  const dragRef = useRef<{ startY: number; startVol: number } | null>(null);
+  const [volPill, setVolPill] = useState<number | null>(null);
+  const volPillTimer = useRef<number | null>(null);
+  const onVolTouchStart = (e: React.TouchEvent) => {
+    const v = videoRef.current; if (!v) return;
+    dragRef.current = { startY: e.touches[0].clientY, startVol: v.muted ? 0 : v.volume };
+    kick();
+  };
+  const onVolTouchMove = (e: React.TouchEvent) => {
+    const v = videoRef.current; const d = dragRef.current;
+    if (!v || !d || !wrapRef.current) return;
+    const h = wrapRef.current.clientHeight || 1;
+    const dy = d.startY - e.touches[0].clientY; // up = positive
+    const next = Math.max(0, Math.min(1, d.startVol + dy / h));
+    v.volume = next;
+    v.muted = next === 0;
+    setVolPill(next);
+    if (volPillTimer.current) window.clearTimeout(volPillTimer.current);
+    volPillTimer.current = window.setTimeout(() => setVolPill(null), 700);
+    e.preventDefault();
+  };
+  const onVolTouchEnd = () => { dragRef.current = null; };
+
   return (
     <div
       ref={wrapRef}
@@ -479,11 +505,34 @@ function ModernPlayer({
     >
       <video
         ref={videoRef}
-        autoPlay playsInline muted
-        onClick={toggle}
+        autoPlay playsInline
+        onClick={() => { if (isMobile) { kick(); } else { toggle(); } }}
         style={{ cursor: showUI ? "pointer" : "none" }}
         className="aspect-video w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full group-[:fullscreen]:object-contain"
       />
+
+      {/* Right-side vertical volume rocker (mobile only) */}
+      {isMobile && (
+        <div
+          onTouchStart={onVolTouchStart}
+          onTouchMove={onVolTouchMove}
+          onTouchEnd={onVolTouchEnd}
+          className="absolute right-0 top-0 z-10 h-full w-1/3"
+          style={{ touchAction: "none" }}
+          aria-label="Volume rocker"
+        />
+      )}
+
+      <AnimatePresence>
+        {volPill !== null && (
+          <motion.div
+            initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+            className="pointer-events-none absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/70 px-3 py-2 text-xs font-bold text-white backdrop-blur"
+          >
+            {Math.round(volPill * 100)}%
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       <AnimatePresence>
