@@ -118,7 +118,7 @@ export default function App() {
             <span className="display text-2xl tracking-wider text-foreground">PITCH<span className="text-primary">26</span></span>
           </Link>
           <nav className="hidden items-center gap-1 lg:flex"><Nav /></nav>
-          <Link to="/live-tv" className="hidden lg:inline-flex glass-pill px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-white/20 transition-colors">
+          <Link to="/live-tv" className="hidden lg:inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow hover:bg-primary/90 transition-colors">
             <span className="live-dot mr-2 align-middle" />Watch
           </Link>
         </div>

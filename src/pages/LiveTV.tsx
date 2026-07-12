@@ -9,7 +9,7 @@ import Hls from "hls.js";
 import mpegts from "mpegts.js";
 import { toast } from "sonner";
 import {
-  Search, Tv, Radio, Play, Pause, Sparkles, X, ChevronLeft, ChevronRight,
+  Tv, Radio, Play, Pause, Sparkles, X, ChevronLeft, ChevronRight,
   Volume2, VolumeX, Maximize, Minimize, Loader2, PictureInPicture2,
   LogOut, RotateCw, Expand, Shrink,
 } from "lucide-react";
@@ -34,8 +34,6 @@ export default function LiveTV() {
   const [active, setActive] = useState<Channel | null>(null);
   const [autoStarted, setAutoStarted] = useState(false);
   const [reloadNonce, setReloadNonce] = useState(0);
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<string>("All");
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -157,11 +155,6 @@ export default function LiveTV() {
     };
   }, [active, reloadNonce]);
 
-  const categories = useMemo(
-    () => ["All", ...Array.from(new Set(channels.map((c) => c.category))).sort()],
-    [channels],
-  );
-
   const heroChannel = useMemo(() => {
     // Prefer TSN 1 as the default featured channel.
     const tsn1 = channels.find((c) => /\btsn\s*1\b/i.test(c.name) && !is4k(c.name))
@@ -176,28 +169,15 @@ export default function LiveTV() {
     setActive(heroChannel);
   }, [heroChannel, active, autoStarted]);
 
-
-
-  const filtered = useMemo(
-    () =>
-      channels.filter(
-        (c) =>
-          (category === "All" || c.category === category) &&
-          c.name.toLowerCase().includes(query.toLowerCase()),
-      ),
-    [channels, query, category],
-  );
-
   const rows = useMemo(() => {
-    const searching = query.trim().length > 0 || category !== "All";
-    if (searching) return [{ title: "Results", items: filtered }];
+    const cats = Array.from(new Set(channels.map((c) => c.category))).sort();
     const groups: { title: string; items: Channel[] }[] = [];
-    for (const cat of categories.filter((c) => c !== "All")) {
+    for (const cat of cats) {
       const items = channels.filter((c) => c.category === cat);
       if (items.length) groups.push({ title: CAT_LABEL[cat] ?? cat, items });
     }
     return groups;
-  }, [query, category, filtered, categories, channels]);
+  }, [channels]);
 
   const play = (c: Channel) => {
     setActive(c);
@@ -258,30 +238,6 @@ export default function LiveTV() {
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={query} onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search channels..."
-            className="w-full rounded-md border border-border bg-card/40 py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-primary"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => (
-            <button key={cat} onClick={() => setCategory(cat)}
-              className={`relative rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.15em] transition-colors ${
-                category === cat ? "text-primary-foreground" : "border border-border bg-card/40 text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {category === cat && (
-                <motion.span layoutId="livetv-cat" className="absolute inset-0 rounded-full bg-primary" transition={{ type: "spring", stiffness: 320, damping: 28 }} />
-              )}
-              <span className="relative">{CAT_LABEL[cat] ?? cat}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading channels…</p>
