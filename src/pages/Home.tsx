@@ -5,7 +5,7 @@ import { Seo } from "@/lib/seo";
 import LiveTicker, { useLiveMatches } from "@/components/LiveTicker";
 
 import heroImg from "@/assets/hero-stadium.jpg";
-import wc26Emblem from "@/assets/wc26-emblem.webp.asset.json";
+import wc26Emblem from "@/assets/wc26-trophy.png.asset.json";
 import { bdTime, bdDate } from "@/lib/flags";
 
 type Article = {
@@ -59,7 +59,7 @@ export default function Home() {
         <img src={heroImg} alt="" width={1920} height={1080} fetchPriority="high" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-30" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/70 via-background/80 to-background" />
         <img src={wc26Emblem.url} alt="" aria-hidden="true" className="pointer-events-none absolute -right-8 top-0 -z-10 h-[380px] w-auto opacity-30 md:h-[620px] md:opacity-90" />
-        <div className="tri-ribbon mb-6" />
+        
         <div className="mx-auto max-w-7xl px-4 pb-12 pt-10 md:pt-16">
           <div className="flex items-center gap-3">
             <img src={wc26Emblem.url} alt="FIFA World Cup 26" width={72} height={100} className="h-14 w-auto md:h-20 object-contain" />
