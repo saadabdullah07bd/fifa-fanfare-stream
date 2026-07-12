@@ -151,22 +151,25 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Lovable AI Gateway fallback — Gemini 2.5 Flash Lite when Firecrawl left the minute empty.
-  const aiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (aiKey && ["IN_PLAY", "LIVE"].includes(out.status) && (out.minute == null || out.minute === 0)) {
+  // Native Google Gemini 2.5 Flash Lite fallback — fills the live minute when Firecrawl came up empty.
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  if (geminiKey && ["IN_PLAY", "LIVE"].includes(out.status) && (out.minute == null || out.minute === 0)) {
     try {
       const prompt = `You are a live football score assistant. For the FIFA World Cup 2026 match "${out.home.name} vs ${out.away.name}" happening near ${out.utc_date}, return the current live state. Reply STRICTLY as compact JSON only, no prose: {"minute":number|null,"injury":number|null,"home":number|null,"away":number|null,"status":"IN_PLAY"|"PAUSED"|"FINISHED"|"SCHEDULED"}.`;
-      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${aiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
+      const aiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json", temperature: 0 },
+          }),
+        },
+      );
       if (aiRes.ok) {
         const j: any = await aiRes.json();
-        const raw: string = j?.choices?.[0]?.message?.content ?? "";
+        const raw: string = j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";
         const jsonMatch = raw.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const p = JSON.parse(jsonMatch[0]);
@@ -175,13 +178,17 @@ Deno.serve(async (req) => {
           if (typeof p.home === "number") out.score.full.home = p.home;
           if (typeof p.away === "number") out.score.full.away = p.away;
           if (typeof p.status === "string") out.status = p.status;
-          out.live_source = "lovable-ai-gemini-flash-lite";
+          out.live_source = "gemini-2.5-flash-lite";
         }
+      } else {
+        console.error("gemini fallback http", aiRes.status, (await aiRes.text()).slice(0, 200));
       }
     } catch (e) {
-      console.error("lovable-ai fallback failed", (e as Error).message);
+      console.error("gemini fallback failed", (e as Error).message);
     }
   }
+
+
 
 
   return new Response(JSON.stringify(out), {
