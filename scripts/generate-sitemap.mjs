@@ -4,7 +4,7 @@ import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
-const BASE_URL = process.env.VITE_SITE_URL || "https://fifa-fanfare-stream.lovable.app";
+const BASE_URL = process.env.VITE_SITE_URL || "https://pitch26.muhammadsaadabdullah.com";
 const today = new Date().toISOString().slice(0, 10);
 
 const staticEntries = [

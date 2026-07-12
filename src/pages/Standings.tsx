@@ -74,8 +74,8 @@ export default function Standings() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <Seo
-        title="Standings & Top Scorers — Pitch26 World Cup 2026"
-        description="Live 2026 FIFA World Cup group standings and top scorer leaderboard on Pitch26, refreshed continuously throughout the tournament."
+        title="FIFA World Cup 2026 Standings, Groups & Top Scorers Live | Pitch26"
+        description="Live FIFA World Cup 2026 group standings, points table and Golden Boot top scorers leaderboard, updated after every match."
         path="/standings"
       />
 

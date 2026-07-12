@@ -224,7 +224,7 @@ export default function LiveTV() {
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
       className="mx-auto max-w-7xl space-y-8 px-4 py-8"
     >
-      <Seo title="Live TV — Pitch26" description="Stream World Cup 2026 and Cricket channels in HD & 4K." />
+      <Seo title="Watch World Cup 2026 Live Free in HD & 4K — Semifinals & Final | Pitch26" description="Live stream FIFA World Cup 2026 matches free in HD and 4K UHD — semifinals, final and every group-stage game. No signup, plays instantly on any device." path="/live-tv" />
 
       <div className="flex items-center justify-between">
         <h1 className="display text-5xl">Live TV</h1>

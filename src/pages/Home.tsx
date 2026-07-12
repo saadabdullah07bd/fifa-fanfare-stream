@@ -43,9 +43,16 @@ export default function Home() {
   return (
     <div>
       <Seo
-        title="Pitch26 — Live football scores & FIFA World Cup 2026 hub"
-        description="Live scores, timelines, fixtures, and standings for the FIFA World Cup 2026 and every big football match today."
+        title="Watch FIFA World Cup 2026 Live Free — Semifinals, Final & Every Match | Pitch26"
+        description="Watch FIFA World Cup 2026 live free — semifinals, final and every match in HD & 4K. Live scores, fixtures, groups, standings and top scorers, updated by the second."
         path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Watch FIFA World Cup 2026 Live Free",
+          "description": "Stream every FIFA World Cup 2026 match live and free — including the semifinals and the final — with live scores and stats.",
+          "url": "https://pitch26.muhammadsaadabdullah.com/",
+        }}
       />
       <section className="relative isolate overflow-hidden">
         <img src={heroImg} alt="" width={1920} height={1080} fetchPriority="high" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-40" />
