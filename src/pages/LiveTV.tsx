@@ -17,7 +17,7 @@ import {
 type Channel = { id: string; category: string; stream_id: string; name: string; logo_url: string | null };
 
 const is4k = (name: string) => /\b(4k|uhd)\b/i.test(name);
-const CAT_LABEL: Record<string, string> = { wc2026: "World Cup 2026", cricket: "Cricket" };
+
 
 /**
  * Live TV streaming page for World Cup and sports channels.
@@ -192,16 +192,6 @@ export default function LiveTV() {
     return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
   }, [channels, defaultStreamId]);
 
-  const rows = useMemo(() => {
-    const cats = Array.from(new Set(channels.map((c) => c.category))).sort();
-    const groups: { title: string; items: Channel[] }[] = [];
-    for (const cat of cats) {
-      const items = channels.filter((c) => c.category === cat);
-      if (items.length) groups.push({ title: CAT_LABEL[cat] ?? cat, items });
-    }
-    return groups;
-  }, [channels]);
-
   const play = (c: Channel) => {
     setActive(c);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -212,30 +202,8 @@ export default function LiveTV() {
     navigate("/", { replace: true });
   };
 
-  const [query, setQuery] = useState("");
-  const [activeCat, setActiveCat] = useState<string>("all");
+  const totalVisible = channels.length;
 
-  const catOptions = useMemo(() => {
-    const cats = Array.from(new Set(channels.map((c) => c.category))).sort();
-    return [{ key: "all", label: "All channels", count: channels.length }, ...cats.map((c) => ({
-      key: c,
-      label: CAT_LABEL[c] ?? c,
-      count: channels.filter((ch) => ch.category === c).length,
-    }))];
-  }, [channels]);
-
-  const filteredRows = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return rows
-      .filter((r) => activeCat === "all" || (CAT_LABEL[activeCat] ?? activeCat) === r.title)
-      .map((r) => ({
-        ...r,
-        items: q ? r.items.filter((c) => c.name.toLowerCase().includes(q)) : r.items,
-      }))
-      .filter((r) => r.items.length > 0);
-  }, [rows, activeCat, query]);
-
-  const totalVisible = filteredRows.reduce((n, r) => n + r.items.length, 0);
 
   return (
     <motion.div
@@ -268,43 +236,9 @@ export default function LiveTV() {
               Every match in HD &amp; 4K UHD. Pick a channel to start streaming instantly.
             </p>
           </div>
-          <div className="w-full sm:w-72">
-            <label htmlFor="channel-search" className="sr-only">Search channels</label>
-            <input
-              id="channel-search"
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search channels…"
-              className="h-11 w-full rounded-full border border-border bg-background/70 px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
-            />
-          </div>
         </div>
-
-        {catOptions.length > 1 && (
-          <nav aria-label="Filter by category" className="relative mt-5 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {catOptions.map((c) => {
-              const on = activeCat === c.key;
-              return (
-                <button
-                  key={c.key}
-                  type="button"
-                  onClick={() => setActiveCat(c.key)}
-                  aria-pressed={on}
-                  className={`shrink-0 rounded-full border px-4 py-2 text-xs uppercase tracking-[0.18em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                    on
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background/50 text-muted-foreground hover:border-primary/60 hover:text-foreground"
-                  }`}
-                >
-                  {c.label}
-                  <span className={`ml-1.5 tabular-nums ${on ? "text-primary-foreground/80" : "text-muted-foreground/70"}`}>{c.count}</span>
-                </button>
-              );
-            })}
-          </nav>
-        )}
       </header>
+
 
       <AnimatePresence mode="wait">
         {active ? (
@@ -380,12 +314,9 @@ export default function LiveTV() {
           No channels match your search.
         </div>
       ) : (
-        <div className="space-y-10">
-          {filteredRows.map((row) => (
-            <ChannelRow key={row.title} title={row.title} items={row.items} onPlay={play} activeId={active?.id ?? null} />
-          ))}
-        </div>
+        <ChannelRow title="FIFA World Cup 2026" items={channels} onPlay={play} activeId={active?.id ?? null} />
       )}
+
 
       <div className="mt-8 flex justify-center border-t border-border/50 pt-8">
         <button
@@ -424,7 +355,7 @@ function ChannelRow({
 }
 
 function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPlay: (c: Channel) => void; isActive: boolean }) {
-  const catLabel = CAT_LABEL[c.category] ?? c.category;
+  const catLabel = "FIFA World Cup 2026";
   return (
     <motion.button
       onClick={() => onPlay(c)}
@@ -697,7 +628,7 @@ function ModernPlayer({
                   {channel.name}
                 </p>
                 <p className="truncate text-[10px] uppercase tracking-[0.2em] text-white/60">
-                  {CAT_LABEL[channel.category] ?? channel.category}
+                  FIFA World Cup 2026
                 </p>
               </div>
               {is4k(channel.name) && (
