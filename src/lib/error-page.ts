@@ -1,3 +1,7 @@
+/**
+ * Renders a static HTML error page for server-side failures.
+ * @returns A string containing the HTML content of the error page.
+ */
 export function renderErrorPage(): string {
   return `<!doctype html>
 <html lang="en">

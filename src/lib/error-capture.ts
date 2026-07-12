@@ -15,6 +15,11 @@ if (typeof globalThis.addEventListener === "function") {
   );
 }
 
+/**
+ * Retrieves the last captured error if it hasn't expired (TTL 5s).
+ * Clears the error after consumption.
+ * @returns The captured error or undefined.
+ */
 export function consumeLastCapturedError(): unknown {
   if (!lastCapturedError) return undefined;
   if (Date.now() - lastCapturedError.at > TTL_MS) {

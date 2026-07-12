@@ -1,5 +1,15 @@
-// Public proxy for API-Football club search + club dashboard data.
-// Actions: search (?q=), overview (?teamId=)
+/**
+ * Club Search & Overview Function
+ * Purpose: Public proxy for API-Football to search clubs and fetch dashboard data.
+ * HTTP Method: GET, POST
+ * Inputs:
+ *   - action: "search" | "overview" (default: "search")
+ *   - q: Search string (for search)
+ *   - teamId: Numeric ID of the team (for overview)
+ * Outputs: JSON list of teams or team overview details (squad, fixtures).
+ * External APIs: API-Football (v3.football.api-sports.io)
+ */
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -10,6 +20,7 @@ const cache = new Map<string, { at: number; body: unknown }>();
 const TTL = 60_000;
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   const key = Deno.env.get("API_FOOTBALL_KEY");
@@ -20,11 +31,14 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown> = {};
   if (req.method === "POST") { try { body = await req.json(); } catch { /* empty */ } }
   const action = String(body.action ?? url.searchParams.get("action") ?? "search");
+  
+  // In-memory caching to stay within API rate limits
   const cacheKey = JSON.stringify({ action, body, s: url.search });
   const hit = cache.get(cacheKey);
   if (hit && Date.now() - hit.at < TTL) return json(hit.body);
 
   const headers = { "x-apisports-key": key };
+  /** Fetches data from API-Football and handles errors */
   const fetchJson = async (path: string) => {
     const r = await fetch(`${AF}${path}`, { headers });
     if (!r.ok) throw new Error(`api-football ${r.status}`);
@@ -52,6 +66,7 @@ Deno.serve(async (req) => {
       const teamId = Number(body.teamId ?? url.searchParams.get("teamId"));
       if (!teamId) return json({ error: "teamId required" }, 400);
       const season = new Date().getUTCFullYear();
+      // Fetch multiple resources in parallel for the dashboard
       const [teamRes, nextRes, lastRes, squadRes] = await Promise.all([
         fetchJson(`/teams?id=${teamId}`),
         fetchJson(`/fixtures?team=${teamId}&next=5`),
@@ -92,6 +107,7 @@ Deno.serve(async (req) => {
   }
 });
 
+/** Helper for JSON responses with CORS headers */
 function json(b: unknown, status = 200) {
   return new Response(JSON.stringify(b), {
     status, headers: { ...cors, "Content-Type": "application/json" },

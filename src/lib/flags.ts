@@ -21,6 +21,13 @@ const FIFA_TO_ISO2: Record<string, string> = {
   VIE:"vn",WAL:"gb-wls",YEM:"ye",ZAM:"zm",ZIM:"zw",
 };
 
+/**
+ * Generates a URL for a country's flag image from flagcdn.com.
+ * Maps FIFA 3-letter codes to ISO 3166-1 alpha-2 codes.
+ * @param code - The FIFA country code (e.g., "ARG").
+ * @param size - The desired width of the flag image.
+ * @returns The flag image URL or null if not found.
+ */
 export function flagUrl(code?: string | null, size: 40 | 80 | 160 | 320 = 80): string | null {
   if (!code) return null;
   const iso = FIFA_TO_ISO2[code.toUpperCase()];
@@ -29,16 +36,31 @@ export function flagUrl(code?: string | null, size: 40 | 80 | 160 | 320 = 80): s
 }
 
 const DHAKA = "Asia/Dhaka";
+/**
+ * Formats an ISO date string to a human-readable time in Bangladesh Time (Asia/Dhaka).
+ * @param iso - The ISO date string.
+ * @returns Formatted time string (e.g., "8:00 PM").
+ */
 export function bdTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-US", {
     timeZone: DHAKA, hour: "numeric", minute: "2-digit", hour12: true,
   });
 }
+/**
+ * Formats an ISO date string to a full date in Bangladesh Time (Asia/Dhaka).
+ * @param iso - The ISO date string.
+ * @returns Formatted date string (e.g., "Monday, July 12, 2021").
+ */
 export function bdDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
     timeZone: DHAKA, weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 }
+/**
+ * Formats an ISO date string to a short date in Bangladesh Time (Asia/Dhaka).
+ * @param iso - The ISO date string.
+ * @returns Formatted short date string (e.g., "12 Jul").
+ */
 export function bdShortDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
     timeZone: DHAKA, day: "numeric", month: "short",
