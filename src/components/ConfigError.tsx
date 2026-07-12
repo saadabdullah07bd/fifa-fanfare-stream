@@ -1,3 +1,7 @@
+/**
+ * A fallback component displayed when required environment variables are missing.
+ * Provides instructions to the user on how to resolve the configuration issue.
+ */
 export default function ConfigError() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">

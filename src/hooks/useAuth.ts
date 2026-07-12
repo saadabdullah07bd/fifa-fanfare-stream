@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
+/**
+ * Hook to access the current authenticated user and auth state readiness.
+ * 
+ * @returns An object containing the current user, a ready flag, and an authed boolean.
+ */
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
@@ -16,6 +21,11 @@ export function useAuth() {
   return { user, ready, authed: !!user };
 }
 
+/**
+ * Hook to check if the current user has the 'admin' role.
+ * 
+ * @returns An object containing the admin status and auth readiness flag.
+ */
 export function useIsAdmin() {
   const { user, ready } = useAuth();
   const [admin, setAdmin] = useState(false);
