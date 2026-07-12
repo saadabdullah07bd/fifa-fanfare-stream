@@ -118,7 +118,7 @@ export default function MatchDetail() {
         }}
       />
       <h1 className="sr-only">{m.home.name} vs {m.away.name} — {m.competition}</h1>
-      <Link to="/" className="text-xs uppercase tracking-[0.2em] text-primary hover:underline">← Home</Link>
+      <button type="button" onClick={goBack} className="text-xs uppercase tracking-[0.2em] text-primary hover:underline">← Back</button>
 
 
       <motion.div
