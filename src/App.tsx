@@ -88,13 +88,13 @@ function Nav() {
 }
 
 function MobileTabBar() {
-  const items = [
+  const items: { to: string; label: string; Icon: typeof HomeIcon; end?: boolean }[] = [
     { to: "/", label: "Home", Icon: HomeIcon, end: true },
     { to: "/fixtures", label: "Fixtures", Icon: CalendarDays },
     { to: "/standings", label: "Table", Icon: Trophy },
     { to: "/news", label: "News", Icon: Newspaper },
     { to: "/live-tv", label: "Live", Icon: Tv },
-  ] as const;
+  ];
   return (
     <nav
       aria-label="Primary"
