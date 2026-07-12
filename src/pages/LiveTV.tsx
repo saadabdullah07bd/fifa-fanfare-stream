@@ -212,7 +212,7 @@ export default function LiveTV() {
           <motion.div key="player"
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
           >
-            <ModernPlayer videoRef={videoRef} channel={active} onClose={() => setActive(null)} />
+            <ModernPlayer videoRef={videoRef} channel={active} onClose={() => setActive(null)} onReload={() => setReloadNonce((n) => n + 1)} />
           </motion.div>
         ) : heroChannel ? (
           <motion.div key="hero"
