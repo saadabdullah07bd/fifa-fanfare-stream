@@ -274,6 +274,6 @@ Deno.serve(async (req) => {
   cache = { at: Date.now(), body };
 
   return new Response(JSON.stringify(body), {
-    headers: { ...cors, "Content-Type": "application/json" },
+    headers: { ...cors, "Content-Type": "application/json", ...CDN_CACHE_HEADERS },
   });
 });
