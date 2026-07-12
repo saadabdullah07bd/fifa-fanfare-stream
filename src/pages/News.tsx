@@ -31,7 +31,7 @@ export default function News() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 pb-12">
-      <Seo title="News — Pitch26" description="Latest World Cup 2026 and football headlines, live." />
+      <Seo title="FIFA World Cup 2026 News, Team Updates & Match Reports | Pitch26" description="Latest FIFA World Cup 2026 news, team announcements, injury updates and match reports — updated live from top football sources." path="/news" />
       <h1 className="display text-4xl sm:text-5xl">The Daily Pitch</h1>
       <div className="mt-4 h-px w-full bg-border" />
 

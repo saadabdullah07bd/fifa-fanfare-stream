@@ -61,7 +61,7 @@ export default function Fixtures() {
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
       className="mx-auto max-w-6xl px-4 py-8"
     >
-      <Seo title="Knockout — Pitch26" description="2026 FIFA World Cup knockout bracket." />
+      <Seo title="FIFA World Cup 2026 Fixtures, Knockout Bracket & Kickoff Times | Pitch26" description="Full FIFA World Cup 2026 fixtures list, knockout bracket, quarter-final, semifinal and final schedule with kickoff times, venues and live scores." path="/fixtures" />
       <h1 className="display text-5xl">Knockout</h1>
 
       {sorted.length === 0 && (
