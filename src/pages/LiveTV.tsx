@@ -314,12 +314,9 @@ export default function LiveTV() {
           No channels match your search.
         </div>
       ) : (
-        <div className="space-y-10">
-          {filteredRows.map((row) => (
-            <ChannelRow key={row.title} title={row.title} items={row.items} onPlay={play} activeId={active?.id ?? null} />
-          ))}
-        </div>
+        <ChannelRow title="FIFA World Cup 2026" items={channels} onPlay={play} activeId={active?.id ?? null} />
       )}
+
 
       <div className="mt-8 flex justify-center border-t border-border/50 pt-8">
         <button
