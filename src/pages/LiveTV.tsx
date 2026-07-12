@@ -17,7 +17,7 @@ import {
 type Channel = { id: string; category: string; stream_id: string; name: string; logo_url: string | null };
 
 const is4k = (name: string) => /\b(4k|uhd)\b/i.test(name);
-const CAT_LABEL: Record<string, string> = { wc2026: "World Cup 2026", cricket: "Cricket" };
+
 
 /**
  * Live TV streaming page for World Cup and sports channels.
