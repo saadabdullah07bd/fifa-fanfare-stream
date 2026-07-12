@@ -239,13 +239,19 @@ function AllMatchesView({ matches }: { matches: MatchRow[] }) {
  * right edge of every card indicate how sides progress into the next round.
  */
 function KnockoutView({ matches }: { matches: MatchRow[] }) {
-  const rounds = KO_STAGES.map((stage) => ({
-    stage,
-    matches: matches.filter((m) => {
+  // For each round, pad the match list up to its expected slot count so the
+  // bracket keeps its shape (16 → 8 → 4 → 2 → 1) even before every fixture
+  // is confirmed.
+  const rounds = KO_STAGES.map((stage, i) => {
+    const slots = Math.max(1, 16 / Math.pow(2, i));
+    const found = matches.filter((m) => {
       const s = (m.stage ?? "").toString();
       return s === stage || KO_LEGACY[s] === stage;
-    }),
-  }));
+    });
+    const filled: (MatchRow | null)[] = [];
+    for (let j = 0; j < slots; j++) filled.push(found[j] ?? null);
+    return { stage, slots, items: filled };
+  });
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [canLeft, setCanLeft] = useState(false);
@@ -268,7 +274,7 @@ function KnockoutView({ matches }: { matches: MatchRow[] }) {
   }, [rounds.length]);
 
   const scrollBy = (dir: 1 | -1) =>
-    scrollRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });
+    scrollRef.current?.scrollBy({ left: dir * 360, behavior: "smooth" });
 
   return (
     <div className="relative mt-6">
@@ -276,28 +282,36 @@ function KnockoutView({ matches }: { matches: MatchRow[] }) {
         ref={scrollRef}
         className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        <div className="flex min-w-max items-stretch gap-4 pb-4 pr-16 md:gap-8">
-          {rounds.map(({ stage, matches: roundMatches }, idx) => (
-            <div key={stage} className="flex min-w-[220px] flex-col">
-              <h3 className="display mb-3 text-center text-xs uppercase tracking-[0.24em] text-primary md:text-sm">
-                {KO_LABEL[stage]}
-              </h3>
-              <div className="flex flex-1 flex-col justify-around gap-3">
-                {roundMatches.length === 0 &&
-                  Array.from({ length: Math.max(1, 16 / Math.pow(2, idx)) }).map((_, i) => (
-                    <BracketPlaceholder key={i} isLast={idx === rounds.length - 1} />
+        <div className="flex min-w-max items-stretch gap-3 pb-4 md:gap-6">
+          {rounds.map(({ stage, items }, idx) => {
+            const isLast = idx === rounds.length - 1;
+            // Chunk items into pairs so we can draw the classic bracket
+            // connector between each sibling and its round-N+1 parent.
+            const pairs: (MatchRow | null)[][] = [];
+            for (let i = 0; i < items.length; i += 2) {
+              pairs.push(items.slice(i, i + 2));
+            }
+            return (
+              <div key={stage} className="flex min-w-[200px] flex-col md:min-w-[240px]">
+                <h3 className="display mb-3 text-center text-xs uppercase tracking-[0.24em] text-primary md:text-sm">
+                  {KO_LABEL[stage]}
+                </h3>
+                <div className="flex flex-1 flex-col justify-around gap-4">
+                  {pairs.map((pair, pi) => (
+                    <BracketPair key={pi} isLast={isLast} single={pair.length === 1}>
+                      {pair.map((m, ii) =>
+                        m ? (
+                          <BracketCard key={m.id} match={m} index={pi * 2 + ii} />
+                        ) : (
+                          <BracketPlaceholder key={ii} />
+                        ),
+                      )}
+                    </BracketPair>
                   ))}
-                {roundMatches.map((m, i) => (
-                  <BracketCard
-                    key={m.id}
-                    match={m}
-                    isLast={idx === rounds.length - 1}
-                    index={i}
-                  />
-                ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -308,7 +322,7 @@ function KnockoutView({ matches }: { matches: MatchRow[] }) {
             type="button"
             onClick={() => scrollBy(-1)}
             initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
-            className="pointer-events-auto absolute left-2 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+            className="pointer-events-auto absolute left-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground md:grid"
             aria-label="Scroll bracket left"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -320,7 +334,7 @@ function KnockoutView({ matches }: { matches: MatchRow[] }) {
             type="button"
             onClick={() => scrollBy(1)}
             initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}
-            className="pointer-events-auto absolute right-2 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+            className="pointer-events-auto absolute right-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground md:grid"
             aria-label="Scroll bracket right"
           >
             <ChevronRight className="h-5 w-5" />
@@ -331,32 +345,69 @@ function KnockoutView({ matches }: { matches: MatchRow[] }) {
   );
 }
 
-
 /**
- * Empty slot shown while a knockout round is still to be decided.
+ * A pair of match cards sharing a bracket connector. The connector draws a
+ * horizontal stub from each card's right edge, a vertical spine linking the
+ * two stubs, and a horizontal outlet at the pair's midpoint feeding into the
+ * next round — the classic Google Sports / ESPN bracket shape.
  */
-function BracketPlaceholder({ isLast }: { isLast: boolean }) {
+function BracketPair({
+  children,
+  isLast,
+  single,
+}: {
+  children: React.ReactNode;
+  isLast: boolean;
+  single: boolean;
+}) {
   return (
-    <div className="relative">
-      <div className="rounded-lg border border-dashed border-border bg-card/20 px-3 py-4 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-        TBD
-      </div>
-      {!isLast && <BracketConnector />}
+    <div className="relative flex flex-col justify-around gap-3">
+      {children}
+      {!isLast && !single && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-3 top-[25%] bottom-[25%] w-3 md:-right-6 md:w-6"
+        >
+          {/* horizontal stub — top card */}
+          <span className="absolute left-0 top-0 h-px w-1/2 bg-border" />
+          {/* horizontal stub — bottom card */}
+          <span className="absolute left-0 bottom-0 h-px w-1/2 bg-border" />
+          {/* vertical spine linking the two stubs */}
+          <span className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-border" />
+          {/* horizontal outlet feeding the next round */}
+          <span className="absolute left-1/2 top-1/2 h-px w-1/2 -translate-y-1/2 bg-border" />
+        </span>
+      )}
+      {!isLast && single && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-3 top-1/2 h-px w-3 -translate-y-1/2 bg-border md:-right-6 md:w-6"
+        />
+      )}
     </div>
   );
 }
 
 /**
- * Single match card inside the bracket. Draws a horizontal connector line to
- * the next round unless it is the Final.
+ * Empty slot shown while a knockout round is still to be decided.
  */
-function BracketCard({ match, isLast, index }: { match: MatchRow; isLast: boolean; index: number }) {
+function BracketPlaceholder() {
+  return (
+    <div className="rounded-lg border border-dashed border-border bg-card/20 px-3 py-4 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+      TBD
+    </div>
+  );
+}
+
+/**
+ * Single match card inside the bracket.
+ */
+function BracketCard({ match, index }: { match: MatchRow; index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.2) }}
-      className="relative"
       whileHover={{ y: -2 }}
     >
       <Link
@@ -381,22 +432,7 @@ function BracketCard({ match, isLast, index }: { match: MatchRow; isLast: boolea
           </p>
         )}
       </Link>
-      {!isLast && <BracketConnector />}
     </motion.div>
-  );
-}
-
-/**
- * Horizontal line + short vertical stub that visually links a match card to
- * the next round in the bracket.
- */
-function BracketConnector() {
-  return (
-    <span
-      aria-hidden
-      className="pointer-events-none absolute top-1/2 left-full h-px -translate-y-1/2 bg-border"
-      style={{ width: "calc(1rem)" }}
-    />
   );
 }
 
