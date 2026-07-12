@@ -50,3 +50,28 @@ export function getWc26Match(id: string | number | undefined): Wc26Match | undef
   if (!Number.isFinite(n)) return undefined;
   return WC26_MATCHES.find((m) => m.match_no === n);
 }
+
+const norm = (s: string | null | undefined) =>
+  (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** Find a wc26 match by team names (order-insensitive) and optional ISO date. */
+export function findWc26MatchByTeams(
+  home: string | null | undefined,
+  away: string | null | undefined,
+  utcDate?: string | null,
+): Wc26Match | undefined {
+  const a = norm(home);
+  const b = norm(away);
+  if (!a || !b) return undefined;
+  const day = utcDate ? utcDate.slice(0, 10) : null;
+  const candidates = WC26_MATCHES.filter((m) => {
+    const h = norm(m.home_name), aw = norm(m.away_name);
+    return (h === a && aw === b) || (h === b && aw === a);
+  });
+  if (candidates.length === 0) return undefined;
+  if (day) {
+    const same = candidates.find((m) => (m.date_utc ?? "").slice(0, 10) === day);
+    if (same) return same;
+  }
+  return candidates[0];
+}
