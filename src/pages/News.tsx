@@ -26,7 +26,7 @@ export default function News() {
   const [lead, ...rest] = articles;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 font-serif">
+    <div className="mx-auto max-w-6xl px-4 py-12 pb-32 font-serif">
       <Seo title="News — Pitch26" description="Latest World Cup 2026 and football headlines, live." />
       <h1 className="font-serif text-5xl font-black tracking-tight">The Daily Pitch</h1>
       <p className="mt-2 font-sans text-sm uppercase tracking-[0.2em] text-muted-foreground">Live headlines</p>
