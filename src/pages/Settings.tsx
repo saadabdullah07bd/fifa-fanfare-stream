@@ -201,6 +201,25 @@ export default function Settings() {
               {save.isPending ? "Saving…" : "Save server"}
             </button>
           </form>
+
+          <form onSubmit={(e) => { e.preventDefault(); addManual.mutate(); }} className="mt-8 space-y-3 rounded-lg border border-border bg-card/40 p-4">
+            <h2 className="display text-2xl">Add manual channel</h2>
+            <p className="text-sm text-muted-foreground">Paste a direct HLS (.m3u8) or MPEG-TS (.ts) link — bypasses the Xtream server.</p>
+            <input required placeholder="Channel name (e.g. TSN 1)" value={manualName} onChange={(e) => setManualName(e.target.value)} maxLength={128}
+              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm" />
+            <input required placeholder="https://example.com/stream.m3u8" value={manualUrl} onChange={(e) => setManualUrl(e.target.value)} maxLength={1024}
+              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm" />
+            <select value={manualCategory} onChange={(e) => setManualCategory(e.target.value)}
+              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm">
+              <option value="wc2026">World Cup 2026</option>
+              <option value="cricket">Cricket</option>
+              <option value="other">Other</option>
+            </select>
+            <button disabled={addManual.isPending}
+              className="rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50">
+              {addManual.isPending ? "Adding…" : "Add channel"}
+            </button>
+          </form>
         </>
       )}
 
