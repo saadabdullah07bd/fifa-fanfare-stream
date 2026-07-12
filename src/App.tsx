@@ -137,7 +137,7 @@ export default function App() {
       <AuthRedirector />
       <OnboardingModal />
       <header className="sticky top-0 z-40 glass-nav">
-        <div className="tri-ribbon" />
+        
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2.5">
             <img src={wc26Emblem.url} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
