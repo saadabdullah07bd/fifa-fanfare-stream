@@ -134,10 +134,12 @@ export default function LiveTV() {
     [channels],
   );
 
-  const heroChannel = useMemo(
-    () => channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null,
-    [channels],
-  );
+  const heroChannel = useMemo(() => {
+    // Prefer TSN 1 as the default featured channel.
+    const tsn1 = channels.find((c) => /\btsn\s*1\b/i.test(c.name) && !is4k(c.name))
+      ?? channels.find((c) => /\btsn\s*1\b/i.test(c.name));
+    return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
+  }, [channels]);
 
   const filtered = useMemo(
     () =>
