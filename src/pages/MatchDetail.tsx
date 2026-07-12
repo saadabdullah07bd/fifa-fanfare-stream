@@ -37,8 +37,10 @@ export default function MatchDetail() {
   const homeCrest = flagUrl(m.home_code, 160);
   const awayCrest = flagUrl(m.away_code, 160);
 
-  const homeGoals = m.goals.filter((g) => g.team_code === m.home_code || g.team === m.home_name);
-  const awayGoals = m.goals.filter((g) => g.team_code === m.away_code || g.team === m.away_name);
+  const cards = [
+    ...m.yellow_cards.map((c) => ({ ...c, card: "YELLOW" as const })),
+    ...m.red_cards.map((c) => ({ ...c, card: "RED" as const })),
+  ].sort((a, b) => a.minute - b.minute);
 
   return (
     <motion.div
