@@ -335,12 +335,9 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
         {isActive && (
           <span className="absolute left-2 top-2 flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
             <Radio className="h-3 w-3 animate-pulse" /> On
-/**
- * Renders channel logo or initials if logo fails to load.
- */
-
           </span>
         )}
+
         <span className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100">
           <Play className="h-8 w-8 fill-primary text-primary" />
         </span>
