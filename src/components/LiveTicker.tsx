@@ -125,7 +125,7 @@ function MiniList({ title, items, showTime }: { title: string; items: LiveMatch[
       <ul className="mt-2 divide-y divide-border">
         {items.map((m) => (
           <li key={m.id} className="py-2 text-sm">
-            <Link to={`/match/${m.id}`} className="flex items-center gap-3 hover:text-primary">
+            <Link to={wcHref(m)} className="flex items-center gap-3 hover:text-primary">
               <span className="w-20 text-xs uppercase tracking-wider text-muted-foreground">
                 {showTime ? bdTime(m.utc_date) : "FT"}
               </span>
