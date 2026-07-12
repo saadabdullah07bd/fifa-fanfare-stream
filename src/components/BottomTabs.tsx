@@ -25,7 +25,10 @@ interface BottomTabsProps {
  * @param props.accentColor - The color used for the active indicator and highlights.
  */
 export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+  const fromState = (location.state as { from?: string } | null)?.from;
+  const effectivePath = pathname === "/auth" && typeof fromState === "string" ? fromState : pathname;
   const navigate = useNavigate();
 
   // Determine which tab is currently active based on the URL path.
@@ -34,8 +37,8 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
   tabs.forEach((t, i) => {
     const match =
       t.to === "/"
-        ? pathname === "/"
-        : pathname === t.to || pathname.startsWith(t.to + "/");
+        ? effectivePath === "/"
+        : effectivePath === t.to || effectivePath.startsWith(t.to + "/");
     if (match && t.to.length > bestLen) {
       bestLen = t.to.length;
       activeIndex = i;

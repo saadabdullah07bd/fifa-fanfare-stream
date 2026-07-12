@@ -12,6 +12,10 @@ export default function MobileSplash() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    try {
+      if (window.sessionStorage.getItem("pitch26-splash-seen") === "1") return;
+      window.sessionStorage.setItem("pitch26-splash-seen", "1");
+    } catch { /* ignore */ }
     setVisible(true);
   }, []);
 
