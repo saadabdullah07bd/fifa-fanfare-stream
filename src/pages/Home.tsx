@@ -287,20 +287,46 @@ function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
       </div>
 
       <div className="relative z-10 mt-auto flex flex-col gap-6 p-5 sm:p-7">
-        <div className="flex items-end gap-4 sm:gap-8">
-          {homeCrest && <img src={homeCrest} alt="" aria-hidden="true" className="hidden h-16 w-24 rounded-lg object-cover ring-1 ring-border sm:block md:h-20 md:w-28" />}
-          <div className="min-w-0 flex-1">
-            <p className="display truncate text-4xl leading-[0.9] tracking-tight sm:text-6xl md:text-[6.5rem]">
-              {abbr(hero.homeName)} <span className="text-primary">VS</span> {abbr(hero.awayName)}
-            </p>
-            <p className="mt-2 truncate text-sm text-muted-foreground sm:text-base">
-              <span className="font-semibold text-foreground/80">{hero.homeName}</span>
-              <span className="mx-2 opacity-40">·</span>
-              <span className="font-semibold text-foreground/80">{hero.awayName}</span>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+          {/* Home team */}
+          <div className="flex min-w-0 flex-col items-start gap-2 sm:gap-3">
+            {homeCrest && (
+              <img
+                src={homeCrest}
+                alt=""
+                aria-hidden="true"
+                className="h-10 w-14 rounded-md object-cover ring-1 ring-border sm:h-16 sm:w-24 md:h-20 md:w-28"
+              />
+            )}
+            <p className="display truncate text-xl leading-tight tracking-tight sm:text-3xl md:text-4xl">
+              {hero.homeName}
             </p>
           </div>
-          {awayCrest && <img src={awayCrest} alt="" aria-hidden="true" className="hidden h-16 w-24 rounded-lg object-cover ring-1 ring-border sm:block md:h-20 md:w-28" />}
+
+          {/* VS pill */}
+          <span
+            aria-hidden="true"
+            className="display rounded-full border border-border bg-black/60 px-3 py-1 text-sm text-primary backdrop-blur-md sm:text-lg md:text-2xl"
+          >
+            VS
+          </span>
+
+          {/* Away team */}
+          <div className="flex min-w-0 flex-col items-end gap-2 text-right sm:gap-3">
+            {awayCrest && (
+              <img
+                src={awayCrest}
+                alt=""
+                aria-hidden="true"
+                className="h-10 w-14 rounded-md object-cover ring-1 ring-border sm:h-16 sm:w-24 md:h-20 md:w-28"
+              />
+            )}
+            <p className="display truncate text-xl leading-tight tracking-tight sm:text-3xl md:text-4xl">
+              {hero.awayName}
+            </p>
+          </div>
         </div>
+
 
         <div className="flex flex-wrap items-center gap-4 sm:gap-6">
           {hero.homeScore != null && hero.awayScore != null ? (
