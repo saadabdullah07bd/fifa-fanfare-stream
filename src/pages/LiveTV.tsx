@@ -39,7 +39,18 @@ export default function LiveTV() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (!active || !videoRef.current) return;
+    if (!active) return;
+    let cancelled = false;
+    let rafId = 0;
+    const waitForVideo = () =>
+      new Promise<HTMLVideoElement>((resolve) => {
+        const tick = () => {
+          if (cancelled) return;
+          if (videoRef.current) resolve(videoRef.current);
+          else rafId = requestAnimationFrame(tick);
+        };
+        tick();
+      });
     let hls: Hls | undefined;
     let mts: ReturnType<typeof mpegts.createPlayer> | undefined;
     (async () => {
