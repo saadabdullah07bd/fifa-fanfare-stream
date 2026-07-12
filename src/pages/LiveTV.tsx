@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import {
   Search, Tv, Radio, Play, Pause, Sparkles, X, ChevronLeft, ChevronRight,
   Volume2, VolumeX, Maximize, Minimize, Loader2, PictureInPicture2,
-  LogOut,
+  LogOut, RotateCw, Expand, Shrink,
 } from "lucide-react";
 
 type Channel = { id: string; category: string; stream_id: string; name: string; logo_url: string | null };
@@ -33,6 +33,7 @@ export default function LiveTV() {
 
   const [active, setActive] = useState<Channel | null>(null);
   const [autoStarted, setAutoStarted] = useState(false);
+  const [reloadNonce, setReloadNonce] = useState(0);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("All");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -138,7 +139,7 @@ export default function LiveTV() {
       hls?.destroy();
       try { mts?.pause(); mts?.unload(); mts?.detachMediaElement(); mts?.destroy(); } catch { /* ignore */ }
     };
-  }, [active]);
+  }, [active, reloadNonce]);
 
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(channels.map((c) => c.category))).sort()],
@@ -211,7 +212,7 @@ export default function LiveTV() {
           <motion.div key="player"
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
           >
-            <ModernPlayer videoRef={videoRef} channel={active} onClose={() => setActive(null)} />
+            <ModernPlayer videoRef={videoRef} channel={active} onClose={() => setActive(null)} onReload={() => setReloadNonce((n) => n + 1)} />
           </motion.div>
         ) : heroChannel ? (
           <motion.div key="hero"
@@ -366,13 +367,15 @@ function ChannelLogo({ url, name }: { url: string | null; name: string }) {
 }
 
 function ModernPlayer({
-  videoRef, channel, onClose,
+  videoRef, channel, onClose, onReload,
 }: {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   channel: Channel;
   onClose: () => void;
+  onReload: () => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [fill, setFill] = useState(false);
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -508,7 +511,7 @@ function ModernPlayer({
         autoPlay playsInline
         onClick={() => { if (isMobile) { kick(); } else { toggle(); } }}
         style={{ cursor: showUI ? "pointer" : "none" }}
-        className="aspect-video w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full group-[:fullscreen]:object-contain"
+        className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
       />
 
       {/* Right-side vertical volume rocker (mobile only) */}
@@ -614,6 +617,20 @@ function ModernPlayer({
               aria-label="Volume"
             />
             <div className="ml-auto flex items-center gap-2">
+              {/* Reload — mobile & tablet only. Resets the stream if it falls behind. */}
+              <button onClick={() => { toast.message("Reloading stream…"); onReload(); kick(); }}
+                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground lg:hidden"
+                aria-label="Reload stream"
+              >
+                <RotateCw className="h-4 w-4" />
+              </button>
+              {/* Fill / fit toggle — mobile & tablet only. Stretches to fill the screen. */}
+              <button onClick={() => { setFill((f) => !f); kick(); }}
+                className={`grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-primary hover:text-primary-foreground lg:hidden ${fill ? "bg-primary/80" : "bg-white/10"}`}
+                aria-label={fill ? "Fit to screen" : "Fill screen"}
+              >
+                {fill ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+              </button>
               <button onClick={togglePip}
                 className="hidden h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground sm:grid"
                 aria-label="Picture in picture"
