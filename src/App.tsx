@@ -15,6 +15,7 @@ import NotFound from "@/pages/NotFound";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Standings from "@/pages/Standings";
+import { BottomTabs } from "@/components/BottomTabs";
 import OnboardingModal from "@/components/OnboardingModal";
 
 function useSession() {
@@ -87,55 +88,13 @@ function Nav() {
   );
 }
 
-function MobileTabBar() {
-  const items: { to: string; label: string; Icon: typeof HomeIcon; end?: boolean }[] = [
-    { to: "/", label: "Home", Icon: HomeIcon, end: true },
-    { to: "/fixtures", label: "Fixtures", Icon: CalendarDays },
-    { to: "/standings", label: "Table", Icon: Trophy },
-    { to: "/news", label: "News", Icon: Newspaper },
-    { to: "/live-tv", label: "Live", Icon: Tv },
-  ];
-  return (
-    <nav
-      aria-label="Primary"
-      className="fixed inset-x-0 bottom-3 z-40 mx-auto flex w-[min(94%,28rem)] items-center justify-between gap-1 rounded-full px-2 py-1.5 lg:hidden"
-      style={{
-        paddingBottom: "max(0.375rem, env(safe-area-inset-bottom))",
-        background: "rgba(20, 30, 25, 0.55)",
-        border: "1px solid var(--glass-border)",
-        backdropFilter: "blur(28px) saturate(200%)",
-        WebkitBackdropFilter: "blur(28px) saturate(200%)",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.28)",
-      }}
-    >
-      {items.map(({ to, label, Icon, end }) => (
-        <NavLink
-          key={to}
-          to={to}
-          end={end}
-          className={({ isActive }) =>
-            `relative flex flex-1 flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${
-              isActive ? "text-primary-foreground" : "text-foreground/75"
-            }`
-          }
-        >
-          {({ isActive }) => (
-            <>
-              {isActive && (
-                <span
-                  className="absolute inset-0 rounded-full bg-primary shadow-[0_6px_18px_rgba(0,0,0,0.35)]"
-                  aria-hidden
-                />
-              )}
-              <Icon className="relative h-4 w-4" />
-              <span className="relative">{label}</span>
-            </>
-          )}
-        </NavLink>
-      ))}
-    </nav>
-  );
-}
+const MOBILE_TABS = [
+  { to: "/", label: "Home", icon: HomeIcon },
+  { to: "/fixtures", label: "Fixtures", icon: CalendarDays },
+  { to: "/standings", label: "Table", icon: Trophy },
+  { to: "/news", label: "News", icon: Newspaper },
+  { to: "/live-tv", label: "Live", icon: Tv },
+];
 
 export default function App() {
   return (
@@ -149,7 +108,7 @@ export default function App() {
             <span className="display text-2xl tracking-wider text-foreground">PITCH<span className="text-primary">26</span></span>
           </Link>
           <nav className="hidden items-center gap-1 lg:flex"><Nav /></nav>
-          <Link to="/live-tv" className="glass-pill px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-white/20 transition-colors">
+          <Link to="/live-tv" className="hidden lg:inline-flex glass-pill px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-white/20 transition-colors">
             <span className="live-dot mr-2 align-middle" />Watch
           </Link>
         </div>
@@ -174,7 +133,7 @@ export default function App() {
       <footer className="glass-nav mt-8 py-8 pb-24 text-center text-xs text-muted-foreground lg:pb-8">
         Pitch26 · Independent fan hub · Not affiliated with FIFA
       </footer>
-      <MobileTabBar />
+      <BottomTabs tabs={MOBILE_TABS} accentColor="#e6b800" />
     </div>
   );
 }
