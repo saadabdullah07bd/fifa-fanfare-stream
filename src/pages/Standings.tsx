@@ -533,7 +533,7 @@ function PodiumCard({ scorer: s, place, maxGoals }: { scorer: Scorer; place: 1 |
 
       <div className="mt-4 flex items-center gap-3">
         {(() => {
-          const flag = s.team.crest ?? flagUrl(s.team.tla, 160);
+          const flag = s.team.crest ?? flagUrl(s.team.tla ?? fifaCodeFromName(s.team.name), 160);
           return flag ? (
             <img src={flag} alt="" className="h-8 w-12 shrink-0 rounded-[3px] object-cover ring-1 ring-border" loading="lazy" />
           ) : (
