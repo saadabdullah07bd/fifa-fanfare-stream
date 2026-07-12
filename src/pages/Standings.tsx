@@ -101,7 +101,13 @@ export default function Standings() {
 
   const updatedLabel = useMemo(() => {
     if (!updated) return "";
-    try { return new Date(updated).toLocaleString(); } catch { return updated; }
+    try {
+      return new Date(updated).toLocaleString("en-US", {
+        timeZone: "Asia/Dhaka",
+        day: "numeric", month: "short", year: "numeric",
+        hour: "numeric", minute: "2-digit", hour12: true,
+      }) + " BDT";
+    } catch { return updated; }
   }, [updated]);
 
   return (

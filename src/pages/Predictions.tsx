@@ -149,7 +149,7 @@ function PredictRow({ matchId, date, home, away, homeStart, awayStart, disabled,
     <div className="flex items-center gap-3 rounded-lg border border-border bg-card/40 p-3">
       <div className="flex-1">
         <p className="text-xs uppercase tracking-wider text-muted-foreground">
-          {new Date(date).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+          {new Date(date).toLocaleString("en-US", { timeZone: "Asia/Dhaka", weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}
         </p>
         <p className="mt-1 text-sm font-semibold">{home} vs {away}</p>
       </div>
