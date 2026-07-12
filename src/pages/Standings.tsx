@@ -547,7 +547,7 @@ function PodiumCard({ scorer: s, place, maxGoals }: { scorer: Scorer; place: 1 |
 
       <div className="mt-4 flex items-end justify-between">
         <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-          <p>P {s.played ?? "—"} · Ast {s.assists ?? 0}</p>
+          <p>Matches {s.played ?? "—"}</p>
         </div>
         <div className="text-right">
           <p className="display text-4xl leading-none text-primary sm:text-5xl">{s.goals}</p>
