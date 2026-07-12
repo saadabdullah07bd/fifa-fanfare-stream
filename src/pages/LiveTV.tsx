@@ -237,25 +237,11 @@ export default function LiveTV() {
           >
             <ModernPlayer videoRef={videoRef} channel={active} onClose={() => setActive(null)} onReload={() => setReloadNonce((n) => n + 1)} />
           </motion.div>
-        ) : heroChannel ? (
-          <motion.div key="hero"
-            initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-            className="live-shimmer relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-br from-primary/20 via-card/70 to-accent/10 p-8 sm:p-12"
+        ) : isLoading || heroChannel ? (
+          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="grid aspect-video place-items-center rounded-2xl border border-primary/30 bg-black"
           >
-            <div className="pointer-events-none absolute inset-0 opacity-40" style={{ background: "radial-gradient(600px circle at 80% -10%, hsl(var(--primary) / 0.35), transparent 60%)" }} />
-            <div className="relative">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Featured live
-              </span>
-              <h2 className="display mt-4 max-w-2xl text-3xl sm:text-5xl">{heroChannel.name}</h2>
-              <p className="mt-2 text-sm uppercase tracking-[0.2em] text-muted-foreground">{CAT_LABEL[heroChannel.category] ?? heroChannel.category}</p>
-              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                onClick={() => play(heroChannel)}
-                className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-bold uppercase tracking-[0.15em] text-primary-foreground shadow-lg hover:shadow-primary/30"
-              >
-                <Play className="h-4 w-4 fill-current" /> Watch now
-              </motion.button>
-            </div>
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
           </motion.div>
         ) : (
           <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
