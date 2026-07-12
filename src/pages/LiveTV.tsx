@@ -192,16 +192,6 @@ export default function LiveTV() {
     return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
   }, [channels, defaultStreamId]);
 
-  const rows = useMemo(() => {
-    const cats = Array.from(new Set(channels.map((c) => c.category))).sort();
-    const groups: { title: string; items: Channel[] }[] = [];
-    for (const cat of cats) {
-      const items = channels.filter((c) => c.category === cat);
-      if (items.length) groups.push({ title: CAT_LABEL[cat] ?? cat, items });
-    }
-    return groups;
-  }, [channels]);
-
   const play = (c: Channel) => {
     setActive(c);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -212,30 +202,8 @@ export default function LiveTV() {
     navigate("/", { replace: true });
   };
 
-  const [query, setQuery] = useState("");
-  const [activeCat, setActiveCat] = useState<string>("all");
+  const totalVisible = channels.length;
 
-  const catOptions = useMemo(() => {
-    const cats = Array.from(new Set(channels.map((c) => c.category))).sort();
-    return [{ key: "all", label: "All channels", count: channels.length }, ...cats.map((c) => ({
-      key: c,
-      label: CAT_LABEL[c] ?? c,
-      count: channels.filter((ch) => ch.category === c).length,
-    }))];
-  }, [channels]);
-
-  const filteredRows = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return rows
-      .filter((r) => activeCat === "all" || (CAT_LABEL[activeCat] ?? activeCat) === r.title)
-      .map((r) => ({
-        ...r,
-        items: q ? r.items.filter((c) => c.name.toLowerCase().includes(q)) : r.items,
-      }))
-      .filter((r) => r.items.length > 0);
-  }, [rows, activeCat, query]);
-
-  const totalVisible = filteredRows.reduce((n, r) => n + r.items.length, 0);
 
   return (
     <motion.div
