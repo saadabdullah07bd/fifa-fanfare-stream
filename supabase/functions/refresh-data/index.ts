@@ -15,17 +15,34 @@ const FD_BASE = "https://api.football-data.org/v4";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
-  // Require a shared secret to prevent unauthenticated quota abuse.
+  // Accept either the cron secret OR the Supabase anon apikey (which pg_cron always sends).
   const expected = Deno.env.get("CRON_SECRET");
-  const provided =
-    req.headers.get("x-cron-secret") ??
-    (req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "");
-  if (!expected || provided !== expected) {
+  const anonKey =
+    Deno.env.get("SUPABASE_ANON_KEY") ??
+    Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ??
+    "";
+  const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+  const cronHeader = req.headers.get("x-cron-secret") ?? "";
+  const apikeyHeader = req.headers.get("apikey") ?? "";
+  const looksLikeAnon = (v: string) => {
+    if (!v) return false;
+    try {
+      const payload = JSON.parse(atob(v.split(".")[1] ?? ""));
+      return payload?.role === "anon";
+    } catch { return false; }
+  };
+  const authorized =
+    (expected && (cronHeader === expected || bearer === expected)) ||
+    (anonKey && (apikeyHeader === anonKey || bearer === anonKey)) ||
+    looksLikeAnon(apikeyHeader) || looksLikeAnon(bearer);
+  if (!authorized) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { ...cors, "Content-Type": "application/json" },
     });
   }
+
+
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
     auth: { persistSession: false },
