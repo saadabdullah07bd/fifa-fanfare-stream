@@ -117,12 +117,66 @@ export default function MatchDetail() {
             {m.home_score == null ? "Match not yet played." : "No goals recorded."}
           </p>
         ) : (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <GoalColumn title={homeName} code={m.home_code} goals={homeGoals} align="left" />
-            <GoalColumn title={awayName} code={m.away_code} goals={awayGoals} align="right" />
-          </div>
+          <ul className="mt-4 flex flex-col gap-2">
+            {m.goals.map((g, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/50 p-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 border-primary bg-background text-sm">⚽</span>
+                  <p className="truncate font-semibold">
+                    {g.player}
+                    {g.type === "OG" && <span className="ml-1 text-[10px] uppercase tracking-widest text-muted-foreground">(OG)</span>}
+                    {g.type === "PEN" && <span className="ml-1 text-[10px] uppercase tracking-widest text-muted-foreground">(Pen)</span>}
+                  </p>
+                </div>
+                <span className="display shrink-0 text-sm tabular-nums text-primary">
+                  {g.minute}{g.injury ? `+${g.injury}` : ""}'
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
+
+      {/* Cards */}
+      {cards.length > 0 && (
+        <section className="mt-10">
+          <h2 className="display text-2xl text-primary">Cards</h2>
+          <ul className="mt-4 flex flex-col gap-2">
+            {cards.map((c, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/50 p-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span aria-hidden className={`inline-block h-5 w-3.5 shrink-0 rounded-[2px] ${c.card === "RED" ? "bg-red-500" : "bg-yellow-400"}`} />
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{c.player}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{c.team}</p>
+                  </div>
+                </div>
+                <span className="display shrink-0 text-sm tabular-nums text-primary">
+                  {c.minute}{c.injury ? `+${c.injury}` : ""}'
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Match info */}
+      {(m.referee || m.attendance) && (
+        <section className="mt-10 grid gap-3 sm:grid-cols-2">
+          {m.referee && (
+            <div className="rounded-lg border border-border bg-card/40 p-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-primary">Referee</p>
+              <p className="mt-1 text-sm">{m.referee}</p>
+            </div>
+          )}
+          {m.attendance && (
+            <div className="rounded-lg border border-border bg-card/40 p-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-primary">Attendance</p>
+              <p className="mt-1 text-sm tabular-nums">{m.attendance.toLocaleString()}</p>
+            </div>
+          )}
+        </section>
+      )}
 
       {m.notes && (
         <section className="mt-8 rounded-lg border border-border bg-card/40 p-4 text-sm text-muted-foreground">
