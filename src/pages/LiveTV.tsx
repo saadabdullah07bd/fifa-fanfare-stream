@@ -374,8 +374,8 @@ function ModernPlayer({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(true);
-  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(0.5);
   const [buffering, setBuffering] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [showUI, setShowUI] = useState(true);
