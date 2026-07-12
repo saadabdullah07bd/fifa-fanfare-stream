@@ -532,16 +532,15 @@ function PodiumCard({ scorer: s, place, maxGoals }: { scorer: Scorer; place: 1 |
       </div>
 
       <div className="mt-4 flex items-center gap-3">
-        {s.team.crest ? (
-          <img
-            src={s.team.crest}
-            alt=""
-            className="h-8 w-12 shrink-0 rounded-[3px] object-cover ring-1 ring-border"
-            loading="lazy"
-          />
-        ) : (
-          <span className="h-8 w-12 shrink-0 rounded-[3px] bg-secondary/40" aria-hidden="true" />
-        )}
+        {(() => {
+          const flag = s.team.crest ?? flagUrl(s.team.tla, 160);
+          return flag ? (
+            <img src={flag} alt="" className="h-8 w-12 shrink-0 rounded-[3px] object-cover ring-1 ring-border" loading="lazy" />
+          ) : (
+            <span className="h-8 w-12 shrink-0 rounded-[3px] bg-secondary/40" aria-hidden="true" />
+          );
+        })()}
+
         <div className="min-w-0">
           <p className="display truncate text-xl leading-tight sm:text-2xl">{s.player.name}</p>
           <p className="truncate text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
