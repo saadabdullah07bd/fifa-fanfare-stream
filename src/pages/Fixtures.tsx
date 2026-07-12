@@ -449,7 +449,7 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
               return (
                 <div
                   key={stage}
-                  ref={(el) => (columnRefs.current[stage] = el)}
+                  ref={(el) => { columnRefs.current[stage] = el; }}
                   className="flex min-w-[240px] snap-center flex-col md:min-w-[280px] md:snap-align-none"
                 >
                   <div className="mb-4 flex items-center justify-center gap-2">
