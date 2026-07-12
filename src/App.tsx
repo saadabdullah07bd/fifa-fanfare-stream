@@ -133,7 +133,7 @@ export default function App() {
       <footer className="glass-nav mt-8 py-8 pb-24 text-center text-xs text-muted-foreground lg:pb-8">
         Pitch26 · Independent fan hub · Not affiliated with FIFA
       </footer>
-      <MobileTabBar />
+      <BottomTabs tabs={MOBILE_TABS} accentColor="#e6b800" />
     </div>
   );
 }
