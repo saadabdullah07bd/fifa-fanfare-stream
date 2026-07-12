@@ -3,7 +3,7 @@ import { Seo } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Users, Search, Medal, Target } from "lucide-react";
-import { flagUrl } from "@/lib/flags";
+import { flagUrl, fifaCodeFromName } from "@/lib/flags";
 
 
 type Row = {
@@ -462,7 +462,7 @@ function ScorersPanel({
                       <td className="hidden py-3 sm:table-cell">
                         <div className="flex items-center gap-2 min-w-0">
                           {(() => {
-                            const flag = s.team.crest ?? flagUrl(s.team.tla, 80);
+                            const flag = s.team.crest ?? flagUrl(s.team.tla ?? fifaCodeFromName(s.team.name), 80);
                             return flag ? (
                               <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
                             ) : (
@@ -533,7 +533,7 @@ function PodiumCard({ scorer: s, place, maxGoals }: { scorer: Scorer; place: 1 |
 
       <div className="mt-4 flex items-center gap-3">
         {(() => {
-          const flag = s.team.crest ?? flagUrl(s.team.tla, 160);
+          const flag = s.team.crest ?? flagUrl(s.team.tla ?? fifaCodeFromName(s.team.name), 160);
           return flag ? (
             <img src={flag} alt="" className="h-8 w-12 shrink-0 rounded-[3px] object-cover ring-1 ring-border" loading="lazy" />
           ) : (

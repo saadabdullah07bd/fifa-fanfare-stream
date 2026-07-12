@@ -65,6 +65,58 @@ export function flagUrl(code?: string | null, size: 40 | 80 | 160 | 320 = 80): s
   return `https://flagcdn.com/w${size}/${iso}.png`;
 }
 
+// Reverse lookup: normalized country name/aliases → FIFA 3-letter code.
+// Used when upstream data (e.g. top scorers feed) only carries a team name.
+const NAME_TO_FIFA: Record<string, string> = (() => {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
+  const map: Record<string, string> = {};
+  for (const [code, name] of Object.entries(FIFA_NAMES)) map[norm(name)] = code;
+  // Common aliases / long-form names not in FIFA_NAMES.
+  const aliases: Record<string, string> = {
+    southkorea: "KOR", republicofkorea: "KOR", korearepublic: "KOR",
+    northkorea: "PRK", koreadpr: "PRK",
+    unitedstates: "USA", unitedstatesofamerica: "USA", us: "USA",
+    unitedarabemirates: "UAE",
+    ivorycoast: "CIV", cotedivoire: "CIV",
+    czechrepublic: "CZE",
+    bosniaandherzegovina: "BIH", bosniaherzegovina: "BIH",
+    northmacedonia: "MKD",
+    capeverde: "CPV", caboverde: "CPV",
+    drcongo: "COD", democraticrepublicofthecongo: "COD",
+    republicofcongo: "CGO",
+    dominicanrepublic: "DOM",
+    equatorialguinea: "EQG",
+    saudiarabia: "KSA",
+    newzealand: "NZL",
+    southafrica: "RSA",
+    trinidadandtobago: "TRI",
+    saotomeandprincipe: "STP",
+    timorleste: "TLS",
+    hongkong: "HKG",
+    chinesetaipei: "TPE", taiwan: "TPE",
+    palestine: "PLE",
+    burkinafaso: "BFA",
+    sierraleone: "SLE",
+    elsalvador: "SLV",
+    costarica: "CRC",
+    puertorico: "PUR",
+    faroeislands: "FRO",
+    solomonislands: "SOL",
+  };
+  for (const [k, v] of Object.entries(aliases)) map[k] = v;
+  return map;
+})();
+
+/**
+ * Resolve a country name (any casing / punctuation) to its FIFA 3-letter code,
+ * or null when unknown. Used as a fallback when data lacks a `tla`.
+ */
+export function fifaCodeFromName(name?: string | null): string | null {
+  if (!name) return null;
+  const key = name.toLowerCase().replace(/[^a-z]/g, "");
+  return NAME_TO_FIFA[key] ?? null;
+}
+
 const DHAKA = "Asia/Dhaka";
 /**
  * Formats an ISO date string to a human-readable time in Bangladesh Time (Asia/Dhaka).
