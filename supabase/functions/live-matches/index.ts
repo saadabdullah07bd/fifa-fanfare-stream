@@ -131,105 +131,11 @@ Deno.serve(async (req) => {
 
 
 
-  // Enrich live/in-play matches with real-time minute + score from API-Football
-  const afKey = Deno.env.get("API_FOOTBALL_KEY");
-  if (afKey) {
-    try {
-      const liveRes = await fetch("https://v3.football.api-sports.io/fixtures?live=all", {
-        headers: { "x-apisports-key": afKey },
-      });
-      if (liveRes.ok) {
-        const liveJson: any = await liveRes.json();
-        const liveFixtures: any[] = liveJson?.response ?? [];
-        const norm = (s: string) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
-        matches = matches.map((m: any) => {
-          const hn = norm(m.home.name);
-          const an = norm(m.away.name);
-          const f = liveFixtures.find((x) => {
-            const h = norm(x.teams?.home?.name);
-            const a = norm(x.teams?.away?.name);
-            return (h.includes(hn.slice(0, 5)) || hn.includes(h.slice(0, 5))) &&
-                   (a.includes(an.slice(0, 5)) || an.includes(a.slice(0, 5)));
-          });
-          if (!f) return m;
-          const status = f.fixture?.status?.short;
-          const statusMap: Record<string, string> = {
-            "1H": "IN_PLAY", "2H": "IN_PLAY", "ET": "IN_PLAY", "P": "IN_PLAY",
-            "HT": "PAUSED", "BT": "PAUSED",
-            "FT": "FINISHED", "AET": "FINISHED", "PEN": "FINISHED",
-          };
-          return {
-            ...m,
-            status: statusMap[status] ?? m.status,
-            minute: f.fixture?.status?.elapsed ?? m.minute,
-            injury_time: f.fixture?.status?.extra ?? m.injury_time,
-            score: {
-              ...m.score,
-              full: {
-                home: f.goals?.home ?? m.score.full.home,
-                away: f.goals?.away ?? m.score.full.away,
-              },
-            },
-            live_source: "api-football",
-          };
-        });
-      }
-    } catch (_) { /* enrichment optional */ }
-  }
+  // NOTE: All live enrichment is strictly from Google (via Firecrawl) below.
+  // API-Football and TheSportsDB day-of-match enrichment were removed — TSDB
+  // only remains above as the source of the World Cup 2026 fixture calendar
+  // because Google doesn't return a structured schedule feed.
 
-  // TheSportsDB enrichment — free, no key required. Used as a tiebreaker:
-  // if API-Football didn't tag a match live, or its data is stale, TSDB fills gaps.
-  try {
-    const tsdbRes = await fetch(
-      `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${today}&s=Soccer`,
-    );
-    if (tsdbRes.ok) {
-      const tsdbJson: any = await tsdbRes.json();
-      const events: any[] = tsdbJson?.events ?? [];
-      const norm = (s: string) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
-      const parseNum = (v: any) => {
-        const n = Number(v);
-        return Number.isFinite(n) ? n : null;
-      };
-      matches = matches.map((m: any) => {
-        const hn = norm(m.home.name);
-        const an = norm(m.away.name);
-        const e = events.find((x) => {
-          const h = norm(x.strHomeTeam);
-          const a = norm(x.strAwayTeam);
-          return h && a &&
-            (h.includes(hn.slice(0, 5)) || hn.includes(h.slice(0, 5))) &&
-            (a.includes(an.slice(0, 5)) || an.includes(a.slice(0, 5)));
-        });
-        if (!e) return m;
-        const tsdbHome = parseNum(e.intHomeScore);
-        const tsdbAway = parseNum(e.intAwayScore);
-        // Prefer existing enriched values; fall back to TSDB when missing.
-        const merged = {
-          ...m,
-          score: {
-            ...m.score,
-            full: {
-              home: m.score.full.home ?? tsdbHome,
-              away: m.score.full.away ?? tsdbAway,
-            },
-          },
-          sources: [m.live_source, "thesportsdb"].filter(Boolean),
-          tsdb_status: e.strStatus ?? null,
-          tsdb_progress: e.strProgress ?? null,
-        };
-        // If neither football-data nor api-football flagged live, but TSDB shows a progress minute, mark live.
-        if (
-          (merged.status === "SCHEDULED" || merged.status === "TIMED") &&
-          e.strProgress && /\d/.test(e.strProgress)
-        ) {
-          merged.status = "IN_PLAY";
-          merged.minute = parseInt(e.strProgress, 10) || merged.minute;
-        }
-        return merged;
-      });
-    }
-  } catch (_) { /* enrichment optional */ }
 
   // Google scrape enrichment via Firecrawl — reliable minute + score from Google's sports card.
   // Runs in parallel for all live matches.
