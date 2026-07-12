@@ -176,20 +176,20 @@ function AllMatchesView({ matches }: { matches: MatchRow[] }) {
               >
                 <Link
                   to={`/match/${(m.external_id ?? "").replace(/^fd_/, "") || m.id}`}
-                  className="flex flex-col gap-2 rounded-lg border border-border bg-card/70 px-4 py-3 shadow-sm hover:border-primary transition-colors"
+                  className="flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-card/70 px-4 py-3 shadow-sm transition-colors hover:border-primary"
                 >
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                    {/* Home team pushed to the far left. */}
-                    <div className="flex items-center gap-2 justify-start min-w-0">
+                    {/* Home team — name on the far left, flag hugs the score. */}
+                    <div className="flex items-center gap-2 justify-end min-w-0">
+                      <span className="display truncate text-lg text-right">{m.home_team_code ?? "TBD"}</span>
                       {flagUrl(m.home_team_code, 40) ? (
                         <img src={flagUrl(m.home_team_code, 40)!} alt={m.home_team_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
                       ) : (
                         <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
                       )}
-                      <span className="display truncate text-lg">{m.home_team_code ?? "TBD"}</span>
                     </div>
                     {/* Centered scoreline / kickoff. */}
-                    <div className="flex min-w-[100px] flex-col items-center gap-0.5">
+                    <div className="flex min-w-[92px] flex-col items-center gap-0.5">
                       {(m.home_score != null || m.away_score != null) ? (
                         <span className="display text-2xl tabular-nums text-primary">
                           {m.home_score ?? "–"} : {m.away_score ?? "–"}
@@ -203,7 +203,7 @@ function AllMatchesView({ matches }: { matches: MatchRow[] }) {
                           : (KO_LABEL[KO_LEGACY[(m.stage ?? "").toString()] ?? ""] ?? "Group")}
                       </span>
                     </div>
-                    {/* Away team at the right side of its column. */}
+                    {/* Away team — flag hugs the score, name to the far right. */}
                     <div className="flex items-center gap-2 justify-start min-w-0">
                       {flagUrl(m.away_team_code, 40) ? (
                         <img src={flagUrl(m.away_team_code, 40)!} alt={m.away_team_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
@@ -213,16 +213,15 @@ function AllMatchesView({ matches }: { matches: MatchRow[] }) {
                       <span className="display truncate text-lg">{m.away_team_code ?? "TBD"}</span>
                     </div>
                   </div>
-                  {/* Stadium + kickoff footer. Times are Asia/Dhaka (GMT+6). */}
-                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <MapPin className="h-3 w-3" aria-hidden="true" />
-                      {m.venues?.name
-                        ? `${m.venues.name}${m.venues.city ? ` · ${m.venues.city}` : ""}`
-                        : "Venue TBD"}
-                    </span>
-                    <span>{bdTime(m.date_utc)} BDT</span>
-                  </div>
+                  {/* Stadium footer — hidden entirely when we don't have venue data. */}
+                  {m.venues?.name && (
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5">
+                        <MapPin className="h-3 w-3" aria-hidden="true" />
+                        {m.venues.name}{m.venues.city ? ` · ${m.venues.city}` : ""}
+                      </span>
+                    </div>
+                  )}
                 </Link>
               </motion.li>
             ))}
