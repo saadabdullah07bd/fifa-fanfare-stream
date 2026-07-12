@@ -1,8 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { ArrowRight, PlayCircle, Zap, Trophy, MapPin } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, PlayCircle, Zap, Trophy, MapPin, Radio, Clock } from "lucide-react";
 import { Seo } from "@/lib/seo";
 import { useLiveMatches, type LiveMatch } from "@/components/LiveTicker";
 import { WC26_MATCHES, findWc26MatchByTeams, type Wc26Match } from "@/data/wc26-matches";
@@ -17,17 +17,17 @@ type Article = {
 const NEWS_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
 
 /**
- * Landing page — bento-grid hub for the FIFA World Cup 2026. Tiles surface a
- * hero match, live scoreboard, top scorer (Golden Boot), recent results, a
- * flash news headline, and a link into the fan/live-TV zone. All data comes
- * from the bundled WC26 workbook + live edge functions + news feed.
+ * Landing page — bento-grid hub for the FIFA World Cup 2026. Modernized with
+ * stronger responsive scaling, improved accessibility, reduced-motion support,
+ * skeleton loading states, and a live countdown to the next kick-off.
  */
 export default function Home() {
   const navigate = useNavigate();
-  const { data: liveData } = useLiveMatches();
+  const reduceMotion = useReducedMotion();
+  const { data: liveData, isLoading: liveLoading } = useLiveMatches();
   const liveMatches = liveData?.matches ?? [];
 
-  const { data: newsData } = useQuery({
+  const { data: newsData, isLoading: newsLoading } = useQuery({
     queryKey: ["news-feed-home"],
     refetchInterval: 300_000,
     queryFn: async () => {
@@ -40,7 +40,6 @@ export default function Home() {
   });
   const flashHeadline = newsData?.articles?.[0] ?? null;
 
-  // ─── Featured match: prefer any live tie, else the next scheduled WC26 fixture ───
   const hero: HeroMatch | null = useMemo(() => {
     const liveNow = liveMatches.find((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status));
     if (liveNow) return fromLive(liveNow);
@@ -55,7 +54,6 @@ export default function Home() {
     return nextWc ? fromWc(nextWc) : null;
   }, [liveMatches]);
 
-  // ─── Golden Boot leader (all-time top scorer across WC26 dataset) ───
   const topScorer = useMemo(() => {
     const tally = new Map<string, { player: string; goals: number; team: string }>();
     for (const m of WC26_MATCHES) {
@@ -72,7 +70,6 @@ export default function Home() {
     return list[0] ?? null;
   }, []);
 
-  // ─── Recent 3 finished WC26 results ───
   const recentResults = useMemo(() => {
     return WC26_MATCHES
       .filter((m) => m.home_score != null && m.away_score != null && m.date_utc)
@@ -80,14 +77,12 @@ export default function Home() {
       .slice(0, 3);
   }, []);
 
-  // ─── Live/finished scoreboard tile: up to 2 rows ───
   const scoreboard = useMemo(() => {
     const live = liveMatches.filter((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status));
     const finished = liveMatches.filter((m) => m.status === "FINISHED");
     const upcoming = liveMatches.filter((m) => m.status === "SCHEDULED" || m.status === "TIMED");
     const picked = [...live, ...upcoming, ...finished].slice(0, 2);
     if (picked.length > 0) return picked.map(fromLive);
-    // Fallback: latest 2 WC26 finished matches.
     return WC26_MATCHES
       .filter((m) => m.home_score != null && m.date_utc)
       .sort((a, b) => (b.date_utc ?? "").localeCompare(a.date_utc ?? ""))
@@ -95,8 +90,14 @@ export default function Home() {
       .map(fromWc);
   }, [liveMatches]);
 
+  const liveCount = liveMatches.filter((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status)).length;
+
+  const enter = reduceMotion
+    ? { initial: false, animate: { opacity: 1, y: 0 } }
+    : { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4 } };
+
   return (
-    <div className="mx-auto max-w-7xl px-3 pb-10 pt-4 sm:px-6 sm:pt-6">
+    <main id="main" className="mx-auto max-w-7xl px-3 pb-14 pt-4 sm:px-6 sm:pt-6">
       <Seo
         title="Watch FIFA World Cup 2026 Live Free — Semifinals, Final & Every Match | Pitch26"
         description="Watch FIFA World Cup 2026 live free — semifinals, final and every match in HD & 4K. Live scores, fixtures, groups, standings and top scorers, updated by the second."
@@ -112,29 +113,62 @@ export default function Home() {
 
       <h1 className="sr-only">Pitch26 — FIFA World Cup 2026 live scores, fixtures & standings</h1>
 
+      {/* Editorial header */}
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3 sm:mb-6">
+        <div className="flex items-center gap-2">
+          <span
+            role="status"
+            aria-live="polite"
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] backdrop-blur-md ${
+              liveCount > 0
+                ? "border-destructive/40 bg-destructive/15 text-destructive"
+                : "border-border bg-card/60 text-muted-foreground"
+            }`}
+          >
+            {liveCount > 0 ? <span className="live-dot" aria-hidden="true" /> : <Radio className="h-3 w-3" aria-hidden="true" />}
+            {liveCount > 0 ? `${liveCount} live now` : "Standby"}
+          </span>
+          <span className="hidden text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/70 sm:inline">
+            FIFA World Cup 2026 · Live hub
+          </span>
+        </div>
+        <Link
+          to="/fixtures"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/80 transition hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          Full schedule <ArrowRight className="h-3 w-3" aria-hidden="true" />
+        </Link>
+      </header>
+
       <motion.div
-        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        {...enter}
         className="grid auto-rows-[minmax(150px,auto)] grid-cols-1 gap-3 sm:gap-4 md:grid-cols-12 md:gap-5"
       >
-        {/* ─────────── HERO FEATURED MATCH ─────────── */}
-        {hero && <HeroTile hero={hero} onWatch={() => navigate("/live-tv")} />}
+        {hero ? (
+          <HeroTile hero={hero} onWatch={() => navigate("/live-tv")} />
+        ) : (
+          <SkeletonTile className="md:col-span-8 md:row-span-3 md:min-h-[520px]" label="Loading featured match…" />
+        )}
 
-        {/* ─────────── LIVE SCOREBOARD ─────────── */}
-        <ScoreboardTile matches={scoreboard} />
+        {scoreboard.length > 0 ? (
+          <ScoreboardTile matches={scoreboard} />
+        ) : liveLoading ? (
+          <SkeletonTile className="md:col-span-4 md:row-span-2" label="Loading scoreboard…" />
+        ) : (
+          <ScoreboardTile matches={scoreboard} />
+        )}
 
-        {/* ─────────── FLASH NEWS TICKER ─────────── */}
-        <FlashNewsTile article={flashHeadline} />
+        {flashHeadline || !newsLoading ? (
+          <FlashNewsTile article={flashHeadline} />
+        ) : (
+          <SkeletonTile className="md:col-span-4 md:row-span-1" label="Loading headline…" />
+        )}
 
-        {/* ─────────── RECENT RESULTS (was Group A / Standings in the design) ─────────── */}
         <ResultsTile matches={recentResults} />
-
-        {/* ─────────── GOLDEN BOOT ─────────── */}
         <GoldenBootTile scorer={topScorer} />
-
-        {/* ─────────── FAN / LIVE-TV CTA ─────────── */}
         <FanZoneTile />
       </motion.div>
-    </div>
+    </main>
   );
 }
 
@@ -189,35 +223,53 @@ function fromWc(m: Wc26Match): HeroMatch {
   };
 }
 
+function useCountdown(iso: string | null) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!iso) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [iso]);
+  if (!iso) return null;
+  const diff = new Date(iso).getTime() - now;
+  if (diff <= 0) return null;
+  const d = Math.floor(diff / 86_400_000);
+  const h = Math.floor((diff % 86_400_000) / 3_600_000);
+  const m = Math.floor((diff % 3_600_000) / 60_000);
+  const s = Math.floor((diff % 60_000) / 1000);
+  return { d, h, m, s };
+}
+
 function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
   const isLive = hero.status === "LIVE" || hero.status === "PAUSED";
+  const isUpcoming = hero.status === "SCHEDULED";
   const kickoff = hero.utcDate ? `${bdDate(hero.utcDate)} · ${bdTime(hero.utcDate)}` : hero.competition;
   const chipLabel = isLive
     ? (hero.status === "PAUSED" ? "HALF TIME" : `LIVE · ${hero.minute ?? 0}${hero.injury ? `+${hero.injury}` : ""}'`)
     : hero.status === "FINISHED" ? "FULL TIME" : "MATCHDAY";
   const homeCrest = flagUrl(hero.homeCode, 320);
   const awayCrest = flagUrl(hero.awayCode, 320);
+  const countdown = useCountdown(isUpcoming ? hero.utcDate : null);
 
   return (
     <Link
       to={hero.href}
       aria-label={`Open ${hero.homeName} vs ${hero.awayName} match details`}
-      className="group relative flex min-h-[360px] flex-col overflow-hidden rounded-3xl border border-border bg-card md:col-span-8 md:row-span-3 md:min-h-[520px]"
+      className="group relative flex min-h-[380px] flex-col overflow-hidden rounded-3xl border border-border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:col-span-8 md:row-span-3 md:min-h-[540px]"
     >
       <img
         src={wc26Emblem.url}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute -right-24 top-1/2 h-[130%] w-auto -translate-y-1/2 object-contain opacity-[0.07] transition-transform duration-1000 group-hover:scale-105"
+        className="pointer-events-none absolute -right-24 top-1/2 h-[130%] w-auto -translate-y-1/2 object-contain opacity-[0.07] transition-transform duration-1000 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
       />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--can)] via-[var(--gold)] to-[var(--usa)] opacity-70" />
 
-      {/* Top badges */}
       <div className="relative z-10 flex flex-wrap items-center gap-2 p-5 sm:p-7">
         {isLive ? (
           <span className="inline-flex items-center gap-2 rounded-full bg-destructive px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-destructive-foreground shadow-[0_0_20px_rgba(220,38,38,0.4)]">
-            <span className="live-dot" /> {chipLabel}
+            <span className="live-dot" aria-hidden="true" /> {chipLabel}
           </span>
         ) : (
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-black/50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/80 backdrop-blur-md">
@@ -227,12 +279,16 @@ function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
         <span className="rounded-full border border-border bg-black/50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/70 backdrop-blur-md">
           {hero.competition}
         </span>
+        {hero.utcDate && !isLive && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-black/50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/70 backdrop-blur-md">
+            <Clock className="h-3 w-3" aria-hidden="true" /> {bdShortDate(hero.utcDate)}
+          </span>
+        )}
       </div>
 
-      {/* Big VS + score */}
       <div className="relative z-10 mt-auto flex flex-col gap-6 p-5 sm:p-7">
         <div className="flex items-end gap-4 sm:gap-8">
-          {homeCrest && <img src={homeCrest} alt={hero.homeName} className="hidden h-16 w-24 rounded-lg object-cover ring-1 ring-border sm:block md:h-20 md:w-28" />}
+          {homeCrest && <img src={homeCrest} alt="" aria-hidden="true" className="hidden h-16 w-24 rounded-lg object-cover ring-1 ring-border sm:block md:h-20 md:w-28" />}
           <div className="min-w-0 flex-1">
             <p className="display truncate text-4xl leading-[0.9] tracking-tight sm:text-6xl md:text-[6.5rem]">
               {abbr(hero.homeName)} <span className="text-primary">VS</span> {abbr(hero.awayName)}
@@ -243,14 +299,30 @@ function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
               <span className="font-semibold text-foreground/80">{hero.awayName}</span>
             </p>
           </div>
-          {awayCrest && <img src={awayCrest} alt={hero.awayName} className="hidden h-16 w-24 rounded-lg object-cover ring-1 ring-border sm:block md:h-20 md:w-28" />}
+          {awayCrest && <img src={awayCrest} alt="" aria-hidden="true" className="hidden h-16 w-24 rounded-lg object-cover ring-1 ring-border sm:block md:h-20 md:w-28" />}
         </div>
 
         <div className="flex flex-wrap items-center gap-4 sm:gap-6">
           {hero.homeScore != null && hero.awayScore != null ? (
-            <p className="display text-4xl tabular-nums text-primary sm:text-5xl md:text-6xl">
+            <p className="display text-4xl tabular-nums text-primary sm:text-5xl md:text-6xl" aria-live={isLive ? "polite" : undefined}>
               {hero.homeScore} : {hero.awayScore}
             </p>
+          ) : countdown ? (
+            <div className="flex flex-wrap items-center gap-2" aria-label={`Kick-off in ${countdown.d} days ${countdown.h} hours ${countdown.m} minutes`}>
+              {[
+                { v: countdown.d, l: "Days" },
+                { v: countdown.h, l: "Hrs" },
+                { v: countdown.m, l: "Min" },
+                { v: countdown.s, l: "Sec" },
+              ].map((seg) => (
+                <div key={seg.l} className="min-w-[3.25rem] rounded-xl border border-border bg-black/60 px-3 py-2 text-center backdrop-blur-md">
+                  <p className="display text-2xl tabular-nums leading-none text-foreground sm:text-3xl">
+                    {String(seg.v).padStart(2, "0")}
+                  </p>
+                  <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{seg.l}</p>
+                </div>
+              ))}
+            </div>
           ) : (
             <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">
               Kick-off · {kickoff}
@@ -264,7 +336,8 @@ function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onWatch(); }}
-            className="ml-auto inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-xs font-black uppercase tracking-[0.25em] text-primary-foreground shadow-lg shadow-primary/30 transition hover:-translate-y-0.5 hover:brightness-110"
+            aria-label={isLive ? "Watch live now" : "Open live TV hub"}
+            className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-xs font-black uppercase tracking-[0.25em] text-primary-foreground shadow-lg shadow-primary/30 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:hover:translate-y-0"
           >
             <PlayCircle className="h-4 w-4" aria-hidden="true" />
             {isLive ? "Watch live" : "Live TV"}
@@ -278,11 +351,11 @@ function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
 function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
   return (
     <section
-      aria-label="Live and recent scores"
+      aria-labelledby="scoreboard-heading"
       className="flex flex-col justify-between gap-4 rounded-3xl border border-border bg-card p-5 transition-colors hover:border-primary/40 md:col-span-4 md:row-span-2 md:p-6"
     >
       <div className="flex items-center justify-between">
-        <h2 className="display text-2xl tracking-wider text-foreground/70 sm:text-3xl">Scoreboard</h2>
+        <h2 id="scoreboard-heading" className="display text-2xl tracking-wider text-foreground/70 sm:text-3xl">Scoreboard</h2>
         <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
       </div>
 
@@ -291,7 +364,12 @@ function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
           <p className="text-sm text-muted-foreground">No matches to show right now.</p>
         )}
         {matches.map((m, i) => (
-          <Link key={i} to={m.href} className="block">
+          <Link
+            key={i}
+            to={m.href}
+            aria-label={`${m.homeName} versus ${m.awayName}`}
+            className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
             <div className="flex items-center justify-between gap-3">
               <ScoreboardSide code={m.homeCode} name={m.homeName} align="left" />
               <div className="flex flex-col items-center">
@@ -308,7 +386,7 @@ function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
               <ScoreboardSide code={m.awayCode} name={m.awayName} align="right" />
             </div>
             {i < matches.length - 1 && (
-              <div className="mt-5 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+              <div className="mt-5 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true" />
             )}
           </Link>
         ))}
@@ -316,7 +394,7 @@ function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
 
       <Link
         to="/fixtures"
-        className="block rounded-2xl bg-secondary py-3 text-center text-[11px] font-bold uppercase tracking-[0.25em] text-foreground/80 transition hover:bg-primary hover:text-primary-foreground"
+        className="block min-h-11 rounded-2xl bg-secondary py-3 text-center text-[11px] font-bold uppercase tracking-[0.25em] text-foreground/80 transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         Full schedule
       </Link>
@@ -329,9 +407,9 @@ function ScoreboardSide({ code, name, align }: { code: string | null; name: stri
   return (
     <div className={`flex min-w-0 flex-col items-center gap-1 ${align === "left" ? "" : ""}`}>
       {crest ? (
-        <img src={crest} alt={name} className="h-10 w-14 rounded-lg object-cover ring-1 ring-border" />
+        <img src={crest} alt="" aria-hidden="true" className="h-10 w-14 rounded-lg object-cover ring-1 ring-border" />
       ) : (
-        <div className="grid h-10 w-14 place-items-center rounded-lg bg-secondary text-xs font-bold text-foreground/70">
+        <div className="grid h-10 w-14 place-items-center rounded-lg bg-secondary text-xs font-bold text-foreground/70" aria-hidden="true">
           {code ?? "—"}
         </div>
       )}
@@ -345,24 +423,24 @@ function ScoreboardSide({ code, name, align }: { code: string | null; name: stri
 function FlashNewsTile({ article }: { article: Article | null }) {
   return (
     <a
-      href={article?.url ?? "#"}
+      href={article?.url ?? "/news"}
       target={article ? "_blank" : undefined}
       rel="noreferrer"
       aria-label={article ? `Read: ${article.title}` : "Latest news"}
-      className="group flex items-center gap-4 rounded-3xl bg-[var(--trophy-green)] p-5 text-white transition hover:-translate-y-0.5 md:col-span-4 md:row-span-1"
+      className="group flex min-h-[96px] items-center gap-4 rounded-3xl bg-[var(--trophy-green)] p-5 text-white transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:hover:translate-y-0 md:col-span-4 md:row-span-1"
     >
-      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-black/25 transition-transform group-hover:scale-110">
+      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-black/25 transition-transform group-hover:scale-110 motion-reduce:group-hover:scale-100">
         <Zap className="h-6 w-6" aria-hidden="true" />
       </div>
       <div className="min-w-0">
         <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
           {article?.source ?? "Flash news"}
         </p>
-        <p className="mt-0.5 truncate text-sm font-bold leading-tight sm:text-base">
+        <p className="mt-0.5 line-clamp-2 text-sm font-bold leading-tight sm:text-base">
           {article?.title ?? "Latest World Cup 2026 headlines dropping soon."}
         </p>
       </div>
-      <ArrowRight className="ml-auto hidden h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1 sm:block" aria-hidden="true" />
+      <ArrowRight className="ml-auto hidden h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0 sm:block" aria-hidden="true" />
     </a>
   );
 }
@@ -370,18 +448,21 @@ function FlashNewsTile({ article }: { article: Article | null }) {
 function ResultsTile({ matches }: { matches: Wc26Match[] }) {
   return (
     <section
-      aria-label="Recent results"
-      className="rounded-3xl border border-border bg-card p-5 md:col-span-4 md:row-span-2 md:p-6"
+      aria-labelledby="results-heading"
+      className="rounded-3xl border border-border bg-card p-5 transition-colors hover:border-primary/40 md:col-span-4 md:row-span-2 md:p-6"
     >
       <div className="flex items-center justify-between">
-        <h2 className="display text-2xl tracking-wider sm:text-3xl">Recent Results</h2>
-        <Link to="/standings" className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary hover:underline">
+        <h2 id="results-heading" className="display text-2xl tracking-wider sm:text-3xl">Recent Results</h2>
+        <Link
+          to="/standings"
+          className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
           Table
         </Link>
       </div>
 
       <ul className="mt-4 space-y-2">
-        <li className="grid grid-cols-[1fr_auto_1fr] items-center px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+        <li className="grid grid-cols-[1fr_auto_1fr] items-center px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60" aria-hidden="true">
           <span className="text-left">Home</span>
           <span className="px-3 text-center">Score</span>
           <span className="text-right">Away</span>
@@ -390,10 +471,11 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
           <li key={m.match_no}>
             <Link
               to={`/match/${m.match_no}`}
-              className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl border border-transparent bg-secondary/60 px-3 py-2.5 text-sm transition hover:border-primary/40 hover:bg-secondary"
+              aria-label={`${countryName(m.home_code) || m.home_name} ${m.home_score} versus ${m.away_score} ${countryName(m.away_code) || m.away_name}`}
+              className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl border border-transparent bg-secondary/60 px-3 py-2.5 text-sm transition hover:border-primary/40 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <span className="flex items-center gap-2 truncate font-semibold">
-                {flagUrl(m.home_code, 40) && <img src={flagUrl(m.home_code, 40)!} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+                {flagUrl(m.home_code, 40) && <img src={flagUrl(m.home_code, 40)!} alt="" aria-hidden="true" className="h-4 w-6 rounded-sm object-cover" />}
                 <span className="truncate">{countryName(m.home_code) || m.home_name}</span>
               </span>
               <span className="display px-2 tabular-nums text-primary">
@@ -401,7 +483,7 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
               </span>
               <span className="flex items-center justify-end gap-2 truncate font-semibold">
                 <span className="truncate">{countryName(m.away_code) || m.away_name}</span>
-                {flagUrl(m.away_code, 40) && <img src={flagUrl(m.away_code, 40)!} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+                {flagUrl(m.away_code, 40) && <img src={flagUrl(m.away_code, 40)!} alt="" aria-hidden="true" className="h-4 w-6 rounded-sm object-cover" />}
               </span>
             </Link>
             {m.date_utc && (
@@ -422,15 +504,15 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
 function GoldenBootTile({ scorer }: { scorer: { player: string; goals: number; team: string } | null }) {
   return (
     <Link
-      to="/fixtures"
-      aria-label="Golden Boot leader"
-      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground md:col-span-4 md:row-span-2"
+      to="/standings"
+      aria-label={scorer ? `Golden Boot leader: ${scorer.player} with ${scorer.goals} goals` : "Golden Boot leader"}
+      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:hover:translate-y-0 md:col-span-4 md:row-span-2"
     >
       <img
         src={wc26Emblem.url}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute -right-10 top-1/2 h-[110%] w-auto -translate-y-1/2 object-contain opacity-30 mix-blend-multiply transition-transform duration-700 group-hover:scale-110"
+        className="pointer-events-none absolute -right-10 top-1/2 h-[110%] w-auto -translate-y-1/2 object-contain opacity-30 mix-blend-multiply transition-transform duration-700 group-hover:scale-110 motion-reduce:group-hover:scale-100"
       />
       <div className="relative z-10">
         <span className="rounded-lg bg-black px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-primary">
@@ -445,11 +527,11 @@ function GoldenBootTile({ scorer }: { scorer: { player: string; goals: number; t
           <p className="truncate text-base font-black uppercase leading-tight sm:text-lg" title={scorer?.player}>
             {scorer?.player ?? "TBD"}
           </p>
-          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground/70">
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground/80">
             {scorer ? `${scorer.goals} goal${scorer.goals === 1 ? "" : "s"} · ${scorer.team}` : "Race in progress"}
           </p>
         </div>
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-black transition-transform group-hover:scale-110">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-black transition-transform group-hover:scale-110 motion-reduce:group-hover:scale-100">
           <ArrowRight className="h-5 w-5 text-primary" aria-hidden="true" />
         </div>
       </div>
@@ -462,7 +544,7 @@ function FanZoneTile() {
     <Link
       to="/live-tv"
       aria-label="Open the live TV fan hub"
-      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card p-6 md:col-span-4 md:row-span-2"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card p-6 transition-colors hover:border-[var(--trophy-green)]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:col-span-4 md:row-span-2"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(212,175,55,0.18),transparent_60%)]" />
       <div className="relative">
@@ -476,13 +558,25 @@ function FanZoneTile() {
       <p className="relative text-sm text-muted-foreground">
         Every match streamed in HD & 4K. Live scores, timelines and goals — updated by the second.
       </p>
-      <button
-        type="button"
-        className="relative w-full rounded-2xl border-2 border-[var(--trophy-green)] py-4 text-[11px] font-black uppercase tracking-[0.25em] text-[var(--trophy-green)] transition group-hover:bg-[var(--trophy-green)] group-hover:text-white"
+      <span
+        className="relative block w-full rounded-2xl border-2 border-[var(--trophy-green)] py-4 text-center text-[11px] font-black uppercase tracking-[0.25em] text-[var(--trophy-green)] transition group-hover:bg-[var(--trophy-green)] group-hover:text-white"
       >
         Enter Fan Hub
-      </button>
+      </span>
     </Link>
+  );
+}
+
+function SkeletonTile({ className, label }: { className: string; label: string }) {
+  return (
+    <div
+      role="status"
+      aria-label={label}
+      className={`relative overflow-hidden rounded-3xl border border-border bg-card ${className}`}
+    >
+      <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-secondary/40 via-transparent to-secondary/20" aria-hidden="true" />
+      <span className="sr-only">{label}</span>
+    </div>
   );
 }
 
@@ -493,7 +587,6 @@ function FanZoneTile() {
 function abbr(name: string): string {
   const clean = name.trim();
   if (clean.length <= 4) return clean.toUpperCase();
-  // Prefer first word if compact, else first 3 letters.
   const first = clean.split(/\s+/)[0];
   return (first.length <= 4 ? first : clean.slice(0, 3)).toUpperCase();
 }
