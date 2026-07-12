@@ -191,6 +191,36 @@ body {
     repeating-linear-gradient(90deg, rgba(201, 168, 76, 0.04) 0 1px, transparent 1px 42px);
 }
 
+/* ============ Modern volume slider ============ */
+.modern-range {
+  background: linear-gradient(
+    to right,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary)) var(--vol, 50%),
+    rgba(255, 255, 255, 0.18) var(--vol, 50%),
+    rgba(255, 255, 255, 0.18) 100%
+  );
+  outline: none;
+}
+.modern-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 9999px;
+  background: #fff;
+  border: 2px solid hsl(var(--primary));
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.modern-range:hover::-webkit-slider-thumb,
+.modern-range:active::-webkit-slider-thumb { transform: scale(1.15); }
+.modern-range::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 9999px;
+  background: #fff; border: 2px solid hsl(var(--primary));
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+.modern-range::-moz-range-track { background: transparent; }
+
 /* ============ Navigation & surfaces ============ */
 .glass-nav {
   background: rgba(10, 10, 10, 0.78);
