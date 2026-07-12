@@ -447,29 +447,47 @@ function ScoreboardSide({ code, name, align }: { code: string | null; name: stri
 }
 
 function FlashNewsTile({ article }: { article: Article | null }) {
+  const hasImage = !!article?.image_url;
   return (
     <a
       href={article?.url ?? "/news"}
       target={article ? "_blank" : undefined}
       rel="noreferrer"
       aria-label={article ? `Read: ${article.title}` : "Latest news"}
-      className="group flex min-h-[96px] items-center gap-4 rounded-3xl bg-[var(--trophy-green)] p-5 text-white transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:hover:translate-y-0 md:col-span-4 md:row-span-1"
+      className="group relative flex min-h-[220px] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--trophy-green)] text-white transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:hover:translate-y-0 md:col-span-4 md:row-span-1"
     >
-      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-black/25 transition-transform group-hover:scale-110 motion-reduce:group-hover:scale-100">
-        <Zap className="h-6 w-6" aria-hidden="true" />
+      {hasImage && (
+        <>
+          <img
+            src={article!.image_url!}
+            alt=""
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:group-hover:scale-100"
+          />
+          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/10" />
+        </>
+      )}
+      <div className="relative flex items-start gap-3 p-5">
+        {!hasImage && (
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-black/25 transition-transform group-hover:scale-110 motion-reduce:group-hover:scale-100">
+            <Zap className="h-6 w-6" aria-hidden="true" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-white/80">
+            <Zap className="h-3 w-3" aria-hidden="true" />
+            {article?.source ?? "Flash news"}
+          </p>
+          <p className="mt-1.5 text-sm font-bold leading-snug sm:text-base">
+            {article?.title ?? "Latest World Cup 2026 headlines dropping soon."}
+          </p>
+        </div>
+        <ArrowRight className="mt-1 hidden h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0 sm:block" aria-hidden="true" />
       </div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
-          {article?.source ?? "Flash news"}
-        </p>
-        <p className="mt-0.5 line-clamp-2 text-sm font-bold leading-tight sm:text-base">
-          {article?.title ?? "Latest World Cup 2026 headlines dropping soon."}
-        </p>
-      </div>
-      <ArrowRight className="ml-auto hidden h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0 sm:block" aria-hidden="true" />
     </a>
   );
 }
+
 
 function ResultsTile({ matches }: { matches: Wc26Match[] }) {
   return (
