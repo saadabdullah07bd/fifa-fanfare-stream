@@ -136,12 +136,35 @@ function AllMatchesView({ matches }: { matches: MatchRow[] }) {
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [matches]);
 
+  // Pick the "current" day: first group whose date is today or in the future.
+  // Falls back to the last group so historic-only data still lands near the end.
+  const focusKey = useMemo(() => {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const upcoming = groups.find(([day]) => day >= todayIso);
+    return upcoming?.[0] ?? groups[groups.length - 1]?.[0] ?? null;
+  }, [groups]);
+
+  const dayRefs = useRef<Record<string, HTMLElement | null>>({});
+  const scrolledRef = useRef(false);
+
+  useEffect(() => {
+    if (scrolledRef.current || !focusKey) return;
+    const el = dayRefs.current[focusKey];
+    if (!el) return;
+    scrolledRef.current = true;
+    // Delay one frame so sticky headers + layout settle before we jump.
+    requestAnimationFrame(() => {
+      const y = el.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+    });
+  }, [focusKey]);
+
   if (matches.length === 0) return null;
 
   return (
     <div className="mt-8 flex flex-col gap-8">
       {groups.map(([day, list]) => (
-        <section key={day}>
+        <section key={day} ref={(el) => { dayRefs.current[day] = el; }}>
           <h2 className="display sticky top-16 z-10 -mx-4 mb-3 border-y border-border/60 bg-background/85 px-4 py-2 text-sm uppercase tracking-[0.25em] text-primary backdrop-blur">
             {bdShortDate(day + "T00:00:00Z")}
           </h2>
