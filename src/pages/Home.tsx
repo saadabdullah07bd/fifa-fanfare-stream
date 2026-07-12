@@ -1,13 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, PlayCircle, Zap, Trophy, MapPin } from "lucide-react";
 import { Seo } from "@/lib/seo";
-import LiveTicker, { useLiveMatches } from "@/components/LiveTicker";
-import { findWc26MatchByTeams } from "@/data/wc26-matches";
-
-import heroImg from "@/assets/hero-stadium.jpg";
+import { useLiveMatches, type LiveMatch } from "@/components/LiveTicker";
+import { WC26_MATCHES, findWc26MatchByTeams, type Wc26Match } from "@/data/wc26-matches";
+import { bdTime, bdDate, bdShortDate, flagUrl, countryName } from "@/lib/flags";
 import wc26Emblem from "@/assets/wc26-trophy.png.asset.json";
-import { bdTime, bdDate } from "@/lib/flags";
 
 type Article = {
   id: string; title: string; url: string; source: string;
@@ -17,33 +17,86 @@ type Article = {
 const NEWS_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
 
 /**
- * Landing page with hero match, live ticker, and latest news.
+ * Landing page — bento-grid hub for the FIFA World Cup 2026. Tiles surface a
+ * hero match, live scoreboard, top scorer (Golden Boot), recent results, a
+ * flash news headline, and a link into the fan/live-TV zone. All data comes
+ * from the bundled WC26 workbook + live edge functions + news feed.
  */
-
 export default function Home() {
   const navigate = useNavigate();
   const { data: liveData } = useLiveMatches();
-  const matches = liveData?.matches ?? [];
-  // Select a "hero" match to feature (live/upcoming).
-  const hero =
-    matches.find((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status)) ??
-    matches.find((m) => m.status === "SCHEDULED" || m.status === "TIMED") ??
-    null;
+  const liveMatches = liveData?.matches ?? [];
 
-  const { data: newsData, isError: newsError } = useQuery({
-    // Fetch latest news headlines from Supabase edge function.
+  const { data: newsData } = useQuery({
     queryKey: ["news-feed-home"],
     refetchInterval: 300_000,
     queryFn: async () => {
-      const res = await fetch(NEWS_FN, { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } });
+      const res = await fetch(NEWS_FN, {
+        headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+      });
       if (!res.ok) throw new Error(`News feed failed (${res.status})`);
       return res.json() as Promise<{ articles: Article[] }>;
     },
   });
-  const news = (newsData?.articles ?? []).slice(0, 4);
+  const flashHeadline = newsData?.articles?.[0] ?? null;
+
+  // ─── Featured match: prefer any live tie, else the next scheduled WC26 fixture ───
+  const hero: HeroMatch | null = useMemo(() => {
+    const liveNow = liveMatches.find((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status));
+    if (liveNow) return fromLive(liveNow);
+    const upcoming = liveMatches.find((m) => m.status === "SCHEDULED" || m.status === "TIMED");
+    if (upcoming) return fromLive(upcoming);
+    const nowIso = new Date().toISOString();
+    const nextWc = WC26_MATCHES
+      .filter((m) => m.date_utc && m.home_score == null && m.date_utc >= nowIso)
+      .sort((a, b) => (a.date_utc ?? "").localeCompare(b.date_utc ?? ""))[0]
+      ?? WC26_MATCHES.filter((m) => m.date_utc)
+        .sort((a, b) => (b.date_utc ?? "").localeCompare(a.date_utc ?? ""))[0];
+    return nextWc ? fromWc(nextWc) : null;
+  }, [liveMatches]);
+
+  // ─── Golden Boot leader (all-time top scorer across WC26 dataset) ───
+  const topScorer = useMemo(() => {
+    const tally = new Map<string, { player: string; goals: number; team: string }>();
+    for (const m of WC26_MATCHES) {
+      for (const g of m.goals) {
+        if (g.type === "OG") continue;
+        const key = g.player;
+        const prev = tally.get(key);
+        const team = g.team ?? m.home_name;
+        if (prev) prev.goals += 1;
+        else tally.set(key, { player: g.player, goals: 1, team });
+      }
+    }
+    const list = [...tally.values()].sort((a, b) => b.goals - a.goals);
+    return list[0] ?? null;
+  }, []);
+
+  // ─── Recent 3 finished WC26 results ───
+  const recentResults = useMemo(() => {
+    return WC26_MATCHES
+      .filter((m) => m.home_score != null && m.away_score != null && m.date_utc)
+      .sort((a, b) => (b.date_utc ?? "").localeCompare(a.date_utc ?? ""))
+      .slice(0, 3);
+  }, []);
+
+  // ─── Live/finished scoreboard tile: up to 2 rows ───
+  const scoreboard = useMemo(() => {
+    const live = liveMatches.filter((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status));
+    const finished = liveMatches.filter((m) => m.status === "FINISHED");
+    const upcoming = liveMatches.filter((m) => m.status === "SCHEDULED" || m.status === "TIMED");
+    const picked = [...live, ...upcoming, ...finished].slice(0, 2);
+    if (picked.length > 0) return picked.map(fromLive);
+    // Fallback: latest 2 WC26 finished matches.
+    return WC26_MATCHES
+      .filter((m) => m.home_score != null && m.date_utc)
+      .sort((a, b) => (b.date_utc ?? "").localeCompare(a.date_utc ?? ""))
+      .slice(0, 2)
+      .map(fromWc);
+  }, [liveMatches]);
 
   return (
-    <div>
+    <div className="mx-auto max-w-7xl px-3 pb-10 pt-4 sm:px-6 sm:pt-6">
       <Seo
         title="Watch FIFA World Cup 2026 Live Free — Semifinals, Final & Every Match | Pitch26"
         description="Watch FIFA World Cup 2026 live free — semifinals, final and every match in HD & 4K. Live scores, fixtures, groups, standings and top scorers, updated by the second."
@@ -52,121 +105,395 @@ export default function Home() {
           "@context": "https://schema.org",
           "@type": "WebPage",
           "name": "Watch FIFA World Cup 2026 Live Free",
-          "description": "Stream every FIFA World Cup 2026 match live and free — including the semifinals and the final — with live scores and stats.",
+          "description": "Stream every FIFA World Cup 2026 match live and free with live scores and stats.",
           "url": "https://pitch26.muhammadsaadabdullah.com/",
         }}
       />
-      <section className="relative isolate overflow-hidden">
-        <img src={heroImg} alt="" width={1920} height={1080} fetchPriority="high" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-30" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/70 via-background/80 to-background" />
-        <img src={wc26Emblem.url} alt="" aria-hidden="true" className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 -z-10 max-h-[95%] w-auto max-w-[55%] object-contain opacity-30 md:opacity-90" />
-        
-        <div className="mx-auto max-w-7xl px-4 pb-12 pt-10 md:pt-16">
-          <div className="flex items-center gap-3">
-            <img src={wc26Emblem.url} alt="FIFA World Cup 26" width={72} height={100} className="h-14 w-auto md:h-20 object-contain" />
-            <p className="display text-primary tracking-[0.3em] text-xs md:text-sm">USA · CANADA · MEXICO · 2026</p>
-          </div>
-          <h1 className="display mt-4 text-5xl md:text-8xl leading-[0.9]">
-            The tournament,<br /><span className="tri-text">by the second.</span>
-          </h1>
-          <p className="mt-4 max-w-xl text-muted-foreground">
-            Live scores, live timelines, live goals — for the World Cup and every big football match happening right now.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/fixtures" className="rounded-md bg-primary px-5 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/30 hover:brightness-110 transition">See fixtures</Link>
-            <Link to="/live-tv" className="rounded-md border border-border bg-secondary/60 px-5 py-3 text-sm font-bold uppercase tracking-wider hover:border-primary transition">Live TV</Link>
-          </div>
 
-          {/* Featured Hero Match Card */}
-          {hero && (() => {
-            const isPaused = hero.status === "PAUSED";
-            const isLive = ["IN_PLAY", "LIVE"].includes(hero.status) || isPaused;
-            const statusEl = isPaused
-              ? <><span className="live-dot mr-2 align-middle" />Half-time</>
-              : ["IN_PLAY", "LIVE"].includes(hero.status)
-                ? <><span className="live-dot mr-2 align-middle" />Live · {hero.minute ?? 0}{hero.injury_time ? `+${hero.injury_time}` : ""}'</>
-                : `Kick-off · ${bdDate(hero.utc_date)} · ${bdTime(hero.utc_date)}`;
-            const wcMatch = findWc26MatchByTeams(hero.home.name, hero.away.name, hero.utc_date);
-            const matchHref = wcMatch ? `/match/${wcMatch.match_no}` : `/fixtures`;
-            return (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
-                <Link to={matchHref}
-                  className={`mt-10 block rounded-xl border border-border bg-card/85 p-6 shadow-2xl transition hover:-translate-y-0.5 hover:border-primary ${isLive ? "live-shimmer" : ""}`}
-                >
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    <span className="font-bold text-primary">{statusEl}</span>
-                    <span>{hero.competition}</span>
-                  </div>
-                  <div className="mt-6 grid grid-cols-3 items-center gap-4">
-                    <div className="flex flex-col items-end gap-2 text-right">
-                      {hero.home.crest && <img src={hero.home.crest} alt={hero.home.name} className="h-14 w-14 object-contain" />}
-                      <p className="display text-xl md:text-3xl leading-tight">{hero.home.name}</p>
-                    </div>
-                    <div className="text-center">
-                      <AnimatePresence mode="popLayout">
-                        <motion.p
-                          key={`${hero.score.full.home}-${hero.score.full.away}`}
-                          initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.15, opacity: 0 }}
-                          transition={{ type: "spring", stiffness: 220, damping: 18 }}
-                          className="display text-5xl md:text-7xl text-primary tabular-nums"
-                        >
-                          {hero.score.full.home ?? "–"} : {hero.score.full.away ?? "–"}
-                        </motion.p>
-                      </AnimatePresence>
-                      {hero.score.half.home !== null && (
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                          HT {hero.score.half.home}–{hero.score.half.away}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-start gap-2 text-left">
-                      {hero.away.crest && <img src={hero.away.crest} alt={hero.away.name} className="h-14 w-14 object-contain" />}
-                      <p className="display text-xl md:text-3xl leading-tight">{hero.away.name}</p>
-                    </div>
-                  </div>
-                  {isLive && (
-                    <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate("/live-tv"); }}
-                        className="group/btn relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-primary px-6 py-3 text-sm font-black uppercase tracking-[0.2em] text-primary-foreground shadow-lg shadow-primary/30 transition hover:scale-[1.03]"
-                      >
-                        <span className="live-dot" />
-                        <span>Watch this game live</span>
-                        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
-                      </button>
-                      <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                        Streaming now on Pitch26
-                      </span>
-                    </div>
-                  )}
-                </Link>
-              </motion.div>
-            );
-          })()}
-        </div>
-      </section>
+      <h1 className="sr-only">Pitch26 — FIFA World Cup 2026 live scores, fixtures & standings</h1>
 
-      <LiveTicker />
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        className="grid auto-rows-[minmax(150px,auto)] grid-cols-1 gap-3 sm:gap-4 md:grid-cols-12 md:gap-5"
+      >
+        {/* ─────────── HERO FEATURED MATCH ─────────── */}
+        {hero && <HeroTile hero={hero} onWatch={() => navigate("/live-tv")} />}
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 pt-10">
-        <h2 className="display text-3xl">Latest news</h2>
-        {newsError ? (
-          <p className="mt-4 text-sm text-destructive">Could not load headlines right now.</p>
-        ) : news.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">Loading headlines…</p>
-        ) : (
-          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {news.map((n) => (
-              <a key={n.id} href={n.url} target="_blank" rel="noreferrer" className="group rounded-lg border border-border bg-card/40 p-4 transition hover:border-primary">
-                <p className="text-xs uppercase tracking-wider text-primary">{n.source}</p>
-                <p className="mt-2 font-semibold group-hover:text-primary">{n.title}</p>
-                {n.summary && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{n.summary}</p>}
-              </a>
-            ))}
-          </div>
-        )}
-      </section>
+        {/* ─────────── LIVE SCOREBOARD ─────────── */}
+        <ScoreboardTile matches={scoreboard} />
+
+        {/* ─────────── FLASH NEWS TICKER ─────────── */}
+        <FlashNewsTile article={flashHeadline} />
+
+        {/* ─────────── RECENT RESULTS (was Group A / Standings in the design) ─────────── */}
+        <ResultsTile matches={recentResults} />
+
+        {/* ─────────── GOLDEN BOOT ─────────── */}
+        <GoldenBootTile scorer={topScorer} />
+
+        {/* ─────────── FAN / LIVE-TV CTA ─────────── */}
+        <FanZoneTile />
+      </motion.div>
     </div>
   );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ *  Tiles
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+type HeroMatch = {
+  href: string;
+  homeName: string; awayName: string;
+  homeCode: string | null; awayCode: string | null;
+  homeScore: number | null; awayScore: number | null;
+  utcDate: string | null;
+  status: "LIVE" | "PAUSED" | "SCHEDULED" | "FINISHED";
+  minute: number | null; injury: number | null;
+  competition: string;
+  venue: string | null;
+};
+
+function fromLive(m: LiveMatch): HeroMatch {
+  const wc = findWc26MatchByTeams(m.home.name, m.away.name, m.utc_date);
+  const status: HeroMatch["status"] =
+    m.status === "IN_PLAY" || m.status === "LIVE" ? "LIVE"
+    : m.status === "PAUSED" ? "PAUSED"
+    : m.status === "FINISHED" ? "FINISHED"
+    : "SCHEDULED";
+  return {
+    href: wc ? `/match/${wc.match_no}` : "/fixtures",
+    homeName: m.home.name, awayName: m.away.name,
+    homeCode: m.home.tla, awayCode: m.away.tla,
+    homeScore: m.score.full.home, awayScore: m.score.full.away,
+    utcDate: m.utc_date,
+    status,
+    minute: m.minute, injury: m.injury_time,
+    competition: m.competition,
+    venue: wc?.venue_name ?? null,
+  };
+}
+
+function fromWc(m: Wc26Match): HeroMatch {
+  return {
+    href: `/match/${m.match_no}`,
+    homeName: countryName(m.home_code) || m.home_name,
+    awayName: countryName(m.away_code) || m.away_name,
+    homeCode: m.home_code, awayCode: m.away_code,
+    homeScore: m.home_score, awayScore: m.away_score,
+    utcDate: m.date_utc,
+    status: m.home_score != null ? "FINISHED" : "SCHEDULED",
+    minute: null, injury: null,
+    competition: m.stage_label,
+    venue: m.venue_name,
+  };
+}
+
+function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
+  const isLive = hero.status === "LIVE" || hero.status === "PAUSED";
+  const kickoff = hero.utcDate ? `${bdDate(hero.utcDate)} · ${bdTime(hero.utcDate)}` : hero.competition;
+  const chipLabel = isLive
+    ? (hero.status === "PAUSED" ? "HALF TIME" : `LIVE · ${hero.minute ?? 0}${hero.injury ? `+${hero.injury}` : ""}'`)
+    : hero.status === "FINISHED" ? "FULL TIME" : "MATCHDAY";
+  const homeCrest = flagUrl(hero.homeCode, 320);
+  const awayCrest = flagUrl(hero.awayCode, 320);
+
+  return (
+    <Link
+      to={hero.href}
+      aria-label={`Open ${hero.homeName} vs ${hero.awayName} match details`}
+      className="group relative flex min-h-[360px] flex-col overflow-hidden rounded-3xl border border-border bg-card md:col-span-8 md:row-span-3 md:min-h-[520px]"
+    >
+      <img
+        src={wc26Emblem.url}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 top-1/2 h-[130%] w-auto -translate-y-1/2 object-contain opacity-[0.07] transition-transform duration-1000 group-hover:scale-105"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--can)] via-[var(--gold)] to-[var(--usa)] opacity-70" />
+
+      {/* Top badges */}
+      <div className="relative z-10 flex flex-wrap items-center gap-2 p-5 sm:p-7">
+        {isLive ? (
+          <span className="inline-flex items-center gap-2 rounded-full bg-destructive px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-destructive-foreground shadow-[0_0_20px_rgba(220,38,38,0.4)]">
+            <span className="live-dot" /> {chipLabel}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-black/50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/80 backdrop-blur-md">
+            {chipLabel}
+          </span>
+        )}
+        <span className="rounded-full border border-border bg-black/50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/70 backdrop-blur-md">
+          {hero.competition}
+        </span>
+      </div>
+
+      {/* Big VS + score */}
+      <div className="relative z-10 mt-auto flex flex-col gap-6 p-5 sm:p-7">
+        <div className="flex items-end gap-4 sm:gap-8">
+          {homeCrest && <img src={homeCrest} alt={hero.homeName} className="hidden h-16 w-24 rounded-lg object-cover ring-1 ring-border sm:block md:h-20 md:w-28" />}
+          <div className="min-w-0 flex-1">
+            <p className="display truncate text-4xl leading-[0.9] tracking-tight sm:text-6xl md:text-[6.5rem]">
+              {abbr(hero.homeName)} <span className="text-primary">VS</span> {abbr(hero.awayName)}
+            </p>
+            <p className="mt-2 truncate text-sm text-muted-foreground sm:text-base">
+              <span className="font-semibold text-foreground/80">{hero.homeName}</span>
+              <span className="mx-2 opacity-40">·</span>
+              <span className="font-semibold text-foreground/80">{hero.awayName}</span>
+            </p>
+          </div>
+          {awayCrest && <img src={awayCrest} alt={hero.awayName} className="hidden h-16 w-24 rounded-lg object-cover ring-1 ring-border sm:block md:h-20 md:w-28" />}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+          {hero.homeScore != null && hero.awayScore != null ? (
+            <p className="display text-4xl tabular-nums text-primary sm:text-5xl md:text-6xl">
+              {hero.homeScore} : {hero.awayScore}
+            </p>
+          ) : (
+            <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">
+              Kick-off · {kickoff}
+            </p>
+          )}
+          {hero.venue && (
+            <p className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              <MapPin className="h-3 w-3" aria-hidden="true" /> {hero.venue}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onWatch(); }}
+            className="ml-auto inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-xs font-black uppercase tracking-[0.25em] text-primary-foreground shadow-lg shadow-primary/30 transition hover:-translate-y-0.5 hover:brightness-110"
+          >
+            <PlayCircle className="h-4 w-4" aria-hidden="true" />
+            {isLive ? "Watch live" : "Live TV"}
+          </button>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
+  return (
+    <section
+      aria-label="Live and recent scores"
+      className="flex flex-col justify-between gap-4 rounded-3xl border border-border bg-card p-5 transition-colors hover:border-primary/40 md:col-span-4 md:row-span-2 md:p-6"
+    >
+      <div className="flex items-center justify-between">
+        <h2 className="display text-2xl tracking-wider text-foreground/70 sm:text-3xl">Scoreboard</h2>
+        <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
+      </div>
+
+      <div className="space-y-5">
+        {matches.length === 0 && (
+          <p className="text-sm text-muted-foreground">No matches to show right now.</p>
+        )}
+        {matches.map((m, i) => (
+          <Link key={i} to={m.href} className="block">
+            <div className="flex items-center justify-between gap-3">
+              <ScoreboardSide code={m.homeCode} name={m.homeName} align="left" />
+              <div className="flex flex-col items-center">
+                <span className="display text-2xl tabular-nums text-foreground sm:text-3xl">
+                  {m.homeScore ?? "–"} <span className="text-muted-foreground/60">:</span> {m.awayScore ?? "–"}
+                </span>
+                <span className={`mt-1 text-[10px] font-bold uppercase tracking-[0.2em] ${m.status === "LIVE" || m.status === "PAUSED" ? "text-destructive" : "text-muted-foreground"}`}>
+                  {m.status === "LIVE" ? `${m.minute ?? 0}${m.injury ? `+${m.injury}` : ""}'`
+                    : m.status === "PAUSED" ? "HT"
+                    : m.status === "FINISHED" ? "FT"
+                    : m.utcDate ? bdTime(m.utcDate) : "TBD"}
+                </span>
+              </div>
+              <ScoreboardSide code={m.awayCode} name={m.awayName} align="right" />
+            </div>
+            {i < matches.length - 1 && (
+              <div className="mt-5 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+            )}
+          </Link>
+        ))}
+      </div>
+
+      <Link
+        to="/fixtures"
+        className="block rounded-2xl bg-secondary py-3 text-center text-[11px] font-bold uppercase tracking-[0.25em] text-foreground/80 transition hover:bg-primary hover:text-primary-foreground"
+      >
+        Full schedule
+      </Link>
+    </section>
+  );
+}
+
+function ScoreboardSide({ code, name, align }: { code: string | null; name: string; align: "left" | "right" }) {
+  const crest = flagUrl(code, 96);
+  return (
+    <div className={`flex min-w-0 flex-col items-center gap-1 ${align === "left" ? "" : ""}`}>
+      {crest ? (
+        <img src={crest} alt={name} className="h-10 w-14 rounded-lg object-cover ring-1 ring-border" />
+      ) : (
+        <div className="grid h-10 w-14 place-items-center rounded-lg bg-secondary text-xs font-bold text-foreground/70">
+          {code ?? "—"}
+        </div>
+      )}
+      <span className="max-w-[6rem] truncate text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
+        {code ?? name}
+      </span>
+    </div>
+  );
+}
+
+function FlashNewsTile({ article }: { article: Article | null }) {
+  return (
+    <a
+      href={article?.url ?? "#"}
+      target={article ? "_blank" : undefined}
+      rel="noreferrer"
+      aria-label={article ? `Read: ${article.title}` : "Latest news"}
+      className="group flex items-center gap-4 rounded-3xl bg-[var(--trophy-green)] p-5 text-white transition hover:-translate-y-0.5 md:col-span-4 md:row-span-1"
+    >
+      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-black/25 transition-transform group-hover:scale-110">
+        <Zap className="h-6 w-6" aria-hidden="true" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/70">
+          {article?.source ?? "Flash news"}
+        </p>
+        <p className="mt-0.5 truncate text-sm font-bold leading-tight sm:text-base">
+          {article?.title ?? "Latest World Cup 2026 headlines dropping soon."}
+        </p>
+      </div>
+      <ArrowRight className="ml-auto hidden h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1 sm:block" aria-hidden="true" />
+    </a>
+  );
+}
+
+function ResultsTile({ matches }: { matches: Wc26Match[] }) {
+  return (
+    <section
+      aria-label="Recent results"
+      className="rounded-3xl border border-border bg-card p-5 md:col-span-4 md:row-span-2 md:p-6"
+    >
+      <div className="flex items-center justify-between">
+        <h2 className="display text-2xl tracking-wider sm:text-3xl">Recent Results</h2>
+        <Link to="/standings" className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary hover:underline">
+          Table
+        </Link>
+      </div>
+
+      <ul className="mt-4 space-y-2">
+        <li className="grid grid-cols-[1fr_auto_1fr] items-center px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+          <span className="text-left">Home</span>
+          <span className="px-3 text-center">Score</span>
+          <span className="text-right">Away</span>
+        </li>
+        {matches.map((m) => (
+          <li key={m.match_no}>
+            <Link
+              to={`/match/${m.match_no}`}
+              className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl border border-transparent bg-secondary/60 px-3 py-2.5 text-sm transition hover:border-primary/40 hover:bg-secondary"
+            >
+              <span className="flex items-center gap-2 truncate font-semibold">
+                {flagUrl(m.home_code, 48) && <img src={flagUrl(m.home_code, 48)!} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+                <span className="truncate">{countryName(m.home_code) || m.home_name}</span>
+              </span>
+              <span className="display px-2 tabular-nums text-primary">
+                {m.home_score} : {m.away_score}
+              </span>
+              <span className="flex items-center justify-end gap-2 truncate font-semibold">
+                <span className="truncate">{countryName(m.away_code) || m.away_name}</span>
+                {flagUrl(m.away_code, 48) && <img src={flagUrl(m.away_code, 48)!} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+              </span>
+            </Link>
+            {m.date_utc && (
+              <p className="mt-1 px-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                {bdShortDate(m.date_utc)} · {m.stage_label}
+              </p>
+            )}
+          </li>
+        ))}
+        {matches.length === 0 && (
+          <li className="text-sm text-muted-foreground">No results yet.</li>
+        )}
+      </ul>
+    </section>
+  );
+}
+
+function GoldenBootTile({ scorer }: { scorer: { player: string; goals: number; team: string } | null }) {
+  return (
+    <Link
+      to="/fixtures"
+      aria-label="Golden Boot leader"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground md:col-span-4 md:row-span-2"
+    >
+      <img
+        src={wc26Emblem.url}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-10 top-1/2 h-[110%] w-auto -translate-y-1/2 object-contain opacity-30 mix-blend-multiply transition-transform duration-700 group-hover:scale-110"
+      />
+      <div className="relative z-10">
+        <span className="rounded-lg bg-black px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-primary">
+          Stat Leader
+        </span>
+        <h3 className="display mt-4 text-4xl leading-none sm:text-5xl">
+          Golden<br />Boot
+        </h3>
+      </div>
+      <div className="relative z-10 mt-6 flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="truncate text-base font-black uppercase leading-tight sm:text-lg" title={scorer?.player}>
+            {scorer?.player ?? "TBD"}
+          </p>
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground/70">
+            {scorer ? `${scorer.goals} goal${scorer.goals === 1 ? "" : "s"} · ${scorer.team}` : "Race in progress"}
+          </p>
+        </div>
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-black transition-transform group-hover:scale-110">
+          <ArrowRight className="h-5 w-5 text-primary" aria-hidden="true" />
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function FanZoneTile() {
+  return (
+    <Link
+      to="/live-tv"
+      aria-label="Open the live TV fan hub"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card p-6 md:col-span-4 md:row-span-2"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(212,175,55,0.18),transparent_60%)]" />
+      <div className="relative">
+        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+          <Trophy className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <h3 className="display mt-4 text-3xl leading-none sm:text-4xl">
+          Live The<br /><span className="text-[var(--trophy-green)]">Tournament</span>
+        </h3>
+      </div>
+      <p className="relative text-sm text-muted-foreground">
+        Every match streamed in HD & 4K. Live scores, timelines and goals — updated by the second.
+      </p>
+      <button
+        type="button"
+        className="relative w-full rounded-2xl border-2 border-[var(--trophy-green)] py-4 text-[11px] font-black uppercase tracking-[0.25em] text-[var(--trophy-green)] transition group-hover:bg-[var(--trophy-green)] group-hover:text-white"
+      >
+        Enter Fan Hub
+      </button>
+    </Link>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ *  Helpers
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+function abbr(name: string): string {
+  const clean = name.trim();
+  if (clean.length <= 4) return clean.toUpperCase();
+  // Prefer first word if compact, else first 3 letters.
+  const first = clean.split(/\s+/)[0];
+  return (first.length <= 4 ? first : clean.slice(0, 3)).toUpperCase();
 }
