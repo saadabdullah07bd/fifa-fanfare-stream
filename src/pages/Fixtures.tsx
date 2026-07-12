@@ -117,7 +117,7 @@ export default function Fixtures() {
           <div
             role="tablist"
             aria-label="Filter fixtures by stage"
-            className="flex gap-2 overflow-x-auto rounded-3xl border border-border bg-card/85 p-2 backdrop-blur-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="scroll-fade-x flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-3xl border border-border bg-card/85 p-2 backdrop-blur-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {STAGE_CHIPS.map((chip) => {
               const active = stage === chip.id;
@@ -128,7 +128,7 @@ export default function Fixtures() {
                   aria-selected={active}
                   type="button"
                   onClick={() => setStage(chip.id)}
-                  className={`shrink-0 whitespace-nowrap rounded-2xl px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors ${
+                  className={`tap-target shrink-0 snap-start whitespace-nowrap rounded-2xl px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors ${
                     active
                       ? "bg-[var(--trophy-green)] text-white shadow"
                       : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"

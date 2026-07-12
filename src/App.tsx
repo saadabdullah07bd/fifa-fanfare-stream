@@ -220,7 +220,7 @@ export default function App() {
         </div>
       </header>
 
-      <main id="main-content" className="flex-1 pb-24 lg:pb-0">
+      <main id="main-content" className="flex-1 pb-safe-tabs lg:pb-0">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/fixtures" element={<Fixtures />} />
