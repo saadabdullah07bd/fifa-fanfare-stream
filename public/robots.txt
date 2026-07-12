@@ -3,7 +3,9 @@ Allow: /
 
 Disallow: /auth
 Disallow: /settings
-Disallow: /live-tv
 Disallow: /predictions
 
-Sitemap: https://fifa-fanfare-stream.lovable.app/sitemap.xml
+# Live TV is a public feature — do NOT block it, we want it indexed
+# so people searching "watch world cup 2026 live free" can find it.
+
+Sitemap: https://pitch26.muhammadsaadabdullah.com/sitemap.xml
