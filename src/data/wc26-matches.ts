@@ -5,6 +5,7 @@ export type Wc26Goal = {
   minute: number;
   injury: number | null;
   type: "REGULAR" | "OG" | "PEN" | string;
+  team?: string;
 };
 
 export type Wc26Card = {
