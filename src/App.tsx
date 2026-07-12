@@ -153,9 +153,8 @@ export default function App() {
             <span className="live-dot mr-2 align-middle" />Watch
           </Link>
         </div>
-        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 lg:hidden"><Nav /></nav>
       </header>
-      <main>
+      <main className="pb-24 lg:pb-0">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/fixtures" element={<Fixtures />} />
