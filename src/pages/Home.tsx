@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Seo } from "@/lib/seo";
 import LiveTicker, { useLiveMatches } from "@/components/LiveTicker";
-import FavoriteClubCard from "@/components/FavoriteClubCard";
+
 import heroImg from "@/assets/hero-stadium.jpg";
 import { bdTime, bdDate } from "@/lib/flags";
 
@@ -139,10 +139,6 @@ export default function Home() {
       </section>
 
       <LiveTicker />
-
-      <section className="mx-auto max-w-7xl px-4 pt-10">
-        <FavoriteClubCard />
-      </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-16 pt-10">
         <h2 className="display text-3xl">Latest news</h2>

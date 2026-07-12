@@ -52,23 +52,43 @@ export default function Standings() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-    // Poll for updated standings and scorers every 90 seconds.
+  // Load standings once and cache in localStorage. Since the 2026 World Cup
+  // hasn't kicked off, tables are stable — no need to poll. They refresh
+  // only when a user reopens the page after a live match has advanced.
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
+    const CACHE_KEY = "pitch26:standings-cache-v1";
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const c = JSON.parse(raw) as { standings: Group[]; scorers: Scorer[]; scorers_source: string; updated_at: string };
+        setGroups(c.standings ?? []);
+        setScorers(c.scorers ?? []);
+        setScorersSource(c.scorers_source ?? "");
+        setUpdated(c.updated_at ?? "");
+        setLoading(false);
+      }
+    } catch { /* ignore */ }
+
+    (async () => {
       const { data, error } = await supabase.functions.invoke("standings", { body: { kind: "all" } });
       if (cancelled) return;
       if (error) { setErr(error.message); setLoading(false); return; }
       const d = data as { standings?: Group[]; scorers?: Scorer[]; scorers_source?: string; updated_at?: string };
-      setGroups(d.standings ?? []);
-      setScorers(d.scorers ?? []);
-      setScorersSource(d.scorers_source ?? "");
-      setUpdated(d.updated_at ?? "");
+      const payload = {
+        standings: d.standings ?? [],
+        scorers: d.scorers ?? [],
+        scorers_source: d.scorers_source ?? "",
+        updated_at: d.updated_at ?? "",
+      };
+      setGroups(payload.standings);
+      setScorers(payload.scorers);
+      setScorersSource(payload.scorers_source);
+      setUpdated(payload.updated_at);
       setLoading(false);
-    };
-    load();
-    const id = window.setInterval(load, 90_000);
-    return () => { cancelled = true; window.clearInterval(id); };
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(payload)); } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   return (
