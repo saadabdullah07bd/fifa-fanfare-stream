@@ -325,7 +325,7 @@ function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
 }
 
 function ScoreboardSide({ code, name, align }: { code: string | null; name: string; align: "left" | "right" }) {
-  const crest = flagUrl(code, 96);
+  const crest = flagUrl(code, 80);
   return (
     <div className={`flex min-w-0 flex-col items-center gap-1 ${align === "left" ? "" : ""}`}>
       {crest ? (
@@ -393,7 +393,7 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
               className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl border border-transparent bg-secondary/60 px-3 py-2.5 text-sm transition hover:border-primary/40 hover:bg-secondary"
             >
               <span className="flex items-center gap-2 truncate font-semibold">
-                {flagUrl(m.home_code, 48) && <img src={flagUrl(m.home_code, 48)!} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+                {flagUrl(m.home_code, 40) && <img src={flagUrl(m.home_code, 40)!} alt="" className="h-4 w-6 rounded-sm object-cover" />}
                 <span className="truncate">{countryName(m.home_code) || m.home_name}</span>
               </span>
               <span className="display px-2 tabular-nums text-primary">
@@ -401,7 +401,7 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
               </span>
               <span className="flex items-center justify-end gap-2 truncate font-semibold">
                 <span className="truncate">{countryName(m.away_code) || m.away_name}</span>
-                {flagUrl(m.away_code, 48) && <img src={flagUrl(m.away_code, 48)!} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+                {flagUrl(m.away_code, 40) && <img src={flagUrl(m.away_code, 40)!} alt="" className="h-4 w-6 rounded-sm object-cover" />}
               </span>
             </Link>
             {m.date_utc && (
