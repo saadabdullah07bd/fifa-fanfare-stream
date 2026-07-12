@@ -6,6 +6,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Seo } from "@/lib/seo";
 import { toast } from "sonner";
 
+/**
+ * Community predictions page where users can guess match scores and view leaderboards.
+ */
+
 export default function Predictions() {
   const { user, ready } = useAuth();
   const qc = useQueryClient();
@@ -27,6 +31,7 @@ export default function Predictions() {
     },
   });
   const { data: mine = [], isError: mineError } = useQuery({
+    // Fetch current user's existing predictions.
     queryKey: ["predictions", user?.id],
     enabled: !!user,
     queryFn: async () => {
@@ -36,6 +41,7 @@ export default function Predictions() {
     },
   });
   const { data: leader = [], isError: leaderboardError } = useQuery({
+    // Calculate global points leaderboard from all user predictions.
     queryKey: ["leaderboard"],
     queryFn: async () => {
       const [preds, profiles] = await Promise.all([
@@ -63,6 +69,7 @@ export default function Predictions() {
   const teamName = (code: string | null) => teams.find((t) => t.code === code)?.name ?? code ?? "TBD";
   const upcoming = matches.filter((m) => new Date(m.date_utc) > new Date()).slice(0, 20);
 
+  /** Persists a user's score prediction to the database. */
   async function save(matchId: string, h: number, a: number) {
     if (!user) return;
     const { error } = await supabase.from("predictions").upsert(
@@ -121,6 +128,10 @@ export default function Predictions() {
                 <span className="font-bold text-primary">{row.points}</span>
               </li>
             ))}
+/**
+ * Row component for predicting a specific match score.
+ */
+
           </ol>
         </aside>
       </div>
@@ -142,6 +153,10 @@ function PredictRow({ matchId, date, home, away, homeStart, awayStart, disabled,
         </p>
         <p className="mt-1 text-sm font-semibold">{home} vs {away}</p>
       </div>
+/**
+ * Numeric input for score entry.
+ */
+
       <div className="flex items-center gap-2">
         <Score value={h} onChange={setH} /><span className="text-muted-foreground">–</span><Score value={a} onChange={setA} />
         <button disabled={disabled} onClick={() => onSave(h, a)} data-testid={`save-${matchId}`}

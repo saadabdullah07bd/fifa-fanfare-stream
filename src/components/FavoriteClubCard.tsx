@@ -14,15 +14,24 @@ type Match = {
   status: string; minute: string | null;
 };
 
+/**
+ * Normalizes match ID for routing, prioritizing external_id without the 'fd_' prefix.
+ */
 function matchRouteId(m: { external_id: string | null; id: string }) {
   return (m.external_id ?? "").replace(/^fd_/, "") || m.id;
 }
 
-
+/**
+ * Retrieves the favorite team code from local storage.
+ */
 function getFavCode(): string | null {
   try { return window.localStorage.getItem("fav_team_code"); } catch { return null; }
 }
 
+/**
+ * A dashboard card that displays personalized content for the user's favorite team.
+ * Shows upcoming matches, recent results, and group standings.
+ */
 export default function FavoriteClubCard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [code, setCode] = useState<string | null>(getFavCode());
@@ -31,6 +40,9 @@ export default function FavoriteClubCard() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Loads user profile from Supabase to get the favorite club details.
+   */
   const loadProfile = async () => {
     const { data: s } = await supabase.auth.getSession();
     const uid = s.session?.user.id;
@@ -42,6 +54,7 @@ export default function FavoriteClubCard() {
 
   useEffect(() => {
     loadProfile();
+    // Re-load when favorite club changes via local event or auth state.
     const onChange = () => { setCode(getFavCode()); loadProfile(); };
     window.addEventListener("favorite-club-changed", onChange);
     const { data: sub } = supabase.auth.onAuthStateChange(() => onChange());
@@ -51,7 +64,7 @@ export default function FavoriteClubCard() {
     };
   }, []);
 
-  // Resolve team by code, or fall back to matching by stored name
+  // Resolve team data by code or name.
   useEffect(() => {
     if (!profile?.favorite_club_name) { setTeam(null); return; }
     setLoading(true);
@@ -73,7 +86,7 @@ export default function FavoriteClubCard() {
     })();
   }, [profile?.favorite_club_name, code]);
 
-  // Load team's fixtures + group opponents
+  // Fetch matches and other teams in the same group.
   useEffect(() => {
     if (!team) { setMatches([]); setGroupTeams([]); setLoading(false); return; }
     (async () => {
@@ -94,6 +107,7 @@ export default function FavoriteClubCard() {
     })();
   }, [team]);
 
+  // Categorize matches into upcoming and past.
   const { next, recent } = useMemo(() => {
     const now = Date.now();
     const upcoming = matches.filter((m) => new Date(m.date_utc).getTime() >= now - 3 * 3600_000);
@@ -134,7 +148,7 @@ export default function FavoriteClubCard() {
 
       {!loading && (
         <div className="grid gap-5 p-5 md:grid-cols-[1.4fr_1fr]">
-          {/* Fixtures */}
+          {/* Fixtures list */}
           <div>
             <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary">
               <Calendar className="h-3 w-3" /> Upcoming
@@ -185,7 +199,7 @@ export default function FavoriteClubCard() {
             )}
           </div>
 
-          {/* Group table */}
+          {/* Group standings summary */}
           <div>
             <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary">
               <Users className="h-3 w-3" /> {team?.group ? `Group ${team.group}` : "Group"}

@@ -30,6 +30,7 @@ function showBlock(reason: string) {
 function detectDevtools() {
   const threshold = 160;
   const check = () => {
+    // Detects devtools by measuring the difference between outer and inner window size
     const w = window.outerWidth - window.innerWidth;
     const h = window.outerHeight - window.innerHeight;
     if (w > threshold || h > threshold) {
@@ -41,6 +42,7 @@ function detectDevtools() {
   setInterval(check, 1000);
 
   // Timing trap: `debugger` pauses only when devtools are open.
+  // We measure the execution time around the debugger statement.
   setInterval(() => {
     const t0 = performance.now();
     // eslint-disable-next-line no-debugger
@@ -62,7 +64,7 @@ function detectDownloadHelpers() {
         return;
       }
     }
-    // IDM adds a "download this video" button next to <video> elements.
+    // IDM adds a "download this video" button next to <video> elements with high z-index
     document.querySelectorAll("video").forEach((v) => {
       const sib = v.parentElement?.querySelector('[style*="z-index: 2147483647"]');
       if (sib && sib.tagName !== "DIV") return;
@@ -82,7 +84,7 @@ function detectCookieEditors() {
     const now = document.cookie;
     if (now !== last) {
       const added = now.split(";").filter((c) => !last.includes(c.trim()));
-      // Ignore our own auth cookies.
+      // Ignore our own auth cookies (Supabase, Google Analytics, Cloudflare).
       const suspicious = added.some((c) => !/^\s*(sb-|_ga|cf_)/.test(c));
       if (suspicious && added.length > 2) {
         showBlock("suspicious cookie activity was detected");
@@ -93,6 +95,7 @@ function detectCookieEditors() {
 }
 
 function hardenContextMenu() {
+  // Prevents right-click and common keyboard shortcuts for inspection
   document.addEventListener("contextmenu", (e) => e.preventDefault());
   document.addEventListener("keydown", (e) => {
     const k = e.key.toLowerCase();
@@ -109,6 +112,10 @@ function hardenContextMenu() {
   });
 }
 
+/**
+ * Installs various deterrents against devtools usage, download managers, and cookie tampering.
+ * Disabled in development environment.
+ */
 export function installTamperGuard() {
   if (installed || import.meta.env.DEV) return;
   installed = true;

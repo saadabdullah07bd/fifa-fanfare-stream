@@ -39,6 +39,10 @@ function stageTitle(stage: string | null | undefined) {
   return label ? titleCase(label) : "";
 }
 
+/**
+ * Tournament standings and top scorers page.
+ */
+
 export default function Standings() {
   const [tab, setTab] = useState<"standings" | "scorers">("standings");
   const [groups, setGroups] = useState<Group[]>([]);
@@ -48,6 +52,7 @@ export default function Standings() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
+    // Poll for updated standings and scorers every 90 seconds.
   useEffect(() => {
     let cancelled = false;
     const load = async () => {

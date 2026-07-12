@@ -15,8 +15,12 @@ import "@fontsource/inter/500.css";
 import "@fontsource/inter/700.css";
 import { installTamperGuard } from "./lib/tamper-guard";
 
+// Install security protections for the application.
 installTamperGuard();
 
+/**
+ * Configure React Query client with persistence and caching policies.
+ */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -30,7 +34,10 @@ const queryClient = new QueryClient({
   },
 });
 
-// Persist the query cache across reloads so returning users see instant content.
+/**
+ * Create a persister to save the query cache in localStorage.
+ * This allows returning users to see content instantly.
+ */
 const persister = createSyncStoragePersister({
   storage: typeof window !== "undefined" ? window.localStorage : undefined,
   key: "pitch26-query-cache",
@@ -41,6 +48,7 @@ const root = document.getElementById("root")!;
 const configured =
   !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Initialize the React root and render the application.
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
     {configured ? (

@@ -2,6 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { bdTime } from "@/lib/flags";
 
+/**
+ * Represents a match currently in progress or recently finished.
+ */
 export type LiveMatch = {
   id: number;
   competition: string;
@@ -17,6 +20,11 @@ export type LiveMatch = {
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/live-matches`;
 
+/**
+ * Custom hook to fetch and poll live match data from Supabase Edge Function.
+ * 
+ * @returns React Query object containing the matches data.
+ */
 export function useLiveMatches() {
   return useQuery({
     queryKey: ["live-matches"],
@@ -29,6 +37,9 @@ export function useLiveMatches() {
   });
 }
 
+/**
+ * A horizontal/grid ticker displaying live scores and upcoming fixtures across all competitions.
+ */
 export default function LiveTicker() {
   const { data, isError } = useLiveMatches();
   const matches = data?.matches ?? [];
@@ -60,6 +71,9 @@ export default function LiveTicker() {
   );
 }
 
+/**
+ * Individual card displaying a match that is currently live.
+ */
 function LiveCard({ m }: { m: LiveMatch }) {
   const min =
     m.status === "PAUSED" ? "HT"
@@ -81,6 +95,9 @@ function LiveCard({ m }: { m: LiveMatch }) {
   );
 }
 
+/**
+ * Simple row displaying team name, crest, and current score.
+ */
 function TeamRow({ name, tla, crest, score }: { name: string; tla: string; crest: string; score: number | null }) {
   return (
     <div className="flex items-center gap-3">
@@ -92,6 +109,9 @@ function TeamRow({ name, tla, crest, score }: { name: string; tla: string; crest
   );
 }
 
+/**
+ * Compact list for upcoming or recently finished matches.
+ */
 function MiniList({ title, items, showTime }: { title: string; items: LiveMatch[]; showTime?: boolean }) {
   return (
     <div className="rounded-lg border border-border bg-card/40 p-4">

@@ -11,6 +11,16 @@ function withSiteOrigin(path: string): string {
   return `${origin.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/**
+ * SEO component that injects meta tags into the document head using react-helmet-async.
+ * Handles canonical URLs, OpenGraph tags, Twitter cards, and JSON-LD schemas.
+ * 
+ * @param title - The page title.
+ * @param description - The meta description.
+ * @param path - The URL path for canonical and OG tags.
+ * @param image - The preview image URL.
+ * @param jsonLd - JSON-LD schema objects for structured data.
+ */
 export function Seo({
   title,
   description,

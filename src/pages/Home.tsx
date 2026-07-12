@@ -14,16 +14,22 @@ type Article = {
 
 const NEWS_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
 
+/**
+ * Landing page with hero match, live ticker, and latest news.
+ */
+
 export default function Home() {
   const navigate = useNavigate();
   const { data: liveData } = useLiveMatches();
   const matches = liveData?.matches ?? [];
+  // Select a "hero" match to feature (live/upcoming).
   const hero =
     matches.find((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status)) ??
     matches.find((m) => m.status === "SCHEDULED" || m.status === "TIMED") ??
     null;
 
   const { data: newsData, isError: newsError } = useQuery({
+    // Fetch latest news headlines from Supabase edge function.
     queryKey: ["news-feed-home"],
     refetchInterval: 300_000,
     queryFn: async () => {
@@ -57,6 +63,7 @@ export default function Home() {
             <Link to="/live-tv" className="rounded-md border border-border bg-secondary/60 px-5 py-3 text-sm font-bold uppercase tracking-wider">Live TV</Link>
           </div>
 
+          {/* Featured Hero Match Card */}
           {hero && (() => {
             const isPaused = hero.status === "PAUSED";
             const isLive = ["IN_PLAY", "LIVE"].includes(hero.status) || isPaused;

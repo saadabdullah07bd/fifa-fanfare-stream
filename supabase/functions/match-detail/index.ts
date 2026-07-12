@@ -1,4 +1,17 @@
-// Full match detail including goal timeline for a given football-data.org match id.
+/**
+ * Match Detail Function
+ * Purpose: Provides comprehensive details for a specific match, including timeline, goals, and bookings.
+ * HTTP Method: GET
+ * Inputs:
+ *   - id: The unique match ID from football-data.org.
+ * Outputs: JSON object with detailed match information and real-time enrichment.
+ * External APIs:
+ *   - Football-Data.org: Primary source for match metadata and timeline.
+ *   - API-Football: Real-time status and score enrichment.
+ *   - Firecrawl/Google: Web-scraped live updates.
+ *   - Gemini 2.5 Flash Lite: AI-driven live state verification.
+ */
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -107,7 +120,7 @@ Deno.serve(async (req) => {
           out.af_fixture_id = f.fixture?.id;
         }
       }
-    } catch (_) { /* optional */ }
+    } catch (_) { /* optional fallback enrichment */ }
   }
 
   // Google enrichment via Firecrawl — strict live minute/score from Google's sports card.
@@ -151,7 +164,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Native Google Gemini 2.5 Flash Lite fallback — fills the live minute when Firecrawl came up empty.
+  // Native Google Gemini 2.5 Flash Lite fallback
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   if (geminiKey && ["IN_PLAY", "LIVE"].includes(out.status) && (out.minute == null || out.minute === 0)) {
     try {
@@ -180,16 +193,11 @@ Deno.serve(async (req) => {
           if (typeof p.status === "string") out.status = p.status;
           out.live_source = "gemini-2.5-flash-lite";
         }
-      } else {
-        console.error("gemini fallback http", aiRes.status, (await aiRes.text()).slice(0, 200));
       }
     } catch (e) {
       console.error("gemini fallback failed", (e as Error).message);
     }
   }
-
-
-
 
   return new Response(JSON.stringify(out), {
     headers: { ...cors, "Content-Type": "application/json" },

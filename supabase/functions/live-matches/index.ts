@@ -1,6 +1,17 @@
-// Returns today's live/recent matches across all competitions your football-data.org
-// tier has access to (Nations League, Champions League, top domestic leagues, etc.).
-// Public endpoint — read-only pass-through with a small in-memory cache.
+/**
+ * Live Matches Function
+ * Purpose: Aggregates live and recent football matches, primarily focusing on World Cup 2026.
+ * HTTP Method: GET
+ * Inputs:
+ *   - status: Optional filter for match status (e.g., LIVE, FINISHED).
+ * Outputs: JSON object with matches and last updated timestamp.
+ * External APIs:
+ *   - Football-Data.org: Primary match source.
+ *   - TheSportsDB: Fallback for World Cup 2026 fixtures.
+ *   - Firecrawl/Google: Real-time score and minute scraping.
+ *   - Gemini 2.5 Flash Lite: AI-driven live status enrichment.
+ */
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -20,7 +31,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 10s cache — keep live minute fresh while free-tier is polled every 30s from the client.
+  // 10s cache — keep live minute fresh
   if (cache && Date.now() - cache.at < 10_000) {
     return new Response(JSON.stringify(cache.body), {
       headers: { ...cors, "Content-Type": "application/json" },
@@ -66,7 +77,6 @@ Deno.serve(async (req) => {
   matches = matches.filter((m: any) => /world cup/i.test(m.competition ?? ""));
 
   // Fallback: TheSportsDB free API for FIFA World Cup 2026 (league id 4429).
-  // Free plan API-Football blocks season 2026, so we source WC fixtures from TSDB.
   if (matches.length === 0) {
     try {
       const endpoints = [
@@ -87,6 +97,7 @@ Deno.serve(async (req) => {
         }
       }
       const parseNum = (v: any) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+      /** Map TSDB status string to our internal status format */
       const statusFromTsdb = (s: string | null, progress: string | null): string => {
         const st = (s ?? "").toUpperCase();
         if (st === "FT" || st === "AET" || st === "PEN" || st === "MATCH FINISHED") return "FINISHED";
@@ -125,20 +136,7 @@ Deno.serve(async (req) => {
     }
   }
 
-
-
-
-
-
-
-  // NOTE: All live enrichment is strictly from Google (via Firecrawl) below.
-  // API-Football and TheSportsDB day-of-match enrichment were removed — TSDB
-  // only remains above as the source of the World Cup 2026 fixture calendar
-  // because Google doesn't return a structured schedule feed.
-
-
-  // Google scrape enrichment via Firecrawl — reliable minute + score from Google's sports card.
-  // Runs in parallel for all live matches.
+  // Google scrape enrichment via Firecrawl — reliable minute + score.
   const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
   if (fcKey) {
     const liveIdx = matches
@@ -159,7 +157,6 @@ Deno.serve(async (req) => {
         if (!fcRes.ok) return;
         const fcJson: any = await fcRes.json();
         const results: any[] = fcJson?.data?.web ?? fcJson?.data ?? [];
-        // Concat titles + descriptions from top results for parsing.
         const text = results.map((r: any) => `${r.title ?? ""} ${r.description ?? r.snippet ?? ""}`).join(" ").replace(/\s+/g, " ");
         if (!text) return;
 
@@ -201,8 +198,7 @@ Deno.serve(async (req) => {
     }));
   }
 
-  // Native Google Gemini 2.5 Flash Lite fallback — fills in live matches whose minute
-  // is still missing after Firecrawl.
+  // Native Google Gemini 2.5 Flash Lite fallback.
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   if (geminiKey) {
     const need = matches
@@ -249,10 +245,6 @@ Deno.serve(async (req) => {
     }));
   }
 
-
-
-
-
   // Final fallback: if still no minute, compute from kickoff time.
   matches = matches.map((m: any) => {
     if (!["IN_PLAY", "LIVE"].includes(m.status)) return m;
@@ -266,8 +258,6 @@ Deno.serve(async (req) => {
     else if (minute > 60) minute = Math.min(minute - 15, 120);
     return { ...m, minute, minute_source: "kickoff-fallback" };
   });
-
-
 
   // Sort: live first, then scheduled today, then finished
   const rank = (s: string) => (["IN_PLAY", "PAUSED", "LIVE"].includes(s) ? 0 : s === "SCHEDULED" || s === "TIMED" ? 1 : 2);

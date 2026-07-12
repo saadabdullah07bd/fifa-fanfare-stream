@@ -6,6 +6,10 @@ import { useIsAdmin } from "@/hooks/useAuth";
 import { Seo } from "@/lib/seo";
 import { toast } from "sonner";
 
+/**
+ * Settings page for user account management and admin Xtream server configuration.
+ */
+
 export default function Settings() {
   const navigate = useNavigate();
   const { admin } = useIsAdmin();
@@ -35,6 +39,7 @@ export default function Settings() {
     setUsername(cfg.username ?? "");
   }, [cfg]);
 
+  // Admin: Save Xtream server credentials.
   const save = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("xtream", {
@@ -47,6 +52,7 @@ export default function Settings() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Admin: Manually trigger channel synchronization.
   const refresh = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("xtream", { body: { action: "refresh_channels" } });

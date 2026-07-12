@@ -18,6 +18,11 @@ declare global {
   }
 }
 
+/**
+ * Reports a client-side error to Lovable's error tracking system.
+ * @param error - The error to report.
+ * @param context - Additional context information to include with the report.
+ */
 export function reportLovableError(error: unknown, context: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
   window.__lovableEvents?.captureException?.(

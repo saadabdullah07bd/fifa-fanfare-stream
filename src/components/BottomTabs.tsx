@@ -2,6 +2,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+/**
+ * Defines the structure for a single tab in the bottom navigation.
+ */
 export interface TabItem {
   to: string;
   icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
@@ -14,10 +17,18 @@ interface BottomTabsProps {
   accentColor?: string;
 }
 
+/**
+ * A bottom navigation bar component for mobile layouts.
+ * Features a spring-animated active indicator and gesture-based interaction.
+ * 
+ * @param props.tabs - Array of tab configurations.
+ * @param props.accentColor - The color used for the active indicator and highlights.
+ */
 export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
+  // Determine which tab is currently active based on the URL path.
   let activeIndex = -1;
   let bestLen = -1;
   tabs.forEach((t, i) => {
@@ -41,6 +52,7 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
   const previewIndexRef = useRef<number | null>(null);
   const suppressClickRef = useRef(false);
 
+  // Measure and track the width of each tab cell for animation positioning.
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -72,6 +84,9 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
   const indicatorCenter = Math.max(halfW, Math.min(totalW - halfW, rawCenter));
   const hoverIndex = pressing ? (previewIndex ?? activeIndex) : activeIndex;
 
+  /**
+   * Handles pointer capture to start a "swipe" or drag interaction across the tabs.
+   */
   const onPointerDown = (e: React.PointerEvent<HTMLAnchorElement>, i: number) => {
     pointerOwnerRef.current = e.currentTarget;
     e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -84,6 +99,9 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
     suppressClickRef.current = false;
   };
 
+  /**
+   * Updates the preview indicator position as the user drags across the tabs.
+   */
   const onPointerMove = (e: React.PointerEvent<HTMLAnchorElement>) => {
     if (!pressingRef.current) return;
     const rx = getRelativeX(e.clientX);
@@ -94,6 +112,9 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
     setPreviewIndex((prev) => (prev !== idx ? idx : prev));
   };
 
+  /**
+   * Finalizes the navigation based on the position where the pointer was released.
+   */
   const onPointerFinish = (e: React.PointerEvent<HTMLAnchorElement>) => {
     if (pointerOwnerRef.current?.hasPointerCapture?.(e.pointerId)) {
       pointerOwnerRef.current.releasePointerCapture?.(e.pointerId);

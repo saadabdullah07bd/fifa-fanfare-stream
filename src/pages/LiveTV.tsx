@@ -19,9 +19,14 @@ type Channel = { id: string; category: string; stream_id: string; name: string; 
 const is4k = (name: string) => /\b(4k|uhd)\b/i.test(name);
 const CAT_LABEL: Record<string, string> = { wc2026: "World Cup 2026", cricket: "Cricket" };
 
+/**
+ * Live TV streaming page for World Cup and sports channels.
+ */
+
 export default function LiveTV() {
   const navigate = useNavigate();
   const { data: channels = [], isLoading, isError, error } = useQuery({
+    // Fetch available TV channels from Supabase.
     queryKey: ["channels"],
     queryFn: async () => {
       const { data, error } = await supabase.from("channels").select("*").order("category").order("name");
@@ -36,6 +41,7 @@ export default function LiveTV() {
   const [reloadNonce, setReloadNonce] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // HLS/MPEGTS stream initialization and playback logic.
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
@@ -155,6 +161,7 @@ export default function LiveTV() {
     };
   }, [active, reloadNonce]);
 
+  // Featured channel logic, defaults to TSN 1 if available.
   const heroChannel = useMemo(() => {
     // Prefer TSN 1 as the default featured channel.
     const tsn1 = channels.find((c) => /\btsn\s*1\b/i.test(c.name) && !is4k(c.name))
@@ -163,6 +170,7 @@ export default function LiveTV() {
   }, [channels]);
 
   // Auto-tune to TSN 1 (or the fallback hero) once channels load.
+  // HLS/MPEGTS stream initialization and playback logic.
   useEffect(() => {
     if (autoStarted || active || !heroChannel) return;
     setAutoStarted(true);
@@ -256,6 +264,10 @@ export default function LiveTV() {
       )}
 
       <div className="mt-8 flex justify-center border-t border-border/50 pt-8">
+/**
+ * Categorized row of channel cards.
+ */
+
         <button onClick={signOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary px-5 py-3 text-sm font-semibold uppercase tracking-wider transition-colors hover:border-primary hover:text-primary">
           <LogOut className="h-4 w-4" /> Sign out
         </button>
@@ -270,6 +282,10 @@ function ChannelRow({
   return (
     <section className="space-y-3">
       <h3 className="display flex items-center gap-2 text-2xl text-primary">
+/**
+ * Interactive card for a single TV channel.
+ */
+
         <span className="inline-block h-4 w-1 rounded bg-primary" />{title}
         <span className="ml-1 text-xs text-muted-foreground tabular-nums">· {items.length}</span>
       </h3>
@@ -303,6 +319,10 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
         {isActive && (
           <span className="absolute left-2 top-2 flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
             <Radio className="h-3 w-3 animate-pulse" /> On
+/**
+ * Renders channel logo or initials if logo fails to load.
+ */
+
           </span>
         )}
         <span className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100">
@@ -321,6 +341,11 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
 
 function ChannelLogo({ url, name }: { url: string | null; name: string }) {
   const [ok, setOk] = useState(!!url);
+/**
+ * Custom video player component with controls and fullscreen support.
+ */
+
+  // HLS/MPEGTS stream initialization and playback logic.
   useEffect(() => { setOk(!!url); }, [url]);
   const initials = name
     .replace(/\(.*?\)|\[.*?\]/g, "")
@@ -359,6 +384,7 @@ function ModernPlayer({
   const [showUI, setShowUI] = useState(true);
   const hideTimer = useRef<number | null>(null);
 
+  // HLS/MPEGTS stream initialization and playback logic.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -381,6 +407,7 @@ function ModernPlayer({
     };
   }, [videoRef, channel.id]);
 
+  // HLS/MPEGTS stream initialization and playback logic.
   useEffect(() => {
     const onFs = () => setFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFs);
@@ -392,6 +419,7 @@ function ModernPlayer({
     if (hideTimer.current) window.clearTimeout(hideTimer.current);
     hideTimer.current = window.setTimeout(() => setShowUI(false), 2600);
   };
+  // HLS/MPEGTS stream initialization and playback logic.
   useEffect(() => { kick(); return () => { if (hideTimer.current) window.clearTimeout(hideTimer.current); }; }, [channel.id]);
 
   const toggle = () => {
@@ -423,6 +451,7 @@ function ModernPlayer({
   };
 
   // Keyboard shortcuts (Space/K play, M mute, F fullscreen, arrows volume/seek, Esc close)
+  // HLS/MPEGTS stream initialization and playback logic.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;

@@ -1,5 +1,15 @@
-// Live news via NewsAPI.org — gives us clean summaries and real images.
-// Falls back to Google News RSS if NewsAPI is unavailable.
+/**
+ * News Feed Function
+ * Purpose: Provides a live news feed focused on the FIFA World Cup 2026.
+ * HTTP Method: GET
+ * Inputs:
+ *   - q: Optional search query (overrides default World Cup query).
+ * Outputs: JSON object with de-duplicated articles and source attribution.
+ * External APIs:
+ *   - NewsAPI.org: Primary source for structured news with images.
+ *   - Google News RSS: Fallback source for latest headlines.
+ */
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -9,6 +19,7 @@ const cors = {
 const cache = new Map<string, { at: number; body: unknown }>();
 const CACHE_MS = 3600_000; // 1 hour
 
+/** Removes HTML tags and normalizes entities in news summaries */
 function stripHtml(s: string): string {
   return s
     .replace(/<[^>]+>/g, "")
@@ -19,12 +30,14 @@ function stripHtml(s: string): string {
     .trim();
 }
 
+/** Extracts text content from specific XML tags in RSS feeds */
 function pick(xml: string, tag: string): string {
   const m = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i"));
   if (!m) return "";
   return m[1].replace(/^<!\[CDATA\[|\]\]>$/g, "").trim();
 }
 
+/** Fetches articles from NewsAPI.org */
 async function fromNewsApi(q: string): Promise<any[] | null> {
   const key = Deno.env.get("NEWSAPI_KEY");
   if (!key) return null;
@@ -52,6 +65,7 @@ async function fromNewsApi(q: string): Promise<any[] | null> {
     }));
 }
 
+/** Fetches articles from Google News RSS as a fallback */
 async function fromGoogleRss(q: string): Promise<any[]> {
   const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`;
   const res = await fetch(rssUrl, { headers: { "User-Agent": "Pitch26/1.0" } });
@@ -64,7 +78,7 @@ async function fromGoogleRss(q: string): Promise<any[]> {
       title: stripHtml(pick(it, "title")).replace(/\s*-\s*[^-]+$/, "").trim(),
       url: pick(it, "link"),
       source: pick(it, "source") || "Google News",
-      summary: "", // Google RSS descriptions are just link lists — don't show them
+      summary: "", // Google RSS descriptions are just link lists
       image_url: null,
       published_at: pick(it, "pubDate") ? new Date(pick(it, "pubDate")).toISOString() : null,
     };
@@ -93,7 +107,7 @@ Deno.serve(async (req) => {
     console.log("news-feed fallback google-rss", { count: articles.length });
   }
 
-  // De-duplicate by URL and by normalized title (same story from multiple outlets).
+  // De-duplicate by URL and by normalized title
   const seenUrl = new Set<string>();
   const seenTitle = new Set<string>();
   articles = articles.filter((a: any) => {

@@ -16,6 +16,10 @@ const staticEntries = [
   { path: "/privacy", changefreq: "yearly", priority: "0.2", lastmod: today },
 ];
 
+/**
+ * Fetches dynamic match entries from Supabase to include in the sitemap.
+ * @returns Array of sitemap entries for dynamic match routes.
+ */
 async function fetchDynamic() {
   const url = process.env.VITE_SUPABASE_URL;
   const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -46,6 +50,11 @@ async function fetchDynamic() {
 }
 
 
+/**
+ * Generates the XML content for the sitemap.
+ * @param entries - The list of sitemap entries.
+ * @returns The full XML sitemap string.
+ */
 function generateSitemap(entries) {
   const urls = entries.map((e) =>
     [

@@ -21,6 +21,10 @@ type MatchStats = { available: boolean; stats: StatItem[]; status?: string | nul
 const FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/match-detail`;
 const STATS_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/match-stats`;
 
+/**
+ * Formats the match status label for display.
+ */
+
 function statusLabel(status: string, minute: number | null, injury: number | null, utcDate: string): { label: string; live: boolean } {
   if (status === "PAUSED") return { label: "Half-time", live: true };
   if (["IN_PLAY", "LIVE"].includes(status)) {
@@ -33,6 +37,10 @@ function statusLabel(status: string, minute: number | null, injury: number | nul
 
 function toNum(v: string | number): number {
   if (typeof v === "number") return v;
+/**
+ * Detailed view for a specific match, including live score, stats, and timeline.
+ */
+
   const m = v.match(/[\d.]+/);
   return m ? Number(m[0]) : 0;
 }
@@ -41,6 +49,7 @@ export default function MatchDetail() {
   const { id } = useParams();
 
   const { data: m, isLoading } = useQuery({
+    // Fetch core match information (teams, score, timeline).
     queryKey: ["match-detail", id],
     enabled: !!id,
     refetchInterval: 30_000,
@@ -52,6 +61,7 @@ export default function MatchDetail() {
   });
 
   const { data: stats } = useQuery({
+    // Fetch advanced match statistics (possession, shots, etc.).
     queryKey: ["match-stats", m?.home.name, m?.away.name, m?.utc_date],
     enabled: !!m,
     refetchInterval: 45_000,
@@ -75,6 +85,7 @@ export default function MatchDetail() {
 
   const { label: statusText, live: isLive } = statusLabel(m.status, m.minute, m.injury_time, m.utc_date);
   const isPlaying = ["IN_PLAY", "LIVE"].includes(m.status);
+  // Combine goals and bookings into a single chronological timeline.
   const timeline = [
     ...m.goals.map((g) => ({ kind: "goal" as const, minute: g.minute, injury: g.injury_time, data: g })),
     ...m.bookings.map((b) => ({ kind: "card" as const, minute: b.minute, injury: null, data: b })),
@@ -240,6 +251,10 @@ export default function MatchDetail() {
                     </p>
                   )}
                 </div>
+/**
+ * Real-time clock component that increments every second.
+ */
+
               </motion.li>
             ))}
           </AnimatePresence>

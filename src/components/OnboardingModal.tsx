@@ -12,6 +12,10 @@ type WcTeam = {
   flag_url: string | null;
 };
 
+/**
+ * An onboarding modal that asks new users to select their favorite World Cup 2026 team.
+ * This selection personalizes their dashboard feed.
+ */
 export default function OnboardingModal() {
   const [open, setOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -19,7 +23,7 @@ export default function OnboardingModal() {
   const [q, setQ] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Show once per user (until they pick or dismiss)
+  // Checks if the user has already onboarded or picked a favorite club.
   useEffect(() => {
     const check = async (uid: string) => {
       const { data } = await supabase
@@ -42,7 +46,7 @@ export default function OnboardingModal() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Preload the full 48-team list once so the picker is instant
+  // Preload the list of 48 teams when the modal is opened.
   useEffect(() => {
     if (!open || teams.length) return;
     supabase.from("teams")
@@ -71,10 +75,15 @@ export default function OnboardingModal() {
     return Array.from(map.entries());
   }, [filtered]);
 
+  /**
+   * Saves the user's favorite team selection to their profile in Supabase.
+   * 
+   * @param t - The team object selected by the user.
+   */
   const pick = async (t: WcTeam) => {
     if (!userId) return;
     setSaving(true);
-    // Stable numeric id from code for the int column (djb2 hash)
+    // Generate a stable numeric ID from the team code for legacy profile columns.
     const idNum = Math.abs(
       [...t.code].reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 5381),
     );
@@ -86,13 +95,16 @@ export default function OnboardingModal() {
     }).eq("id", userId);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    // Also store the team code so cards can query fixtures locally
+    // Cache the team code locally for immediate UI updates.
     try { window.localStorage.setItem("fav_team_code", t.code); } catch { /* noop */ }
     toast.success(`Backing ${t.name} for 2026 🇺🇳`);
     setOpen(false);
     window.dispatchEvent(new CustomEvent("favorite-club-changed"));
   };
 
+  /**
+   * Marks the user as onboarded without selecting a favorite team.
+   */
   const skip = async () => {
     if (userId) {
       await supabase.from("profiles").update({ onboarded_at: new Date().toISOString() }).eq("id", userId);

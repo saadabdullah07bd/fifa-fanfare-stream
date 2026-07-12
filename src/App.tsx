@@ -18,6 +18,9 @@ import Standings from "@/pages/Standings";
 import { BottomTabs } from "@/components/BottomTabs";
 import OnboardingModal from "@/components/OnboardingModal";
 
+/**
+ * Internal hook to manage auth session state within the App component.
+ */
 function useSession() {
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
@@ -32,6 +35,9 @@ function useSession() {
   return { ready, authed };
 }
 
+/**
+ * Wrapper component to protect routes that require authentication.
+ */
 function RequireAuth({ children }: { children: ReactNode }) {
   const { ready, authed } = useSession();
   const location = useLocation();
@@ -40,6 +46,9 @@ function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Retrieves any pending post-auth redirect path from session storage.
+ */
 function getPendingAuthRedirect() {
   if (typeof window === "undefined") return null;
   const path = window.sessionStorage.getItem("postAuthRedirect");
@@ -47,6 +56,9 @@ function getPendingAuthRedirect() {
   return path;
 }
 
+/**
+ * Component that handles redirection after a successful login based on stored state.
+ */
 function AuthRedirector() {
   const navigate = useNavigate();
   useEffect(() => {
@@ -63,6 +75,9 @@ function AuthRedirector() {
   return null;
 }
 
+/**
+ * Desktop navigation menu links.
+ */
 function Nav() {
   const items = [
     ["/", "Home"], ["/fixtures", "Fixtures"],
@@ -87,6 +102,9 @@ function Nav() {
   );
 }
 
+/**
+ * Renders the footer only on the homepage.
+ */
 function HomeOnlyFooter() {
   const { pathname } = useLocation();
   if (pathname !== "/") return null;
@@ -105,7 +123,9 @@ const MOBILE_TABS = [
   { to: "/news", label: "News", icon: Newspaper },
 ];
 
-
+/**
+ * Main application component that defines routing and layout.
+ */
 export default function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">

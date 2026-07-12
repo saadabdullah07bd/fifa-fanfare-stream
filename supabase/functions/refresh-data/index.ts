@@ -1,5 +1,16 @@
-// Hourly refresh: fixtures/standings/scorers from football-data.org, news from NewsAPI,
-// venue photos best-effort via Firecrawl. Called by pg_cron.
+/**
+ * Data Refresh Function
+ * Purpose: Synchronizes football data (teams, matches, standings, scorers, news) from external APIs to the Supabase database.
+ * HTTP Method: POST (Authorized via CRON_SECRET or Supabase Anon Key)
+ * Inputs:
+ *   - mode: "full" (all data) | "matches" (only match updates).
+ * Outputs: JSON summary of sync results for each data type.
+ * External APIs:
+ *   - Football-Data.org: Tournament structure and results.
+ *   - NewsAPI: Tournament news articles.
+ * Auth: Verified against environment CRON_SECRET or bearer tokens.
+ */
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const cors = {
@@ -13,9 +24,10 @@ const FD_COMPETITION = "WC";
 const FD_BASE = "https://api.football-data.org/v4";
 
 Deno.serve(async (req) => {
+  // CORS Preflight
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
-  // Accept either the cron secret OR the Supabase anon apikey (which pg_cron always sends).
+  // Authorization check for scheduled tasks
   const expected = Deno.env.get("CRON_SECRET");
   const anonKey =
     Deno.env.get("SUPABASE_ANON_KEY") ??
@@ -24,6 +36,8 @@ Deno.serve(async (req) => {
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   const cronHeader = req.headers.get("x-cron-secret") ?? "";
   const apikeyHeader = req.headers.get("apikey") ?? "";
+  
+  /** Validates if a JWT bearer token represents an anonymous user */
   const looksLikeAnon = (v: string) => {
     if (!v) return false;
     try {
@@ -31,10 +45,12 @@ Deno.serve(async (req) => {
       return payload?.role === "anon";
     } catch { return false; }
   };
+
   const authorized =
     (expected && (cronHeader === expected || bearer === expected)) ||
     (anonKey && (apikeyHeader === anonKey || bearer === anonKey)) ||
     looksLikeAnon(apikeyHeader) || looksLikeAnon(bearer);
+    
   if (!authorized) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
@@ -42,19 +58,17 @@ Deno.serve(async (req) => {
     });
   }
 
-
-
+  // Admin client with service role for DB writes
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
     auth: { persistSession: false },
   });
   const results: Record<string, string> = {};
   const now = new Date().toISOString();
 
-  // mode=matches → per-minute cron only re-syncs match rows (fast, cheap).
-  // Default mode → full 3-hourly refresh (teams, matches, standings, scorers, news).
   const url = new URL(req.url);
   const mode = url.searchParams.get("mode") ?? "full";
 
+  /** Logs the result of a specific sync operation to the database */
   async function record(source: string, status: string, detail?: string) {
     await admin.from("scrape_runs").upsert({ source, status, detail: detail ?? null, last_run_at: now });
     results[source] = status + (detail ? `: ${detail}` : "");
@@ -151,6 +165,7 @@ Deno.serve(async (req) => {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/scorers?limit=50`, { headers: fdHeaders });
       if (res.ok) {
         const { scorers } = await res.json() as { scorers: Array<any> };
+        // Clear previous scorers and insert new list
         await admin.from("scorers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
         const scorerRows = scorers.map((s) => ({
             player: s.player.name, team_code: s.team.tla,
@@ -189,7 +204,6 @@ Deno.serve(async (req) => {
       await record("news", "skipped", "NEWSAPI_KEY not set");
     }
   }
-
 
   return new Response(JSON.stringify({ ok: true, results }), {
     headers: { ...cors, "Content-Type": "application/json" },

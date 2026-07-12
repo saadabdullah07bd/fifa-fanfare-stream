@@ -29,6 +29,10 @@ const staticEntries: SitemapEntry[] = [
   { path: "/predictions", changefreq: "weekly", priority: "0.5", lastmod: today },
 ];
 
+/**
+ * Fetches dynamic venue entries from Supabase to include in the sitemap.
+ * @returns Array of sitemap entries for dynamic venue routes.
+ */
 async function fetchDynamic(): Promise<SitemapEntry[]> {
   const url = process.env.VITE_SUPABASE_URL;
   const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -47,6 +51,11 @@ async function fetchDynamic(): Promise<SitemapEntry[]> {
   }
 }
 
+/**
+ * Generates the XML content for the sitemap.
+ * @param entries - The list of sitemap entries.
+ * @returns The full XML sitemap string.
+ */
 function generateSitemap(entries: SitemapEntry[]) {
   const urls = entries.map((e) =>
     [
