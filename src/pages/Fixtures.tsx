@@ -18,6 +18,19 @@ const KO_LABEL: Record<string, string> = {
   FINAL: "Final",
 };
 
+// Stage filter chips available in the "All Matches" view.
+type StageFilter = "ALL" | "GROUP" | "LAST_32" | "LAST_16" | "QUARTER_FINALS" | "SEMI_FINALS" | "FINAL" | "THIRD_PLACE";
+const STAGE_CHIPS: { id: StageFilter; label: string }[] = [
+  { id: "ALL", label: "All Stages" },
+  { id: "GROUP", label: "Group Stage" },
+  { id: "LAST_32", label: "Round of 32" },
+  { id: "LAST_16", label: "Round of 16" },
+  { id: "QUARTER_FINALS", label: "Quarter Finals" },
+  { id: "SEMI_FINALS", label: "Semi Finals" },
+  { id: "THIRD_PLACE", label: "3rd Place" },
+  { id: "FINAL", label: "Final" },
+];
+
 type ViewMode = "all" | "knockout";
 
 /**
@@ -28,6 +41,8 @@ type ViewMode = "all" | "knockout";
 export default function Fixtures() {
   const [params, setParams] = useSearchParams();
   const view: ViewMode = params.get("view") === "knockout" ? "knockout" : "all";
+  const stageParam = (params.get("stage") ?? "ALL") as StageFilter;
+  const stage: StageFilter = STAGE_CHIPS.some((c) => c.id === stageParam) ? stageParam : "ALL";
 
   const sorted = useMemo(
     () => [...WC26_MATCHES]
@@ -40,6 +55,13 @@ export default function Fixtures() {
     const next = new URLSearchParams(params);
     if (v === "all") next.delete("view");
     else next.set("view", v);
+    setParams(next, { replace: true });
+  };
+
+  const setStage = (s: StageFilter) => {
+    const next = new URLSearchParams(params);
+    if (s === "ALL") next.delete("stage");
+    else next.set("stage", s);
     setParams(next, { replace: true });
   };
 
@@ -56,12 +78,21 @@ export default function Fixtures() {
         path="/fixtures"
       />
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="display text-3xl sm:text-4xl md:text-5xl">{view === "knockout" ? "Knockout" : "Fixtures"}</h1>
+      {/* ─────────── Header + view toggle ─────────── */}
+      <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div>
+          <h1 className="display text-5xl leading-none tracking-tight sm:text-6xl md:text-7xl">
+            Match <span className="text-primary">Fixtures</span>
+          </h1>
+          <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+            World Cup 2026 · Road to the Final
+          </p>
+        </div>
+
         <div
           role="tablist"
           aria-label="Fixtures view"
-          className="inline-flex rounded-full border border-border bg-card/60 p-1 text-xs font-bold uppercase tracking-[0.2em]"
+          className="inline-flex rounded-2xl border border-border bg-card p-1 text-xs font-bold uppercase tracking-[0.2em]"
         >
           {(["all", "knockout"] as const).map((v) => (
             <button
@@ -70,17 +101,50 @@ export default function Fixtures() {
               role="tab"
               aria-selected={view === v}
               onClick={() => setView(v)}
-              className={`rounded-full px-4 py-2 transition-colors ${
-                view === v ? "bg-primary text-primary-foreground shadow" : "text-foreground/70 hover:text-foreground"
+              className={`rounded-xl px-5 py-2 transition-colors ${
+                view === v ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {v === "all" ? "All Matches" : "Knockout"}
+              {v === "all" ? "All Matches" : "Knockouts"}
             </button>
           ))}
         </div>
       </div>
 
-      {view === "all" ? <AllMatchesView matches={sorted} /> : <KnockoutView matches={sorted} />}
+      {/* ─────────── Sticky stage-filter chips (All view only) ─────────── */}
+      {view === "all" && (
+        <div className="sticky top-16 z-30 -mx-3 mt-8 px-3 sm:-mx-4 sm:px-4">
+          <div
+            role="tablist"
+            aria-label="Filter fixtures by stage"
+            className="flex gap-2 overflow-x-auto rounded-3xl border border-border bg-card/85 p-2 backdrop-blur-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {STAGE_CHIPS.map((chip) => {
+              const active = stage === chip.id;
+              return (
+                <button
+                  key={chip.id}
+                  role="tab"
+                  aria-selected={active}
+                  type="button"
+                  onClick={() => setStage(chip.id)}
+                  className={`shrink-0 whitespace-nowrap rounded-2xl px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors ${
+                    active
+                      ? "bg-[var(--trophy-green)] text-white shadow"
+                      : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {view === "all"
+        ? <AllMatchesView matches={sorted} stage={stage} />
+        : <KnockoutView matches={sorted} />}
     </motion.div>
   );
 }
@@ -92,18 +156,23 @@ function displayName(code: string | null, fallback: string): string {
 }
 
 /**
- * Full fixture list grouped by calendar date (Asia/Dhaka, GMT+6).
+ * Full fixture list grouped by calendar date, with premium broadcast cards.
  */
-function AllMatchesView({ matches }: { matches: Wc26Match[] }) {
+function AllMatchesView({ matches, stage }: { matches: Wc26Match[]; stage: StageFilter }) {
+  const filtered = useMemo(
+    () => stage === "ALL" ? matches : matches.filter((m) => m.stage === stage),
+    [matches, stage],
+  );
+
   const groups = useMemo(() => {
     const map = new Map<string, Wc26Match[]>();
-    for (const m of matches) {
+    for (const m of filtered) {
       const key = (m.date_utc ?? "").slice(0, 10);
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(m);
     }
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [matches]);
+  }, [filtered]);
 
   const focusKey = useMemo(() => {
     const todayIso = new Date().toISOString().slice(0, 10);
@@ -120,81 +189,40 @@ function AllMatchesView({ matches }: { matches: Wc26Match[] }) {
     if (!el) return;
     scrolledRef.current = true;
     requestAnimationFrame(() => {
-      const y = el.getBoundingClientRect().top + window.scrollY - 96;
+      const y = el.getBoundingClientRect().top + window.scrollY - 200;
       window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
     });
   }, [focusKey]);
 
-  if (matches.length === 0) return null;
+  if (filtered.length === 0) {
+    return (
+      <div className="mt-16 rounded-3xl border border-dashed border-border bg-card/40 p-10 text-center">
+        <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">
+          No matches in this stage yet.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-8 flex flex-col gap-8">
+    <div className="mt-8 flex flex-col gap-10">
       {groups.map(([day, list]) => (
         <section key={day} ref={(el) => { dayRefs.current[day] = el; }}>
-          <h2 className="display sticky top-16 z-10 -mx-4 mb-3 border-y border-border/60 bg-background/85 px-4 py-2 text-sm uppercase tracking-[0.25em] text-primary backdrop-blur">
-            {bdShortDate(day + "T00:00:00Z")}
-          </h2>
-          <ul className="flex flex-col gap-2">
-            {list.map((m, i) => {
-              const homeName = displayName(m.home_code, m.home_name);
-              const awayName = displayName(m.away_code, m.away_name);
-              const stageLabel = KO_LABEL[m.stage] ?? (m.stage === "GROUP" ? "Group" : m.stage_label);
-              return (
-                <motion.li
-                  key={m.match_no}
-                  initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.2) }}
-                >
-                  <Link
-                    to={`/match/${m.match_no}`}
-                    className="flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-card/70 px-4 py-3 shadow-sm transition-colors hover:border-primary"
-                  >
-                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
-                      <div className="flex items-center gap-1.5 sm:gap-2 justify-end min-w-0">
-                        <span className="display truncate text-right text-sm sm:text-base md:text-lg" title={homeName}>
-                          {homeName}
-                        </span>
-                        {flagUrl(m.home_code, 40) ? (
-                          <img src={flagUrl(m.home_code, 40)!} alt={m.home_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-                        ) : (
-                          <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
-                        )}
-                      </div>
-                      <div className="flex min-w-[72px] sm:min-w-[92px] flex-col items-center gap-0.5">
-                        {(m.home_score != null || m.away_score != null) ? (
-                          <span className="display text-xl sm:text-2xl tabular-nums text-primary">
-                            {m.home_score ?? "–"} : {m.away_score ?? "–"}
-                          </span>
-                        ) : (
-                          <span className="display text-xs sm:text-sm tabular-nums text-foreground/80">{m.date_utc ? bdTime(m.date_utc) : "TBD"}</span>
-                        )}
-                        <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                          {stageLabel}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2 justify-start min-w-0">
-                        {flagUrl(m.away_code, 40) ? (
-                          <img src={flagUrl(m.away_code, 40)!} alt={m.away_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-                        ) : (
-                          <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
-                        )}
-                        <span className="display truncate text-sm sm:text-base md:text-lg" title={awayName}>
-                          {awayName}
-                        </span>
-                      </div>
-                    </div>
-
-                    {m.venue_name && (
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                        <span className="inline-flex items-center gap-1.5">
-                          <MapPin className="h-3 w-3" aria-hidden="true" />
-                          {m.venue_name}{m.venue_city ? ` · ${m.venue_city}` : ""}
-                        </span>
-                      </div>
-                    )}
-                  </Link>
-                </motion.li>
-              );
-            })}
+          <div className="mb-4 flex items-center gap-4 px-1">
+            <h2 className="display text-2xl tracking-wider text-primary sm:text-3xl">
+              {bdShortDate(day + "T00:00:00Z")}
+            </h2>
+            <div className="h-px flex-1 bg-gradient-to-r from-primary/40 to-transparent" />
+          </div>
+          <ul className="flex flex-col gap-3">
+            {list.map((m, i) => (
+              <motion.li
+                key={m.match_no}
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.2) }}
+              >
+                <FixtureCard match={m} />
+              </motion.li>
+            ))}
           </ul>
         </section>
       ))}
@@ -203,7 +231,114 @@ function AllMatchesView({ matches }: { matches: Wc26Match[] }) {
 }
 
 /**
- * Horizontal knockout bracket.
+ * Premium-broadcast fixture card: home team (right-aligned) · score/time centre
+ * · away team (left-aligned), with a venue + stage-chip footer.
+ */
+function FixtureCard({ match: m }: { match: Wc26Match }) {
+  const homeName = displayName(m.home_code, m.home_name);
+  const awayName = displayName(m.away_code, m.away_name);
+  const stageLabel = KO_LABEL[m.stage] ?? (m.stage === "GROUP" ? "Group Stage" : m.stage_label);
+  const played = m.home_score != null && m.away_score != null;
+  const homeCrest = flagUrl(m.home_code, 80);
+  const awayCrest = flagUrl(m.away_code, 80);
+
+  return (
+    <Link
+      to={`/match/${m.match_no}`}
+      aria-label={`${homeName} vs ${awayName} — ${stageLabel}`}
+      className="group relative block overflow-hidden rounded-3xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-card/60 md:p-6"
+    >
+      <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-[1fr_auto_1fr] md:gap-6">
+        {/* Home team */}
+        <div className="order-2 flex items-center justify-center gap-3 md:order-1 md:justify-end md:gap-4">
+          <span className="display truncate text-lg tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-xl md:text-2xl" title={homeName}>
+            {homeName}
+          </span>
+          {homeCrest ? (
+            <img
+              src={homeCrest}
+              alt=""
+              width={48}
+              height={48}
+              loading="lazy"
+              className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-border md:h-12 md:w-12"
+            />
+          ) : (
+            <span className="h-10 w-10 shrink-0 rounded-full bg-secondary md:h-12 md:w-12" />
+          )}
+        </div>
+
+        {/* Score / Time capsule */}
+        <div className="order-1 flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-black/40 px-6 py-3 md:order-2 md:px-8">
+          {played ? (
+            <>
+              <span className="display text-2xl tabular-nums tracking-widest sm:text-3xl">
+                {m.home_score}
+                <span className="mx-2 text-primary">-</span>
+                {m.away_score}
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Full time
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="display text-2xl tracking-widest text-primary sm:text-3xl">
+                {m.date_utc ? bdTime(m.date_utc) : "TBD"}
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Kick-off
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* Away team */}
+        <div className="order-3 flex items-center justify-center gap-3 md:justify-start md:gap-4">
+          {awayCrest ? (
+            <img
+              src={awayCrest}
+              alt=""
+              width={48}
+              height={48}
+              loading="lazy"
+              className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-border md:h-12 md:w-12"
+            />
+          ) : (
+            <span className="h-10 w-10 shrink-0 rounded-full bg-secondary md:h-12 md:w-12" />
+          )}
+          <span className="display truncate text-lg tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-xl md:text-2xl" title={awayName}>
+            {awayName}
+          </span>
+        </div>
+      </div>
+
+      {/* Footer: venue + stage chip */}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
+        {m.venue_name ? (
+          <p className="inline-flex min-w-0 items-center gap-1.5 truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              {m.venue_name}{m.venue_city ? ` · ${m.venue_city}` : ""}
+            </span>
+          </p>
+        ) : <span />}
+        <span
+          className={`rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${
+            m.stage === "GROUP"
+              ? "bg-secondary text-muted-foreground"
+              : "bg-[var(--trophy-green)] text-white"
+          }`}
+        >
+          {stageLabel}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+/**
+ * Horizontal knockout bracket. Structure preserved from the previous design.
  */
 function KnockoutView({ matches }: { matches: Wc26Match[] }) {
   const rounds = KO_STAGES.map((stage, i) => {
@@ -238,7 +373,7 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
     scrollRef.current?.scrollBy({ left: dir * 360, behavior: "smooth" });
 
   return (
-    <div className="relative mt-6">
+    <div className="relative mt-8">
       <div
         ref={scrollRef}
         className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -251,7 +386,7 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
               pairs.push(items.slice(i, i + 2));
             }
             return (
-              <div key={stage} className="flex min-w-[200px] flex-col md:min-w-[240px]">
+              <div key={stage} className="flex min-w-[220px] flex-col md:min-w-[260px]">
                 <h3 className="display mb-3 text-center text-xs uppercase tracking-[0.24em] text-primary md:text-sm">
                   {KO_LABEL[stage]}
                 </h3>
@@ -339,7 +474,7 @@ function BracketPair({
 
 function BracketPlaceholder() {
   return (
-    <div className="rounded-lg border border-dashed border-border bg-card/20 px-3 py-4 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+    <div className="rounded-2xl border border-dashed border-border bg-card/20 px-3 py-5 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
       TBD
     </div>
   );
@@ -355,7 +490,7 @@ function BracketCard({ match, index }: { match: Wc26Match; index: number }) {
     >
       <Link
         to={`/match/${match.match_no}`}
-        className="block cursor-pointer rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md transition-colors hover:border-primary"
+        className="block cursor-pointer rounded-2xl border border-border bg-card p-3 text-sm shadow-md transition-colors hover:border-primary"
       >
         <BracketRow code={match.home_code} fallback={match.home_name} score={match.home_score} />
         <div className="my-1 h-px bg-border/60" />
