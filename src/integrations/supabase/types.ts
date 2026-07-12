@@ -94,6 +94,30 @@ export type Database = {
           },
         ]
       }
+      match_score_snapshots: {
+        Row: {
+          away_score: number
+          home_score: number
+          match_no: number
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          away_score?: number
+          home_score?: number
+          match_no: number
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          away_score?: number
+          home_score?: number
+          match_no?: number
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           away_score: number | null
@@ -197,6 +221,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_log: {
+        Row: {
+          body: string
+          dedupe_key: string
+          id: string
+          match_no: number | null
+          news_id: string | null
+          sent_at: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          dedupe_key: string
+          id?: string
+          match_no?: number | null
+          news_id?: string | null
+          sent_at?: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          dedupe_key?: string
+          id?: string
+          match_no?: number | null
+          news_id?: string | null
+          sent_at?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       predictions: {
         Row: {
           away_score: number
@@ -247,6 +307,8 @@ export type Database = {
           favorite_club_logo: string | null
           favorite_club_name: string | null
           id: string
+          notif_match_events: boolean
+          notif_news: boolean
           onboarded_at: string | null
         }
         Insert: {
@@ -257,6 +319,8 @@ export type Database = {
           favorite_club_logo?: string | null
           favorite_club_name?: string | null
           id: string
+          notif_match_events?: boolean
+          notif_news?: boolean
           onboarded_at?: string | null
         }
         Update: {
@@ -267,7 +331,36 @@ export type Database = {
           favorite_club_logo?: string | null
           favorite_club_name?: string | null
           id?: string
+          notif_match_events?: boolean
+          notif_news?: boolean
           onboarded_at?: string | null
+        }
+        Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: Database["public"]["Enums"]["push_platform"]
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform: Database["public"]["Enums"]["push_platform"]
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: Database["public"]["Enums"]["push_platform"]
+          token?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -491,6 +584,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      push_platform: "web" | "android" | "ios"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -619,6 +713,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      push_platform: ["web", "android", "ios"],
     },
   },
 } as const
