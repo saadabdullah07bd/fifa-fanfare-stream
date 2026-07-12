@@ -462,7 +462,7 @@ function ScorersPanel({
                       <td className="hidden py-3 sm:table-cell">
                         <div className="flex items-center gap-2 min-w-0">
                           {(() => {
-                            const flag = s.team.crest ?? flagUrl(s.team.tla, 80);
+                            const flag = s.team.crest ?? flagUrl(s.team.tla ?? fifaCodeFromName(s.team.name), 80);
                             return flag ? (
                               <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
                             ) : (
