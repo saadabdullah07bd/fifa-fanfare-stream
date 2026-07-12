@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Seo } from "@/lib/seo";
 import Hls from "hls.js";
 import mpegts from "mpegts.js";
@@ -31,6 +32,7 @@ export default function LiveTV() {
   });
 
   const [active, setActive] = useState<Channel | null>(null);
+  const [autoStarted, setAutoStarted] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("All");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -46,26 +48,35 @@ export default function LiveTV() {
       if (error) throw new Error(error.message);
       const { url, type, fallbackUrl } = data as { url: string; type?: "mpegts" | "hls"; fallbackUrl?: string };
       const v = videoRef.current!;
-      v.muted = true;
+      // Default: sound on at 50% (not muted).
+      v.muted = false;
+      v.volume = 0.5;
       v.removeAttribute("src");
       v.load();
       // Wait until the browser has ~3s of media buffered before starting playback.
       // This avoids the perceived "stuck loading" from a blind setTimeout.
       const MIN_BUFFER_SEC = 3;
       let started = false;
+      const startPlay = () => {
+        // Try with sound; if the browser blocks unmuted autoplay, fall back to muted.
+        v.play().catch(() => {
+          v.muted = true;
+          v.play().catch(() => toast.error("Tap play to start the live stream."));
+        });
+      };
       const tryStart = () => {
         if (started) return;
         const b = v.buffered;
         const ahead = b.length ? b.end(b.length - 1) - v.currentTime : 0;
         if (ahead >= MIN_BUFFER_SEC || v.readyState >= 4) {
           started = true;
-          v.play().catch(() => toast.error("Tap play to start the live stream."));
+          startPlay();
         }
       };
       v.addEventListener("progress", tryStart);
       v.addEventListener("canplaythrough", tryStart);
       // Safety net: start after 4s regardless so the user is never stuck.
-      const safety = window.setTimeout(() => { started = true; v.play().catch(() => {}); }, 4000);
+      const safety = window.setTimeout(() => { started = true; startPlay(); }, 4000);
       const playVideo = () => { window.clearTimeout(safety); tryStart(); };
       if (type === "mpegts" && mpegts.getFeatureList().mseLivePlayback) {
         mts = mpegts.createPlayer(
@@ -134,10 +145,21 @@ export default function LiveTV() {
     [channels],
   );
 
-  const heroChannel = useMemo(
-    () => channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null,
-    [channels],
-  );
+  const heroChannel = useMemo(() => {
+    // Prefer TSN 1 as the default featured channel.
+    const tsn1 = channels.find((c) => /\btsn\s*1\b/i.test(c.name) && !is4k(c.name))
+      ?? channels.find((c) => /\btsn\s*1\b/i.test(c.name));
+    return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
+  }, [channels]);
+
+  // Auto-tune to TSN 1 (or the fallback hero) once channels load.
+  useEffect(() => {
+    if (autoStarted || active || !heroChannel) return;
+    setAutoStarted(true);
+    setActive(heroChannel);
+  }, [heroChannel, active, autoStarted]);
+
+
 
   const filtered = useMemo(
     () =>
@@ -352,8 +374,8 @@ function ModernPlayer({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(true);
-  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(0.5);
   const [buffering, setBuffering] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [showUI, setShowUI] = useState(true);
@@ -446,6 +468,32 @@ function ModernPlayer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel.id]);
 
+  const isMobile = useIsMobile();
+
+  // Right-side vertical drag = volume rocker (mobile).
+  const dragRef = useRef<{ startY: number; startVol: number } | null>(null);
+  const [volPill, setVolPill] = useState<number | null>(null);
+  const volPillTimer = useRef<number | null>(null);
+  const onVolTouchStart = (e: React.TouchEvent) => {
+    const v = videoRef.current; if (!v) return;
+    dragRef.current = { startY: e.touches[0].clientY, startVol: v.muted ? 0 : v.volume };
+    kick();
+  };
+  const onVolTouchMove = (e: React.TouchEvent) => {
+    const v = videoRef.current; const d = dragRef.current;
+    if (!v || !d || !wrapRef.current) return;
+    const h = wrapRef.current.clientHeight || 1;
+    const dy = d.startY - e.touches[0].clientY; // up = positive
+    const next = Math.max(0, Math.min(1, d.startVol + dy / h));
+    v.volume = next;
+    v.muted = next === 0;
+    setVolPill(next);
+    if (volPillTimer.current) window.clearTimeout(volPillTimer.current);
+    volPillTimer.current = window.setTimeout(() => setVolPill(null), 700);
+    e.preventDefault();
+  };
+  const onVolTouchEnd = () => { dragRef.current = null; };
+
   return (
     <div
       ref={wrapRef}
@@ -457,11 +505,34 @@ function ModernPlayer({
     >
       <video
         ref={videoRef}
-        autoPlay playsInline muted
-        onClick={toggle}
+        autoPlay playsInline
+        onClick={() => { if (isMobile) { kick(); } else { toggle(); } }}
         style={{ cursor: showUI ? "pointer" : "none" }}
         className="aspect-video w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full group-[:fullscreen]:object-contain"
       />
+
+      {/* Right-side vertical volume rocker (mobile only) */}
+      {isMobile && (
+        <div
+          onTouchStart={onVolTouchStart}
+          onTouchMove={onVolTouchMove}
+          onTouchEnd={onVolTouchEnd}
+          className="absolute right-0 top-0 z-10 h-full w-1/3"
+          style={{ touchAction: "none" }}
+          aria-label="Volume rocker"
+        />
+      )}
+
+      <AnimatePresence>
+        {volPill !== null && (
+          <motion.div
+            initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+            className="pointer-events-none absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/70 px-3 py-2 text-xs font-bold text-white backdrop-blur"
+          >
+            {Math.round(volPill * 100)}%
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       <AnimatePresence>
