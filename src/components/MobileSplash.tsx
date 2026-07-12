@@ -12,8 +12,6 @@ export default function MobileSplash() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
-    if (!isMobile) return;
     setVisible(true);
   }, []);
 
