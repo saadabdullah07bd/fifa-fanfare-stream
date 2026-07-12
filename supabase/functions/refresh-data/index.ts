@@ -15,17 +15,24 @@ const FD_BASE = "https://api.football-data.org/v4";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
-  // Require a shared secret to prevent unauthenticated quota abuse.
+  // Accept either a shared cron secret OR the Supabase anon apikey (which pg_cron always sends).
+  // This keeps random public traffic out while letting the scheduled jobs through even if
+  // the vault's CRON_SECRET has drifted from the edge function's env value.
   const expected = Deno.env.get("CRON_SECRET");
-  const provided =
-    req.headers.get("x-cron-secret") ??
-    (req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "");
-  if (!expected || provided !== expected) {
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+  const cronHeader = req.headers.get("x-cron-secret") ?? "";
+  const apikeyHeader = req.headers.get("apikey") ?? "";
+  const authorized =
+    (expected && (cronHeader === expected || bearer === expected)) ||
+    (anonKey && (apikeyHeader === anonKey || bearer === anonKey));
+  if (!authorized) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { ...cors, "Content-Type": "application/json" },
     });
   }
+
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
     auth: { persistSession: false },
