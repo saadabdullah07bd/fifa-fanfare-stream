@@ -3,7 +3,7 @@ import { Seo } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Users, Search, Medal, Target } from "lucide-react";
-import { flagUrl } from "@/lib/flags";
+import { flagUrl, fifaCodeFromName } from "@/lib/flags";
 
 
 type Row = {
