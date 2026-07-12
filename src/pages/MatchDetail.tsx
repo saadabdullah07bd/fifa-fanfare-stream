@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ArrowLeft, Users, Whistle, Share2, CircleDot, Trophy } from "lucide-react";
+import { MapPin, ArrowLeft, Users, Flag, Share2, CircleDot, Trophy } from "lucide-react";
 import { Seo } from "@/lib/seo";
 import { bdTime, bdDate, countryName, flagUrl } from "@/lib/flags";
 import { getWc26Match } from "@/data/wc26-matches";
