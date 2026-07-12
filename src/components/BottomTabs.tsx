@@ -26,21 +26,35 @@ interface BottomTabsProps {
  */
 export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
   const location = useLocation();
-  const { pathname } = location;
+  const { pathname, search } = location;
   const fromState = (location.state as { from?: string } | null)?.from;
   const effectivePath = pathname === "/auth" && typeof fromState === "string" ? fromState : pathname;
+  const effectiveFull = pathname === "/auth" && typeof fromState === "string" ? fromState : `${pathname}${search}`;
   const navigate = useNavigate();
 
-  // Determine which tab is currently active based on the URL path.
+  // Determine which tab is currently active based on the URL path (and query,
+  // when the tab explicitly targets one — e.g. "/fixtures?view=knockout").
   let activeIndex = -1;
-  let bestLen = -1;
+  let bestScore = -1;
   tabs.forEach((t, i) => {
-    const match =
-      t.to === "/"
-        ? effectivePath === "/"
-        : effectivePath === t.to || effectivePath.startsWith(t.to + "/");
-    if (match && t.to.length > bestLen) {
-      bestLen = t.to.length;
+    const [tPath, tQuery] = t.to.split("?");
+    let match = false;
+    let score = tPath.length;
+    if (tQuery) {
+      match = effectiveFull === t.to;
+      score += 1000; // prefer query-specific matches over generic path matches
+    } else if (tPath === "/") {
+      match = effectivePath === "/";
+    } else {
+      // Generic path tab shouldn't win when a query-specific sibling matches.
+      const someSiblingQueryMatches = tabs.some((o) => {
+        const [oP, oQ] = o.to.split("?");
+        return oQ && oP === tPath && effectiveFull === o.to;
+      });
+      match = !someSiblingQueryMatches && (effectivePath === tPath || effectivePath.startsWith(tPath + "/"));
+    }
+    if (match && score > bestScore) {
+      bestScore = score;
       activeIndex = i;
     }
   });
