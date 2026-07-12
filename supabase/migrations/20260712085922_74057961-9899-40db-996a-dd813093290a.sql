@@ -1,0 +1,1 @@
+UPDATE public.teams SET "group" = NULL WHERE "group" IS NOT NULL;
