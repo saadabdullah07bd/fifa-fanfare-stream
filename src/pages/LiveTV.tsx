@@ -686,21 +686,38 @@ function ModernPlayer({
         {showUI && (
           <motion.div key="top"
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/80 to-transparent p-4"
+            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/85 via-black/40 to-transparent p-3 sm:p-4"
           >
-            <div className="pointer-events-auto flex items-center gap-3">
-              <span className="flex items-center gap-1.5 rounded-full bg-primary/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary-foreground">
-                <span className="live-dot" /> Live
+            <div className="pointer-events-auto flex min-w-0 items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-lg">
+                <span className="live-dot" aria-hidden="true" /> Live
               </span>
-              <div>
-                <p className="display text-lg leading-tight text-white">{channel.name}</p>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">
+              <div className="min-w-0">
+                <p className="display truncate text-base leading-tight text-white sm:text-lg" title={channel.name}>
+                  {channel.name}
+                </p>
+                <p className="truncate text-[10px] uppercase tracking-[0.2em] text-white/60">
                   {CAT_LABEL[channel.category] ?? channel.category}
                 </p>
               </div>
               {is4k(channel.name) && (
-                <span className="rounded bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[10px] font-black tracking-wider text-black">4K UHD</span>
+                <span className="hidden rounded bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[10px] font-black tracking-wider text-black sm:inline-block">
+                  4K UHD
+                </span>
               )}
+            </div>
+
+            <div className="pointer-events-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                title="Close player (Esc)"
+                aria-label="Close player"
+                className="inline-flex h-10 min-w-10 items-center gap-1.5 rounded-full bg-white/10 px-3 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:h-9"
+              >
+                <LogOut className="h-4 w-4 rotate-180" aria-hidden="true" />
+                <span className="hidden sm:inline">Change channel</span>
+              </button>
             </div>
           </motion.div>
         )}
