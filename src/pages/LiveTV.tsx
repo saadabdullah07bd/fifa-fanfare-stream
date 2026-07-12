@@ -610,13 +610,22 @@ function ModernPlayer({
             >
               {muted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </button>
-            <input
-              type="range" min={0} max={1} step={0.01}
-              value={muted ? 0 : volume}
-              onChange={(e) => setVol(parseFloat(e.target.value))}
-              className="hidden h-1 w-24 cursor-pointer appearance-none rounded-full bg-white/20 accent-primary sm:block"
-              aria-label="Volume"
-            />
+            {(() => {
+              const v = muted ? 0 : volume;
+              const pct = Math.round(v * 100);
+              return (
+                <div className="volume-slider group/vol hidden items-center sm:flex">
+                  <input
+                    type="range" min={0} max={1} step={0.01}
+                    value={v}
+                    onChange={(e) => setVol(parseFloat(e.target.value))}
+                    style={{ ["--vol" as any]: `${pct}%` }}
+                    className="modern-range h-1.5 w-20 cursor-pointer appearance-none rounded-full transition-all group-hover/vol:w-28"
+                    aria-label="Volume"
+                  />
+                </div>
+              );
+            })()}
             <div className="ml-auto flex items-center gap-2">
               {/* Reload — resets the stream if it falls behind. */}
               <button onClick={() => { toast.message("Reloading stream…"); onReload(); kick(); }}
