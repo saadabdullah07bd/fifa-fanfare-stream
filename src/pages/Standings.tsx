@@ -77,11 +77,6 @@ export default function Standings() {
         initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
         className="display text-4xl tracking-wider text-primary sm:text-5xl"
       >Standings &amp; Stats</motion.h1>
-      {updated && (
-        <p className="mt-2 text-sm text-muted-foreground">
-          Last sync {new Date(updated).toLocaleTimeString()}
-        </p>
-      )}
 
       <div className="mt-6 inline-flex rounded-full border border-border bg-card/60 p-1">
         {(["standings", "scorers"] as const).map((k) => (
