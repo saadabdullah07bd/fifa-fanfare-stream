@@ -56,19 +56,26 @@ export default function LiveTV() {
       // This avoids the perceived "stuck loading" from a blind setTimeout.
       const MIN_BUFFER_SEC = 3;
       let started = false;
+      const startPlay = () => {
+        // Try with sound; if the browser blocks unmuted autoplay, fall back to muted.
+        v.play().catch(() => {
+          v.muted = true;
+          v.play().catch(() => toast.error("Tap play to start the live stream."));
+        });
+      };
       const tryStart = () => {
         if (started) return;
         const b = v.buffered;
         const ahead = b.length ? b.end(b.length - 1) - v.currentTime : 0;
         if (ahead >= MIN_BUFFER_SEC || v.readyState >= 4) {
           started = true;
-          v.play().catch(() => toast.error("Tap play to start the live stream."));
+          startPlay();
         }
       };
       v.addEventListener("progress", tryStart);
       v.addEventListener("canplaythrough", tryStart);
       // Safety net: start after 4s regardless so the user is never stuck.
-      const safety = window.setTimeout(() => { started = true; v.play().catch(() => {}); }, 4000);
+      const safety = window.setTimeout(() => { started = true; startPlay(); }, 4000);
       const playVideo = () => { window.clearTimeout(safety); tryStart(); };
       if (type === "mpegts" && mpegts.getFeatureList().mseLivePlayback) {
         mts = mpegts.createPlayer(
