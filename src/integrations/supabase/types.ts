@@ -98,21 +98,21 @@ export type Database = {
         Row: {
           away_score: number
           home_score: number
-          match_no: number
+          match_id: string
           status: string | null
           updated_at: string
         }
         Insert: {
           away_score?: number
           home_score?: number
-          match_no: number
+          match_id: string
           status?: string | null
           updated_at?: string
         }
         Update: {
           away_score?: number
           home_score?: number
-          match_no?: number
+          match_id?: string
           status?: string | null
           updated_at?: string
         }
@@ -226,7 +226,7 @@ export type Database = {
           body: string
           dedupe_key: string
           id: string
-          match_no: number | null
+          match_id: string | null
           news_id: string | null
           sent_at: string
           title: string
@@ -237,7 +237,7 @@ export type Database = {
           body: string
           dedupe_key: string
           id?: string
-          match_no?: number | null
+          match_id?: string | null
           news_id?: string | null
           sent_at?: string
           title: string
@@ -248,7 +248,7 @@ export type Database = {
           body?: string
           dedupe_key?: string
           id?: string
-          match_no?: number | null
+          match_id?: string | null
           news_id?: string | null
           sent_at?: string
           title?: string
