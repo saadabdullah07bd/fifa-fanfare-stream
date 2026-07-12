@@ -484,7 +484,7 @@ function ModernPlayer({
       <video
         ref={videoRef}
         autoPlay playsInline
-        onClick={() => { if (isMobile) { kick(); } else { toggle(); } }}
+        onClick={() => { kick(); }}
         style={{ cursor: showUI ? "pointer" : "none" }}
         className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
       />
@@ -544,12 +544,6 @@ function ModernPlayer({
                 <span className="rounded bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[10px] font-black tracking-wider text-black">4K UHD</span>
               )}
             </div>
-            <button onClick={onClose}
-              className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full bg-black/50 text-white/90 backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
-              aria-label="Close player"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -593,16 +587,16 @@ function ModernPlayer({
               aria-label="Volume"
             />
             <div className="ml-auto flex items-center gap-2">
-              {/* Reload — mobile & tablet only. Resets the stream if it falls behind. */}
+              {/* Reload — resets the stream if it falls behind. */}
               <button onClick={() => { toast.message("Reloading stream…"); onReload(); kick(); }}
-                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground lg:hidden"
+                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
                 aria-label="Reload stream"
               >
                 <RotateCw className="h-4 w-4" />
               </button>
-              {/* Fill / fit toggle — mobile & tablet only. Stretches to fill the screen. */}
+              {/* Fill / fit toggle — stretches to fill the screen. */}
               <button onClick={() => { setFill((f) => !f); kick(); }}
-                className={`grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-primary hover:text-primary-foreground lg:hidden ${fill ? "bg-primary/80" : "bg-white/10"}`}
+                className={`grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-primary hover:text-primary-foreground ${fill ? "bg-primary/80" : "bg-white/10"}`}
                 aria-label={fill ? "Fit to screen" : "Fill screen"}
               >
                 {fill ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
