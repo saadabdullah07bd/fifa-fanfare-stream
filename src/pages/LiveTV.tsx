@@ -511,7 +511,7 @@ function ModernPlayer({
         autoPlay playsInline
         onClick={() => { if (isMobile) { kick(); } else { toggle(); } }}
         style={{ cursor: showUI ? "pointer" : "none" }}
-        className="aspect-video w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full group-[:fullscreen]:object-contain"
+        className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
       />
 
       {/* Right-side vertical volume rocker (mobile only) */}
