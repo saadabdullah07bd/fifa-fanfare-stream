@@ -411,7 +411,7 @@ function BracketCard({ match, index }: { match: MatchRow; index: number }) {
     >
       <Link
         to={`/match/${(match.external_id ?? "").replace(/^fd_/, "") || match.id}`}
-        className="block rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md transition-colors hover:border-primary"
+        className="block cursor-pointer rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md transition-colors hover:border-primary"
       >
         <BracketRow code={match.home_team_code} score={match.home_score} />
         <div className="my-1 h-px bg-border/60" />
