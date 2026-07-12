@@ -87,7 +87,7 @@ export default function Fixtures() {
       />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="display text-5xl">{view === "knockout" ? "Knockout" : "Fixtures"}</h1>
+        <h1 className="display text-3xl sm:text-4xl md:text-5xl">{view === "knockout" ? "Knockout" : "Fixtures"}</h1>
         <div
           role="tablist"
           aria-label="Fixtures view"
