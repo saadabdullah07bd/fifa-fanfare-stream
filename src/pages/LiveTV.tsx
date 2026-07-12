@@ -219,16 +219,99 @@ export default function LiveTV() {
     navigate("/", { replace: true });
   };
 
+  const [query, setQuery] = useState("");
+  const [activeCat, setActiveCat] = useState<string>("all");
+
+  const catOptions = useMemo(() => {
+    const cats = Array.from(new Set(channels.map((c) => c.category))).sort();
+    return [{ key: "all", label: "All channels", count: channels.length }, ...cats.map((c) => ({
+      key: c,
+      label: CAT_LABEL[c] ?? c,
+      count: channels.filter((ch) => ch.category === c).length,
+    }))];
+  }, [channels]);
+
+  const filteredRows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return rows
+      .filter((r) => activeCat === "all" || (CAT_LABEL[activeCat] ?? activeCat) === r.title)
+      .map((r) => ({
+        ...r,
+        items: q ? r.items.filter((c) => c.name.toLowerCase().includes(q)) : r.items,
+      }))
+      .filter((r) => r.items.length > 0);
+  }, [rows, activeCat, query]);
+
+  const totalVisible = filteredRows.reduce((n, r) => n + r.items.length, 0);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
-      className="mx-auto max-w-7xl space-y-8 px-4 py-8"
+      className="mx-auto max-w-7xl space-y-6 px-4 py-6 pb-16 sm:space-y-8 sm:py-8"
     >
       <Seo title="Watch World Cup 2026 Live Free in HD & 4K — Semifinals & Final | Pitch26" description="Live stream FIFA World Cup 2026 matches free in HD and 4K UHD — semifinals, final and every group-stage game. No signup, plays instantly on any device." path="/live-tv" />
 
-      <div className="flex items-center justify-between">
-        <h1 className="display text-5xl">Live TV</h1>
-      </div>
+      {/* Editorial header */}
+      <header className="relative overflow-hidden rounded-3xl border border-border bg-card/60 p-5 sm:p-7">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            background:
+              "radial-gradient(60% 80% at 100% 0%, hsl(var(--primary) / 0.18), transparent 60%), radial-gradient(50% 70% at 0% 100%, hsl(var(--trophy-green,142 55% 27%) / 0.25), transparent 60%)",
+          }}
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-primary">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/70" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+              </span>
+              <span>On air · World Cup 2026</span>
+            </div>
+            <h1 className="display mt-2 text-4xl leading-none sm:text-6xl md:text-7xl">Watch Live</h1>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+              Every match in HD &amp; 4K UHD. Pick a channel to start streaming instantly.
+            </p>
+          </div>
+          <div className="w-full sm:w-72">
+            <label htmlFor="channel-search" className="sr-only">Search channels</label>
+            <input
+              id="channel-search"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search channels…"
+              className="h-11 w-full rounded-full border border-border bg-background/70 px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
+            />
+          </div>
+        </div>
+
+        {catOptions.length > 1 && (
+          <nav aria-label="Filter by category" className="relative mt-5 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {catOptions.map((c) => {
+              const on = activeCat === c.key;
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => setActiveCat(c.key)}
+                  aria-pressed={on}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-xs uppercase tracking-[0.18em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    on
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background/50 text-muted-foreground hover:border-primary/60 hover:text-foreground"
+                  }`}
+                >
+                  {c.label}
+                  <span className={`ml-1.5 tabular-nums ${on ? "text-primary-foreground/80" : "text-muted-foreground/70"}`}>{c.count}</span>
+                </button>
+              );
+            })}
+          </nav>
+        )}
+      </header>
 
       <AnimatePresence mode="wait">
         {active ? (
@@ -239,44 +322,58 @@ export default function LiveTV() {
           </motion.div>
         ) : isLoading || heroChannel ? (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="grid aspect-video place-items-center rounded-2xl border border-primary/30 bg-black"
+            className="grid aspect-video place-items-center rounded-3xl border border-primary/30 bg-black"
+            role="status" aria-live="polite"
           >
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <Loader2 className="h-12 w-12 animate-spin text-primary" aria-hidden="true" />
+            <span className="sr-only">Loading stream…</span>
           </motion.div>
         ) : (
           <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="rounded-2xl border border-border bg-card/40 p-10 text-center"
+            className="rounded-3xl border border-border bg-card/40 p-10 text-center"
           >
-            <Tv className="mx-auto h-10 w-10 text-primary" />
+            <Tv className="mx-auto h-10 w-10 text-primary" aria-hidden="true" />
             <h2 className="display mt-3 text-2xl">Pick a channel to start watching</h2>
             <p className="mt-1 text-sm text-muted-foreground">{channels.length} channel{channels.length === 1 ? "" : "s"} available</p>
           </motion.div>
         )}
       </AnimatePresence>
 
-
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading channels…</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" role="status" aria-live="polite">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl bg-card/40" />
+          ))}
+          <span className="sr-only">Loading channels…</span>
+        </div>
       ) : isError ? (
-        <p className="text-sm text-destructive">{(error as Error).message || "Could not load channels."}</p>
+        <div className="rounded-3xl border border-destructive/40 bg-destructive/10 p-6 text-center text-sm text-destructive">
+          {(error as Error).message || "Could not load channels."}
+        </div>
       ) : channels.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card/40 p-6 text-sm text-muted-foreground">
+        <div className="rounded-3xl border border-border bg-card/40 p-6 text-sm text-muted-foreground">
           No channels yet. The site admin needs to connect the Xtream server from Settings.
+        </div>
+      ) : totalVisible === 0 ? (
+        <div className="rounded-3xl border border-border bg-card/40 p-10 text-center text-sm text-muted-foreground">
+          No channels match your search.
         </div>
       ) : (
         <div className="space-y-10">
-          {rows.map((row) => (
+          {filteredRows.map((row) => (
             <ChannelRow key={row.title} title={row.title} items={row.items} onPlay={play} activeId={active?.id ?? null} />
           ))}
         </div>
       )}
 
       <div className="mt-8 flex justify-center border-t border-border/50 pt-8">
-        <button onClick={signOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary px-5 py-3 text-sm font-semibold uppercase tracking-wider transition-colors hover:border-primary hover:text-primary">
-          <LogOut className="h-4 w-4" /> Sign out
+        <button
+          onClick={signOut}
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-secondary px-5 py-2.5 text-sm font-semibold uppercase tracking-wider transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
         </button>
       </div>
-
     </motion.div>
   );
 }
@@ -285,11 +382,16 @@ function ChannelRow({
   title, items, onPlay, activeId,
 }: { title: string; items: Channel[]; onPlay: (c: Channel) => void; activeId: string | null }) {
   return (
-    <section className="space-y-3">
-      <h3 className="display flex items-center gap-2 text-2xl text-primary">
-        <span className="inline-block h-4 w-1 rounded bg-primary" />{title}
-        <span className="ml-1 text-xs text-muted-foreground tabular-nums">· {items.length}</span>
-      </h3>
+    <section className="space-y-4" aria-label={title}>
+      <div className="flex items-baseline justify-between">
+        <h3 className="display flex items-center gap-2 text-2xl text-primary sm:text-3xl">
+          <span className="inline-block h-5 w-1 rounded bg-primary" aria-hidden="true" />
+          {title}
+        </h3>
+        <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground tabular-nums">
+          {items.length} channel{items.length === 1 ? "" : "s"}
+        </span>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {items.map((c) => (
