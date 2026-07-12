@@ -236,43 +236,9 @@ export default function LiveTV() {
               Every match in HD &amp; 4K UHD. Pick a channel to start streaming instantly.
             </p>
           </div>
-          <div className="w-full sm:w-72">
-            <label htmlFor="channel-search" className="sr-only">Search channels</label>
-            <input
-              id="channel-search"
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search channels…"
-              className="h-11 w-full rounded-full border border-border bg-background/70 px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
-            />
-          </div>
         </div>
-
-        {catOptions.length > 1 && (
-          <nav aria-label="Filter by category" className="relative mt-5 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {catOptions.map((c) => {
-              const on = activeCat === c.key;
-              return (
-                <button
-                  key={c.key}
-                  type="button"
-                  onClick={() => setActiveCat(c.key)}
-                  aria-pressed={on}
-                  className={`shrink-0 rounded-full border px-4 py-2 text-xs uppercase tracking-[0.18em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                    on
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background/50 text-muted-foreground hover:border-primary/60 hover:text-foreground"
-                  }`}
-                >
-                  {c.label}
-                  <span className={`ml-1.5 tabular-nums ${on ? "text-primary-foreground/80" : "text-muted-foreground/70"}`}>{c.count}</span>
-                </button>
-              );
-            })}
-          </nav>
-        )}
       </header>
+
 
       <AnimatePresence mode="wait">
         {active ? (
