@@ -8,19 +8,13 @@ import { Seo } from "@/lib/seo";
 import { flagUrl, bdShortDate, bdTime } from "@/lib/flags";
 import { normalizeAppMatchStatus } from "@/lib/match-status";
 
-const KO_STAGES = ["LAST_16", "QUARTER_FINALS", "SEMI_FINALS", "THIRD_PLACE", "FINAL"] as const;
+const KO_STAGES = ["SEMI_FINALS", "FINAL"] as const;
 const KO_LEGACY: Record<string, string> = {
-  "last-16": "LAST_16",
-  "quarter-finals": "QUARTER_FINALS",
   "semi-finals": "SEMI_FINALS",
-  "third-place": "THIRD_PLACE",
   "final": "FINAL",
 };
 const KO_LABEL: Record<string, string> = {
-  LAST_16: "Round of 16",
-  QUARTER_FINALS: "Quarter-finals",
   SEMI_FINALS: "Semi-finals",
-  THIRD_PLACE: "Third place",
   FINAL: "Final",
 };
 

@@ -7,7 +7,7 @@ const cors = {
 };
 
 const cache = new Map<string, { at: number; body: unknown }>();
-const CACHE_MS = 120_000; // 2 min
+const CACHE_MS = 3600_000; // 1 hour
 
 function stripHtml(s: string): string {
   return s
