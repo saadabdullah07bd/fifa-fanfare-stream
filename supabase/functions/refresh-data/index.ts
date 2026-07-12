@@ -102,8 +102,8 @@ Deno.serve(async (req) => {
       } else await record("matches", "error", `HTTP ${res.status}`);
     } catch (e) { await record("matches", "error", (e as Error).message.slice(0, 200)); }
 
-    // Standings
-    try {
+    // Standings (skip in matches-only mode)
+    if (mode !== "matches") try {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/standings`, { headers: fdHeaders });
       if (res.ok) {
         const { standings } = await res.json() as { standings: Array<{ group?: string; type: string; table: Array<any> }> };
@@ -129,8 +129,8 @@ Deno.serve(async (req) => {
       } else await record("standings", "error", `HTTP ${res.status}`);
     } catch (e) { await record("standings", "error", (e as Error).message.slice(0, 200)); }
 
-    // Scorers
-    try {
+    // Scorers (skip in matches-only mode)
+    if (mode !== "matches") try {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/scorers?limit=50`, { headers: fdHeaders });
       if (res.ok) {
         const { scorers } = await res.json() as { scorers: Array<any> };
@@ -147,8 +147,8 @@ Deno.serve(async (req) => {
     await record("football-data", "skipped", "FOOTBALL_DATA_API_TOKEN not set");
   }
 
-  // ---- NewsAPI ----
-  if (newsKey) {
+  // ---- NewsAPI (skip in matches-only mode) ----
+  if (mode !== "matches") {
     try {
       const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent("FIFA World Cup 2026")}&sortBy=publishedAt&language=en&pageSize=30&apiKey=${newsKey}`;
       const res = await fetch(url);
