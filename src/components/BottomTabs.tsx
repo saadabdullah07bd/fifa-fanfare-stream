@@ -37,8 +37,8 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
   tabs.forEach((t, i) => {
     const match =
       t.to === "/"
-        ? pathname === "/"
-        : pathname === t.to || pathname.startsWith(t.to + "/");
+        ? effectivePath === "/"
+        : effectivePath === t.to || effectivePath.startsWith(t.to + "/");
     if (match && t.to.length > bestLen) {
       bestLen = t.to.length;
       activeIndex = i;
