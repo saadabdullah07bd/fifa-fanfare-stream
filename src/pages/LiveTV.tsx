@@ -403,18 +403,22 @@ function ChannelRow({
 }
 
 function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPlay: (c: Channel) => void; isActive: boolean }) {
+  const catLabel = CAT_LABEL[c.category] ?? c.category;
   return (
     <motion.button
       onClick={() => onPlay(c)}
-      whileHover={{ y: -6, scale: 1.03 }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      className={`group relative w-full overflow-hidden rounded-xl border bg-card/60 text-left shadow-md transition-colors ${
+      aria-label={`Play ${c.name}${is4k(c.name) ? " in 4K UHD" : ""} — ${catLabel}`}
+      aria-pressed={isActive}
+      className={`group relative w-full overflow-hidden rounded-2xl border bg-card/60 text-left shadow-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
         isActive ? "border-primary ring-2 ring-primary/50" : "border-border hover:border-primary/60"
       }`}
     >
       <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-gradient-to-br from-secondary/40 via-secondary/20 to-primary/10">
         <ChannelLogo url={c.logo_url} name={c.name} />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         {is4k(c.name) && (
           <span className="absolute bottom-2 right-2 whitespace-nowrap rounded bg-gradient-to-r from-amber-400 to-orange-500 px-1.5 py-0.5 text-[9px] font-black leading-none tracking-wider text-black shadow">
             4K UHD
@@ -422,18 +426,18 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
         )}
         {isActive && (
           <span className="absolute left-2 top-2 flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
-            <Radio className="h-3 w-3 animate-pulse" /> On
+            <Radio className="h-3 w-3 animate-pulse" aria-hidden="true" /> On
           </span>
         )}
 
-        <span className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100">
+        <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
           <Play className="h-8 w-8 fill-primary text-primary" />
         </span>
       </div>
       <div className="p-2.5">
         <p className="truncate text-sm font-semibold">{c.name}</p>
         <p className="truncate text-xs uppercase tracking-[0.15em] text-muted-foreground">
-          {CAT_LABEL[c.category] ?? c.category}
+          {catLabel}
         </p>
       </div>
     </motion.button>
