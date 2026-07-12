@@ -1,7 +1,7 @@
 import { Routes, Route, NavLink, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, type ReactNode } from "react";
 import { Home as HomeIcon, CalendarDays, Trophy, Newspaper, Tv, Settings as SettingsIcon } from "lucide-react";
-import wc26Emblem from "@/assets/wc26-emblem.png";
+import wc26Emblem from "@/assets/wc26-emblem.webp.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/useAuth";
 import Home from "@/pages/Home";
@@ -140,7 +140,7 @@ export default function App() {
         <div className="tri-ribbon" />
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2.5">
-            <img src={wc26Emblem} alt="" width={40} height={40} className="h-10 w-10 object-contain drop-shadow-[0_2px_8px_rgba(245,197,24,0.35)]" />
+            <img src={wc26Emblem.url} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
             <span className="display text-2xl tracking-wider text-foreground">PITCH<span className="text-primary">26</span></span>
           </Link>
           <nav className="hidden items-center gap-1 lg:flex"><Nav /></nav>
