@@ -33,6 +33,11 @@ Deno.serve(async (req) => {
   const results: Record<string, string> = {};
   const now = new Date().toISOString();
 
+  // mode=matches → per-minute cron only re-syncs match rows (fast, cheap).
+  // Default mode → full 3-hourly refresh (teams, matches, standings, scorers, news).
+  const url = new URL(req.url);
+  const mode = url.searchParams.get("mode") ?? "full";
+
   async function record(source: string, status: string, detail?: string) {
     await admin.from("scrape_runs").upsert({ source, status, detail: detail ?? null, last_run_at: now });
     results[source] = status + (detail ? `: ${detail}` : "");
@@ -45,8 +50,8 @@ Deno.serve(async (req) => {
   if (fdToken) {
     const fdHeaders = { "X-Auth-Token": fdToken };
 
-    // Teams
-    try {
+    // Teams (skip in matches-only mode)
+    if (mode !== "matches") try {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/teams`, { headers: fdHeaders });
       if (res.ok) {
         const { teams } = await res.json() as { teams: Array<{ tla: string; name: string; crest: string; area: { name: string } }> };
