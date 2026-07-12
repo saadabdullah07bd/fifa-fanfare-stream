@@ -286,14 +286,11 @@ export default function LiveTV() {
       )}
 
       <div className="mt-8 flex justify-center border-t border-border/50 pt-8">
-/**
- * Categorized row of channel cards.
- */
-
         <button onClick={signOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary px-5 py-3 text-sm font-semibold uppercase tracking-wider transition-colors hover:border-primary hover:text-primary">
           <LogOut className="h-4 w-4" /> Sign out
         </button>
       </div>
+
     </motion.div>
   );
 }
@@ -304,13 +301,10 @@ function ChannelRow({
   return (
     <section className="space-y-3">
       <h3 className="display flex items-center gap-2 text-2xl text-primary">
-/**
- * Interactive card for a single TV channel.
- */
-
         <span className="inline-block h-4 w-1 rounded bg-primary" />{title}
         <span className="ml-1 text-xs text-muted-foreground tabular-nums">· {items.length}</span>
       </h3>
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {items.map((c) => (
           <ChannelCard key={title + c.id} channel={c} onPlay={onPlay} isActive={activeId === c.id} />
@@ -341,12 +335,9 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
         {isActive && (
           <span className="absolute left-2 top-2 flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
             <Radio className="h-3 w-3 animate-pulse" /> On
-/**
- * Renders channel logo or initials if logo fails to load.
- */
-
           </span>
         )}
+
         <span className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100">
           <Play className="h-8 w-8 fill-primary text-primary" />
         </span>
