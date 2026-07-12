@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,6 +47,13 @@ function toNum(v: string | number): number {
 
 export default function MatchDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  // Prefer going back in history so users return to the fixtures/knockout tab
+  // they came from. Fall back to home when there's no previous entry.
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/");
+  };
 
   const { data: m, isLoading } = useQuery({
     // Fetch core match information (teams, score, timeline).
@@ -111,7 +118,7 @@ export default function MatchDetail() {
         }}
       />
       <h1 className="sr-only">{m.home.name} vs {m.away.name} — {m.competition}</h1>
-      <Link to="/" className="text-xs uppercase tracking-[0.2em] text-primary hover:underline">← Home</Link>
+      <button type="button" onClick={goBack} className="text-xs uppercase tracking-[0.2em] text-primary hover:underline">← Back</button>
 
 
       <motion.div
