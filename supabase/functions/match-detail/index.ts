@@ -151,23 +151,21 @@ Deno.serve(async (req) => {
     }
   }
 
-  // OpenRouter free-AI fallback — asks a free web-search model to fetch live data
-  // from Google when Firecrawl returned nothing usable.
-  const orKey = Deno.env.get("OPENROUTER_API_KEY");
-  if (orKey && ["IN_PLAY", "LIVE"].includes(out.status) && (out.minute == null || out.minute === 0)) {
+  // Lovable AI Gateway fallback — Gemini 2.5 Flash Lite when Firecrawl left the minute empty.
+  const aiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (aiKey && ["IN_PLAY", "LIVE"].includes(out.status) && (out.minute == null || out.minute === 0)) {
     try {
-      const prompt = `Search Google right now for the live score of "${out.home.name} vs ${out.away.name}" (FIFA World Cup 2026). Reply STRICTLY as JSON: {"minute":number|null,"injury":number|null,"home":number|null,"away":number|null,"status":"IN_PLAY"|"PAUSED"|"FINISHED"|"SCHEDULED"}. No prose.`;
-      const orRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const prompt = `You are a live football score assistant. For the FIFA World Cup 2026 match "${out.home.name} vs ${out.away.name}" happening near ${out.utc_date}, return the current live state. Reply STRICTLY as compact JSON only, no prose: {"minute":number|null,"injury":number|null,"home":number|null,"away":number|null,"status":"IN_PLAY"|"PAUSED"|"FINISHED"|"SCHEDULED"}.`;
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { "Authorization": `Bearer ${orKey}`, "Content-Type": "application/json" },
+        headers: { "Authorization": `Bearer ${aiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.0-flash-exp:free",
+          model: "google/gemini-2.5-flash-lite",
           messages: [{ role: "user", content: prompt }],
-          plugins: [{ id: "web" }],
         }),
       });
-      if (orRes.ok) {
-        const j: any = await orRes.json();
+      if (aiRes.ok) {
+        const j: any = await aiRes.json();
         const raw: string = j?.choices?.[0]?.message?.content ?? "";
         const jsonMatch = raw.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -177,13 +175,14 @@ Deno.serve(async (req) => {
           if (typeof p.home === "number") out.score.full.home = p.home;
           if (typeof p.away === "number") out.score.full.away = p.away;
           if (typeof p.status === "string") out.status = p.status;
-          out.live_source = "openrouter-ai";
+          out.live_source = "lovable-ai-gemini-flash-lite";
         }
       }
     } catch (e) {
-      console.error("openrouter fallback failed", (e as Error).message);
+      console.error("lovable-ai fallback failed", (e as Error).message);
     }
   }
+
 
   return new Response(JSON.stringify(out), {
     headers: { ...cors, "Content-Type": "application/json" },
