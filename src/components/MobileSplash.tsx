@@ -19,18 +19,16 @@ export default function MobileSplash() {
     if (!visible) return;
     const v = videoRef.current;
     if (v) {
-      // Autoplay policies require muted playback to start automatically.
+      // Autoplay requires muted playback — keep it muted so the video keeps
+      // playing after the first frame instead of getting paused on unmute.
       v.muted = true;
-      v.volume = 0.2;
+      v.volume = 0;
       const p = v.play();
       if (p && typeof p.then === "function") {
-        p.then(() => {
-          // Attempt a soft unmute; browsers may still block — that's fine.
-          try { v.muted = false; } catch { /* ignore */ }
-        }).catch(() => { /* keep muted, still plays */ });
+        p.catch(() => { /* keep muted, still plays */ });
       }
     }
-    const failSafe = window.setTimeout(() => dismiss(), 8000);
+    const failSafe = window.setTimeout(() => dismiss(), 12000);
     return () => window.clearTimeout(failSafe);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
@@ -44,7 +42,7 @@ export default function MobileSplash() {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-background transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-500 ${
         fading ? "opacity-0" : "opacity-100"
       }`}
     >
@@ -53,11 +51,12 @@ export default function MobileSplash() {
         src={splashVideo.url}
         autoPlay
         muted
+        loop={false}
         playsInline
         preload="auto"
         onEnded={dismiss}
         onError={dismiss}
-        className="h-full w-full object-contain"
+        className="h-full w-full object-cover"
       />
       <button
         type="button"
