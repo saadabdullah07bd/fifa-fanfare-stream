@@ -33,6 +33,7 @@ export default function LiveTV() {
 
   const [active, setActive] = useState<Channel | null>(null);
   const [autoStarted, setAutoStarted] = useState(false);
+  const [reloadNonce, setReloadNonce] = useState(0);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("All");
   const videoRef = useRef<HTMLVideoElement>(null);
