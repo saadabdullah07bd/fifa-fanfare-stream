@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { MapPin } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { flagUrl, bdShortDate, bdTime } from "@/lib/flags";
 import { normalizeAppMatchStatus } from "@/lib/match-status";
+
 
 // Knockout stages ordered earliest → latest. Third-place playoff intentionally
 // omitted so the bracket squeezes cleanly from Round of 32 into the Final.
