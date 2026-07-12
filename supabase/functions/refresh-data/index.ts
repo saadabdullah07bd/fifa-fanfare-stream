@@ -149,27 +149,30 @@ Deno.serve(async (req) => {
 
   // ---- NewsAPI (skip in matches-only mode) ----
   if (mode !== "matches") {
-    try {
-      const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent("FIFA World Cup 2026")}&sortBy=publishedAt&language=en&pageSize=30&apiKey=${newsKey}`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const { articles } = await res.json() as { articles: Array<any> };
-        const newsRows = articles
-          .filter((a) => !!a.url && !!a.title)
-          .map((a) => ({
-            url: a.url, title: a.title,
-            summary: a.description ?? null,
-            source: a.source?.name ?? new URL(a.url).hostname.replace(/^www\./, ""),
-            image_url: a.urlToImage ?? null,
-            published_at: a.publishedAt ?? now,
-          }));
-        if (newsRows.length) await admin.from("news").upsert(newsRows, { onConflict: "url" });
-        await record("news", "ok", `${articles.length} items`);
-      } else await record("news", "error", `HTTP ${res.status}`);
-    } catch (e) { await record("news", "error", (e as Error).message.slice(0, 200)); }
-  } else {
-    await record("news", "skipped", "NEWSAPI_KEY not set");
+    if (newsKey) {
+      try {
+        const newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent("FIFA World Cup 2026")}&sortBy=publishedAt&language=en&pageSize=30&apiKey=${newsKey}`;
+        const res = await fetch(newsUrl);
+        if (res.ok) {
+          const { articles } = await res.json() as { articles: Array<any> };
+          const newsRows = articles
+            .filter((a) => !!a.url && !!a.title)
+            .map((a) => ({
+              url: a.url, title: a.title,
+              summary: a.description ?? null,
+              source: a.source?.name ?? new URL(a.url).hostname.replace(/^www\./, ""),
+              image_url: a.urlToImage ?? null,
+              published_at: a.publishedAt ?? now,
+            }));
+          if (newsRows.length) await admin.from("news").upsert(newsRows, { onConflict: "url" });
+          await record("news", "ok", `${articles.length} items`);
+        } else await record("news", "error", `HTTP ${res.status}`);
+      } catch (e) { await record("news", "error", (e as Error).message.slice(0, 200)); }
+    } else {
+      await record("news", "skipped", "NEWSAPI_KEY not set");
+    }
   }
+
 
   return new Response(JSON.stringify({ ok: true, results }), {
     headers: { ...cors, "Content-Type": "application/json" },
