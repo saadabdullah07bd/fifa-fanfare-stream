@@ -422,17 +422,15 @@ function ScorersPanel({
         </div>
       ) : (
         <>
-          {/* Podium — top 3 */}
-          {(first || second || third) && (
-            <div className="grid gap-4 sm:grid-cols-3">
-              {second && <PodiumCard scorer={second} place={2} maxGoals={maxGoals} />}
-              {first && <PodiumCard scorer={first} place={1} maxGoals={maxGoals} />}
-              {third && <PodiumCard scorer={third} place={3} maxGoals={maxGoals} />}
+          {/* Golden Boot leader — full-width hero (2nd & 3rd removed by request; they now sit in the leaderboard below). */}
+          {first && (
+            <div className="grid gap-4">
+              <PodiumCard scorer={first} place={1} maxGoals={maxGoals} />
             </div>
           )}
 
-          {/* Remaining leaderboard */}
-          {rest.length > 0 && (
+          {/* Leaderboard — includes former #2 and #3, then the rest. */}
+          {(second || third || rest.length > 0) && (
             <div className="overflow-hidden rounded-3xl border border-border bg-card/50">
               <table className="w-full text-sm">
                 <caption className="sr-only">Top scorers leaderboard</caption>
@@ -441,43 +439,41 @@ function ScorersPanel({
                     <th scope="col" className="w-10 py-3 pl-4 text-left">#</th>
                     <th scope="col" className="py-3 text-left">Player</th>
                     <th scope="col" className="hidden py-3 text-left sm:table-cell">Team</th>
-                    <th scope="col" className="hidden py-3 text-center md:table-cell" title="Matches played">P</th>
-                    <th scope="col" className="hidden py-3 text-center md:table-cell" title="Assists">Ast</th>
+                    <th scope="col" className="hidden py-3 text-center md:table-cell" title="Matches played">Matches</th>
                     <th scope="col" className="py-3 pr-4 text-center font-bold text-primary">Goals</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rest.map((s, i) => (
+                  {[second, third, ...rest].filter(Boolean).map((s, i) => (
                     <tr
-                      key={s.player.name + i}
+                      key={(s as Scorer).player.name + i}
                       className="border-b border-border/40 tabular-nums transition-colors last:border-0 hover:bg-primary/5"
                     >
-                      <td className="py-3 pl-4 text-muted-foreground">{i + 4}</td>
+                      <td className="py-3 pl-4 text-muted-foreground">{i + 2}</td>
                       <td className="py-3">
-                        <div className="font-medium">{s.player.name}</div>
+                        <div className="font-medium">{(s as Scorer).player.name}</div>
                         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:hidden">
-                          {s.team.name}
+                          {(s as Scorer).team.name}
                         </div>
                       </td>
                       <td className="hidden py-3 sm:table-cell">
                         <div className="flex items-center gap-2 min-w-0">
                           {(() => {
-                            const flag = s.team.crest ?? flagUrl(s.team.tla ?? fifaCodeFromName(s.team.name), 80);
+                            const t = (s as Scorer).team;
+                            const flag = t.crest ?? flagUrl(t.tla ?? fifaCodeFromName(t.name), 80);
                             return flag ? (
                               <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
                             ) : (
                               <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
                             );
                           })()}
-
-                          <span className="truncate">{s.team.name}</span>
+                          <span className="truncate">{(s as Scorer).team.name}</span>
                         </div>
                       </td>
-                      <td className="hidden py-3 text-center text-muted-foreground md:table-cell">{s.played ?? "—"}</td>
-                      <td className="hidden py-3 text-center md:table-cell">{s.assists ?? 0}</td>
+                      <td className="hidden py-3 text-center text-muted-foreground md:table-cell">{(s as Scorer).played ?? "—"}</td>
                       <td className="py-3 pr-4 text-center">
                         <span className="inline-flex min-w-[2.25rem] justify-center rounded-md bg-primary/10 px-2 py-0.5 text-base font-bold text-primary">
-                          {s.goals}
+                          {(s as Scorer).goals}
                         </span>
                       </td>
                     </tr>
