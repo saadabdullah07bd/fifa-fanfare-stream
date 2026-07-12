@@ -367,13 +367,15 @@ function ChannelLogo({ url, name }: { url: string | null; name: string }) {
 }
 
 function ModernPlayer({
-  videoRef, channel, onClose,
+  videoRef, channel, onClose, onReload,
 }: {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   channel: Channel;
   onClose: () => void;
+  onReload: () => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [fill, setFill] = useState(false);
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.5);
