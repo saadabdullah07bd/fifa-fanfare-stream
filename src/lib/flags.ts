@@ -21,12 +21,42 @@ const FIFA_TO_ISO2: Record<string, string> = {
   VIE:"vn",WAL:"gb-wls",YEM:"ye",ZAM:"zm",ZIM:"zw",
 };
 
+// Full country names for FIFA 3-letter codes. Used in fixture rows and brackets
+// so users see "Norway" instead of "NOR".
+const FIFA_NAMES: Record<string, string> = {
+  AFG:"Afghanistan",ALB:"Albania",ALG:"Algeria",AND:"Andorra",ANG:"Angola",ARG:"Argentina",ARM:"Armenia",AUS:"Australia",AUT:"Austria",AZE:"Azerbaijan",
+  BAN:"Bangladesh",BEL:"Belgium",BEN:"Benin",BFA:"Burkina Faso",BHR:"Bahrain",BIH:"Bosnia",BLR:"Belarus",BOL:"Bolivia",BOT:"Botswana",BRA:"Brazil",
+  BUL:"Bulgaria",BUR:"Burundi",CAM:"Cambodia",CAN:"Canada",CGO:"Congo",CHA:"Chad",CHI:"Chile",CHN:"China",CIV:"Ivory Coast",CMR:"Cameroon",
+  COD:"DR Congo",COL:"Colombia",COM:"Comoros",CPV:"Cape Verde",CRC:"Costa Rica",CRO:"Croatia",CUB:"Cuba",CUW:"Curaçao",CYP:"Cyprus",CZE:"Czechia",
+  DEN:"Denmark",DJI:"Djibouti",DOM:"Dominican Rep.",ECU:"Ecuador",EGY:"Egypt",ENG:"England",EQG:"Eq. Guinea",ERI:"Eritrea",ESP:"Spain",EST:"Estonia",
+  ETH:"Ethiopia",FIJ:"Fiji",FIN:"Finland",FRA:"France",FRO:"Faroe Is.",GAB:"Gabon",GAM:"Gambia",GEO:"Georgia",GER:"Germany",GHA:"Ghana",
+  GIB:"Gibraltar",GNB:"Guinea-Bissau",GRE:"Greece",GRN:"Grenada",GUA:"Guatemala",GUI:"Guinea",GUY:"Guyana",HAI:"Haiti",HKG:"Hong Kong",HON:"Honduras",
+  HUN:"Hungary",IDN:"Indonesia",IND:"India",IRL:"Ireland",IRN:"Iran",IRQ:"Iraq",ISL:"Iceland",ISR:"Israel",ITA:"Italy",JAM:"Jamaica",
+  JOR:"Jordan",JPN:"Japan",KAZ:"Kazakhstan",KEN:"Kenya",KGZ:"Kyrgyzstan",KOR:"South Korea",KOS:"Kosovo",KSA:"Saudi Arabia",KUW:"Kuwait",LAO:"Laos",
+  LAT:"Latvia",LBN:"Lebanon",LBR:"Liberia",LBY:"Libya",LES:"Lesotho",LIE:"Liechtenstein",LTU:"Lithuania",LUX:"Luxembourg",MAD:"Madagascar",MAR:"Morocco",
+  MAS:"Malaysia",MDA:"Moldova",MDV:"Maldives",MEX:"Mexico",MKD:"N. Macedonia",MLI:"Mali",MLT:"Malta",MNE:"Montenegro",MNG:"Mongolia",MOZ:"Mozambique",
+  MRI:"Mauritius",MTN:"Mauritania",MWI:"Malawi",MYA:"Myanmar",NAM:"Namibia",NCA:"Nicaragua",NED:"Netherlands",NEP:"Nepal",NGA:"Nigeria",NIG:"Niger",
+  NIR:"N. Ireland",NOR:"Norway",NZL:"New Zealand",OMA:"Oman",PAK:"Pakistan",PAN:"Panama",PAR:"Paraguay",PER:"Peru",PHI:"Philippines",PLE:"Palestine",
+  POL:"Poland",POR:"Portugal",PRK:"North Korea",PUR:"Puerto Rico",QAT:"Qatar",ROU:"Romania",RSA:"South Africa",RUS:"Russia",RWA:"Rwanda",SCO:"Scotland",
+  SDN:"Sudan",SEN:"Senegal",SEY:"Seychelles",SIN:"Singapore",SLE:"Sierra Leone",SLV:"El Salvador",SMR:"San Marino",SOL:"Solomon Is.",SOM:"Somalia",SRB:"Serbia",
+  SRI:"Sri Lanka",SSD:"South Sudan",STP:"São Tomé",SUI:"Switzerland",SUR:"Suriname",SVK:"Slovakia",SVN:"Slovenia",SWE:"Sweden",SWZ:"Eswatini",SYR:"Syria",
+  TAH:"Tahiti",TAN:"Tanzania",TGA:"Tonga",THA:"Thailand",TJK:"Tajikistan",TKM:"Turkmenistan",TLS:"Timor-Leste",TOG:"Togo",TPE:"Chinese Taipei",TRI:"Trinidad",
+  TUN:"Tunisia",TUR:"Turkey",UAE:"UAE",UGA:"Uganda",UKR:"Ukraine",URU:"Uruguay",USA:"USA",UZB:"Uzbekistan",VAN:"Vanuatu",VEN:"Venezuela",
+  VIE:"Vietnam",WAL:"Wales",YEM:"Yemen",ZAM:"Zambia",ZIM:"Zimbabwe",
+};
+
+/**
+ * Full country name for a FIFA 3-letter code. Falls back to the code itself
+ * (or empty string) when unknown.
+ */
+export function countryName(code?: string | null): string {
+  if (!code) return "";
+  return FIFA_NAMES[code.toUpperCase()] ?? code;
+}
+
 /**
  * Generates a URL for a country's flag image from flagcdn.com.
  * Maps FIFA 3-letter codes to ISO 3166-1 alpha-2 codes.
- * @param code - The FIFA country code (e.g., "ARG").
- * @param size - The desired width of the flag image.
- * @returns The flag image URL or null if not found.
  */
 export function flagUrl(code?: string | null, size: 40 | 80 | 160 | 320 = 80): string | null {
   if (!code) return null;
