@@ -98,7 +98,7 @@ export default function MobileSplash() {
           onDragStart={(e) => e.preventDefault()}
           onEnded={dismiss}
           onError={dismiss}
-          className="h-full w-full object-contain pointer-events-none select-none"
+          className="h-full w-full object-cover pointer-events-none select-none"
         />
       )}
       <button
