@@ -286,14 +286,11 @@ export default function LiveTV() {
       )}
 
       <div className="mt-8 flex justify-center border-t border-border/50 pt-8">
-/**
- * Categorized row of channel cards.
- */
-
         <button onClick={signOut} className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary px-5 py-3 text-sm font-semibold uppercase tracking-wider transition-colors hover:border-primary hover:text-primary">
           <LogOut className="h-4 w-4" /> Sign out
         </button>
       </div>
+
     </motion.div>
   );
 }
