@@ -201,6 +201,53 @@ Deno.serve(async (req) => {
     }));
   }
 
+  // OpenRouter free-AI fallback — if firecrawl left any live match without a minute,
+  // ask a free model with web-search to fetch live data straight from Google.
+  const orKey = Deno.env.get("OPENROUTER_API_KEY");
+  if (orKey) {
+    const need = matches
+      .map((m: any, i: number) => ({ m, i }))
+      .filter(({ m }) => ["IN_PLAY", "LIVE"].includes(m.status) && (m.minute == null || m.minute === 0));
+    await Promise.all(need.map(async ({ m, i }) => {
+      try {
+        const prompt = `Search Google now for the live score of "${m.home.name} vs ${m.away.name}" (FIFA World Cup 2026). Reply STRICTLY as JSON: {"minute":number|null,"injury":number|null,"home":number|null,"away":number|null,"status":"IN_PLAY"|"PAUSED"|"FINISHED"|"SCHEDULED"}. No prose.`;
+        const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${orKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.0-flash-exp:free",
+            messages: [{ role: "user", content: prompt }],
+            plugins: [{ id: "web" }],
+          }),
+        });
+        if (!r.ok) return;
+        const j: any = await r.json();
+        const raw: string = j?.choices?.[0]?.message?.content ?? "";
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return;
+        const p = JSON.parse(jsonMatch[0]);
+        matches[i] = {
+          ...m,
+          status: typeof p.status === "string" ? p.status : m.status,
+          minute: typeof p.minute === "number" ? p.minute : m.minute,
+          injury_time: typeof p.injury === "number" ? p.injury : m.injury_time,
+          score: {
+            ...m.score,
+            full: {
+              home: typeof p.home === "number" ? p.home : m.score.full.home,
+              away: typeof p.away === "number" ? p.away : m.score.full.away,
+            },
+          },
+          minute_source: "openrouter-ai",
+          sources: [...(m.sources ?? []), "openrouter-ai"],
+        };
+      } catch (e) {
+        console.error("openrouter live-matches failed", (e as Error).message);
+      }
+    }));
+  }
+
+
   // Final fallback: if still no minute, compute from kickoff time.
   matches = matches.map((m: any) => {
     if (!["IN_PLAY", "LIVE"].includes(m.status)) return m;

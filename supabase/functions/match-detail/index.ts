@@ -110,6 +110,81 @@ Deno.serve(async (req) => {
     } catch (_) { /* optional */ }
   }
 
+  // Google enrichment via Firecrawl — strict live minute/score from Google's sports card.
+  const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
+  if (fcKey && ["IN_PLAY", "PAUSED", "LIVE", "SCHEDULED", "TIMED"].includes(out.status)) {
+    try {
+      const query = `${out.home.name} vs ${out.away.name} live score`;
+      const fcRes = await fetch("https://api.firecrawl.dev/v2/search", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${fcKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ query, limit: 3, sources: ["web"] }),
+      });
+      if (fcRes.ok) {
+        const j: any = await fcRes.json();
+        const results: any[] = j?.data?.web ?? j?.data ?? [];
+        const text = results.map((r: any) => `${r.title ?? ""} ${r.description ?? r.snippet ?? ""}`).join(" ").replace(/\s+/g, " ");
+        if (text) {
+          const htMatch = /\b(HT|Half[- ]time)\b/i.test(text);
+          const ftMatch = /\b(FT|Full[- ]time|Full Time|Ended)\b/i.test(text);
+          const minMatch = text.match(/(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]/);
+          if (ftMatch) out.status = "FINISHED";
+          else if (htMatch) out.status = "PAUSED";
+          else if (minMatch) {
+            const mn = parseInt(minMatch[1], 10);
+            if (mn > 0 && mn <= 130) {
+              out.minute = mn;
+              if (minMatch[2]) out.injury_time = parseInt(minMatch[2], 10);
+              out.status = "IN_PLAY";
+            }
+          }
+          const scoreMatch = text.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
+          if (scoreMatch) {
+            out.score.full.home = parseInt(scoreMatch[1], 10);
+            out.score.full.away = parseInt(scoreMatch[2], 10);
+          }
+          out.live_source = "google-firecrawl";
+        }
+      }
+    } catch (e) {
+      console.error("firecrawl match-detail failed", (e as Error).message);
+    }
+  }
+
+  // OpenRouter free-AI fallback — asks a free web-search model to fetch live data
+  // from Google when Firecrawl returned nothing usable.
+  const orKey = Deno.env.get("OPENROUTER_API_KEY");
+  if (orKey && ["IN_PLAY", "LIVE"].includes(out.status) && (out.minute == null || out.minute === 0)) {
+    try {
+      const prompt = `Search Google right now for the live score of "${out.home.name} vs ${out.away.name}" (FIFA World Cup 2026). Reply STRICTLY as JSON: {"minute":number|null,"injury":number|null,"home":number|null,"away":number|null,"status":"IN_PLAY"|"PAUSED"|"FINISHED"|"SCHEDULED"}. No prose.`;
+      const orRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${orKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.0-flash-exp:free",
+          messages: [{ role: "user", content: prompt }],
+          plugins: [{ id: "web" }],
+        }),
+      });
+      if (orRes.ok) {
+        const j: any = await orRes.json();
+        const raw: string = j?.choices?.[0]?.message?.content ?? "";
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const p = JSON.parse(jsonMatch[0]);
+          if (typeof p.minute === "number") out.minute = p.minute;
+          if (typeof p.injury === "number") out.injury_time = p.injury;
+          if (typeof p.home === "number") out.score.full.home = p.home;
+          if (typeof p.away === "number") out.score.full.away = p.away;
+          if (typeof p.status === "string") out.status = p.status;
+          out.live_source = "openrouter-ai";
+        }
+      }
+    } catch (e) {
+      console.error("openrouter fallback failed", (e as Error).message);
+    }
+  }
+
   return new Response(JSON.stringify(out), {
     headers: { ...cors, "Content-Type": "application/json" },
   });

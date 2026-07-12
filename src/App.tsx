@@ -90,11 +90,12 @@ function Nav() {
 
 const MOBILE_TABS = [
   { to: "/", label: "Home", icon: HomeIcon },
-  { to: "/fixtures", label: "Fixtures", icon: CalendarDays },
+  { to: "/fixtures", label: "Knockout", icon: CalendarDays },
   { to: "/standings", label: "Table", icon: Trophy },
   { to: "/news", label: "News", icon: Newspaper },
   { to: "/live-tv", label: "Live", icon: Tv },
 ];
+
 
 export default function App() {
   return (

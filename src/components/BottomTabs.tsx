@@ -136,6 +136,7 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
           <motion.div
             aria-hidden
             className="pointer-events-none absolute top-1.5 bottom-1.5 overflow-hidden rounded-2xl"
+            initial={false}
             animate={{
               x: indicatorCenter - indicatorW / 2,
               y: pressing ? -5 : 0,
