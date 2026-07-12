@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Seo } from "@/lib/seo";
-import { bdTime, bdDate } from "@/lib/flags";
+import { bdTime, bdDate, countryName } from "@/lib/flags";
 
 type Goal = { minute: number; injury_time: number | null; type: string; team_tla: string; team_name: string; scorer: string; assist: string | null; score: { home: number; away: number } | null };
 type Booking = { minute: number; card: string; player: string; team_tla: string };
