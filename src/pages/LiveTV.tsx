@@ -39,16 +39,30 @@ export default function LiveTV() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (!active || !videoRef.current) return;
+    if (!active) return;
+    let cancelled = false;
+    let rafId = 0;
+    const waitForVideo = () =>
+      new Promise<HTMLVideoElement>((resolve) => {
+        const tick = () => {
+          if (cancelled) return;
+          if (videoRef.current) resolve(videoRef.current);
+          else rafId = requestAnimationFrame(tick);
+        };
+        tick();
+      });
     let hls: Hls | undefined;
     let mts: ReturnType<typeof mpegts.createPlayer> | undefined;
     (async () => {
+      const v = await waitForVideo();
+      if (cancelled) return;
       const { data, error } = await supabase.functions.invoke("xtream", {
         body: { action: "stream_url", streamId: active.stream_id },
       });
+      if (cancelled) return;
       if (error) throw new Error(error.message);
       const { url, type, fallbackUrl } = data as { url: string; type?: "mpegts" | "hls"; fallbackUrl?: string };
-      const v = videoRef.current!;
+      // Default: sound on at 50% (not muted).
       // Default: sound on at 50% (not muted).
       v.muted = false;
       v.volume = 0.5;
@@ -136,6 +150,8 @@ export default function LiveTV() {
       void playVideo();
     })().catch((e) => toast.error((e as Error).message));
     return () => {
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
       hls?.destroy();
       try { mts?.pause(); mts?.unload(); mts?.detachMediaElement(); mts?.destroy(); } catch { /* ignore */ }
     };
@@ -514,13 +530,14 @@ function ModernPlayer({
         className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
       />
 
-      {/* Right-side vertical volume rocker (mobile only) */}
+      {/* Right-side vertical volume rocker (mobile only). Constrained so it
+          never swallows taps on the top or bottom control bars. */}
       {isMobile && (
         <div
           onTouchStart={onVolTouchStart}
           onTouchMove={onVolTouchMove}
           onTouchEnd={onVolTouchEnd}
-          className="absolute right-0 top-0 z-10 h-full w-1/3"
+          className="absolute right-0 top-20 bottom-24 z-10 w-24"
           style={{ touchAction: "none" }}
           aria-label="Volume rocker"
         />
@@ -552,7 +569,7 @@ function ModernPlayer({
         {showUI && (
           <motion.div key="top"
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 bg-gradient-to-b from-black/80 to-transparent p-4"
+            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/80 to-transparent p-4"
           >
             <div className="pointer-events-auto flex items-center gap-3">
               <span className="flex items-center gap-1.5 rounded-full bg-primary/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary-foreground">
@@ -595,7 +612,7 @@ function ModernPlayer({
         {showUI && (
           <motion.div key="bot"
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-            className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 sm:p-4"
+            className="absolute inset-x-0 bottom-0 z-20 flex items-center gap-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 sm:p-4"
           >
             <button onClick={toggle}
               className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"

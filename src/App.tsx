@@ -1,5 +1,6 @@
 import { Routes, Route, NavLink, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, type ReactNode } from "react";
+import { Home as HomeIcon, CalendarDays, Trophy, Newspaper, Tv } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Home from "@/pages/Home";
 import Fixtures from "@/pages/Fixtures";
@@ -86,6 +87,56 @@ function Nav() {
   );
 }
 
+function MobileTabBar() {
+  const items: { to: string; label: string; Icon: typeof HomeIcon; end?: boolean }[] = [
+    { to: "/", label: "Home", Icon: HomeIcon, end: true },
+    { to: "/fixtures", label: "Fixtures", Icon: CalendarDays },
+    { to: "/standings", label: "Table", Icon: Trophy },
+    { to: "/news", label: "News", Icon: Newspaper },
+    { to: "/live-tv", label: "Live", Icon: Tv },
+  ];
+  return (
+    <nav
+      aria-label="Primary"
+      className="fixed inset-x-0 bottom-3 z-40 mx-auto flex w-[min(94%,28rem)] items-center justify-between gap-1 rounded-full px-2 py-1.5 lg:hidden"
+      style={{
+        paddingBottom: "max(0.375rem, env(safe-area-inset-bottom))",
+        background: "rgba(20, 30, 25, 0.55)",
+        border: "1px solid var(--glass-border)",
+        backdropFilter: "blur(28px) saturate(200%)",
+        WebkitBackdropFilter: "blur(28px) saturate(200%)",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.28)",
+      }}
+    >
+      {items.map(({ to, label, Icon, end }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          className={({ isActive }) =>
+            `relative flex flex-1 flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${
+              isActive ? "text-primary-foreground" : "text-foreground/75"
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              {isActive && (
+                <span
+                  className="absolute inset-0 rounded-full bg-primary shadow-[0_6px_18px_rgba(0,0,0,0.35)]"
+                  aria-hidden
+                />
+              )}
+              <Icon className="relative h-4 w-4" />
+              <span className="relative">{label}</span>
+            </>
+          )}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
 export default function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -102,9 +153,8 @@ export default function App() {
             <span className="live-dot mr-2 align-middle" />Watch
           </Link>
         </div>
-        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 lg:hidden"><Nav /></nav>
       </header>
-      <main>
+      <main className="pb-24 lg:pb-0">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/fixtures" element={<Fixtures />} />
@@ -121,9 +171,10 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <footer className="glass-nav mt-8 py-8 text-center text-xs text-muted-foreground">
+      <footer className="glass-nav mt-8 py-8 pb-24 text-center text-xs text-muted-foreground lg:pb-8">
         Pitch26 · Independent fan hub · Not affiliated with FIFA
       </footer>
+      <MobileTabBar />
     </div>
   );
 }
