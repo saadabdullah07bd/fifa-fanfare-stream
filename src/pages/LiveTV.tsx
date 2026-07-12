@@ -617,6 +617,20 @@ function ModernPlayer({
               aria-label="Volume"
             />
             <div className="ml-auto flex items-center gap-2">
+              {/* Reload — mobile & tablet only. Resets the stream if it falls behind. */}
+              <button onClick={() => { toast.message("Reloading stream…"); onReload(); kick(); }}
+                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground lg:hidden"
+                aria-label="Reload stream"
+              >
+                <RotateCw className="h-4 w-4" />
+              </button>
+              {/* Fill / fit toggle — mobile & tablet only. Stretches to fill the screen. */}
+              <button onClick={() => { setFill((f) => !f); kick(); }}
+                className={`grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-primary hover:text-primary-foreground lg:hidden ${fill ? "bg-primary/80" : "bg-white/10"}`}
+                aria-label={fill ? "Fit to screen" : "Fill screen"}
+              >
+                {fill ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+              </button>
               <button onClick={togglePip}
                 className="hidden h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground sm:grid"
                 aria-label="Picture in picture"
