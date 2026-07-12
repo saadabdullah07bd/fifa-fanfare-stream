@@ -50,15 +50,40 @@
         "@context": "https://schema.org",
         "@type": "SportsEvent",
         "name": "2026 FIFA World Cup",
+        "description": "The 2026 FIFA World Cup — 48 nations, 104 matches across the United States, Canada and Mexico from June 11 to July 19, 2026. Watch live scores, fixtures, standings and every knockout match on Pitch26.",
+        "image": "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0d76e9b8-cd8b-441c-bafc-94c3ab7aee4d/id-preview-7387ef8b--4511e11a-8de4-47e4-a70b-5a1b3e5d2aa8.lovable.app-1783418593153.png",
         "startDate": "2026-06-11",
         "endDate": "2026-07-19",
         "eventStatus": "https://schema.org/EventScheduled",
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "location": [
-          { "@type": "Country", "name": "United States" },
-          { "@type": "Country", "name": "Canada" },
-          { "@type": "Country", "name": "Mexico" }
+          {
+            "@type": "Place",
+            "name": "United States",
+            "address": { "@type": "PostalAddress", "addressCountry": "US" }
+          },
+          {
+            "@type": "Place",
+            "name": "Canada",
+            "address": { "@type": "PostalAddress", "addressCountry": "CA" }
+          },
+          {
+            "@type": "Place",
+            "name": "Mexico",
+            "address": { "@type": "PostalAddress", "addressCountry": "MX" }
+          }
         ],
+        "performer": [
+          { "@type": "SportsTeam", "name": "FIFA World Cup 2026 Qualified Nations" }
+        ],
+        "offers": {
+          "@type": "Offer",
+          "url": "https://fifa-fanfare-stream.lovable.app/live-tv",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "validFrom": "2026-06-11"
+        },
         "sport": "Association football",
         "organizer": { "@type": "Organization", "name": "FIFA", "url": "https://www.fifa.com/" }
       }
