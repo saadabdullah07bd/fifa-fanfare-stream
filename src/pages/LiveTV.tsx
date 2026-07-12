@@ -578,18 +578,32 @@ function ModernPlayer({
         className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
       />
 
-      {/* Right-side vertical volume rocker (mobile only). Purely a gesture
-          surface — decorative, not a labeled interactive element. */}
+      {/* Right-side vertical volume rocker (mobile only). Slim visible strip so
+          users know the gesture surface is there; sits clear of top/bottom UI. */}
       {isMobile && (
         <div
           onTouchStart={onVolTouchStart}
           onTouchMove={onVolTouchMove}
           onTouchEnd={onVolTouchEnd}
-          className="absolute right-0 top-20 bottom-24 z-10 w-24"
+          className="absolute right-1 top-24 bottom-32 z-10 flex w-10 flex-col items-center justify-center"
           style={{ touchAction: "none" }}
-          aria-hidden="true"
-        />
+          aria-label="Volume — drag up or down"
+          role="presentation"
+        >
+          <div className="pointer-events-none flex flex-col items-center gap-2 rounded-full bg-black/40 px-1.5 py-3 backdrop-blur-sm ring-1 ring-white/15">
+            {muted || volume === 0
+              ? <VolumeX className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />
+              : <Volume2 className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />}
+            <div className="relative h-24 w-1 overflow-hidden rounded-full bg-white/20">
+              <div
+                className="absolute inset-x-0 bottom-0 rounded-full bg-primary"
+                style={{ height: `${Math.round((muted ? 0 : volume) * 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
       )}
+
 
       <AnimatePresence>
         {volPill !== null && (
