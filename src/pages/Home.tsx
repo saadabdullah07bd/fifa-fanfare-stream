@@ -382,8 +382,8 @@ function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
     >
       <div className="flex items-center justify-between">
         <h2 id="scoreboard-heading" className="display text-2xl tracking-wider text-foreground/70 sm:text-3xl">Scoreboard</h2>
-        <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
       </div>
+
 
       <div className="space-y-5">
         {matches.length === 0 && (
