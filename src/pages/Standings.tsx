@@ -461,11 +461,15 @@ function ScorersPanel({
                       </td>
                       <td className="hidden py-3 sm:table-cell">
                         <div className="flex items-center gap-2 min-w-0">
-                          {s.team.crest ? (
-                            <img src={s.team.crest} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-                          ) : (
-                            <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
-                          )}
+                          {(() => {
+                            const flag = s.team.crest ?? flagUrl(s.team.tla, 80);
+                            return flag ? (
+                              <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                            ) : (
+                              <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
+                            );
+                          })()}
+
                           <span className="truncate">{s.team.name}</span>
                         </div>
                       </td>
