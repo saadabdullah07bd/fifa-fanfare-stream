@@ -87,6 +87,16 @@ function Nav() {
   );
 }
 
+function HomeOnlyFooter() {
+  const { pathname } = useLocation();
+  if (pathname !== "/") return null;
+  return (
+    <footer className="hidden lg:block glass-nav mt-8 py-8 text-center text-xs text-muted-foreground">
+      Pitch26 · Independent fan hub · Not affiliated with FIFA
+    </footer>
+  );
+}
+
 const MOBILE_TABS = [
   { to: "/", label: "Home", icon: HomeIcon },
   { to: "/fixtures", label: "Knockout", icon: CalendarDays },
@@ -130,9 +140,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <footer className="hidden lg:block glass-nav mt-8 py-8 text-center text-xs text-muted-foreground">
-        Pitch26 · Independent fan hub · Not affiliated with FIFA
-      </footer>
+      <HomeOnlyFooter />
       <BottomTabs tabs={MOBILE_TABS} accentColor="#e6b800" />
     </div>
   );

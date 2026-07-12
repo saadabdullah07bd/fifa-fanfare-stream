@@ -93,6 +93,18 @@ Deno.serve(async (req) => {
     console.log("news-feed fallback google-rss", { count: articles.length });
   }
 
+  // De-duplicate by URL and by normalized title (same story from multiple outlets).
+  const seenUrl = new Set<string>();
+  const seenTitle = new Set<string>();
+  articles = articles.filter((a: any) => {
+    const u = (a.url || "").split("?")[0].toLowerCase();
+    const t = (a.title || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(" ").slice(0, 8).join(" ");
+    if (!u || !t) return false;
+    if (seenUrl.has(u) || seenTitle.has(t)) return false;
+    seenUrl.add(u); seenTitle.add(t);
+    return true;
+  });
+
   const body = { articles, source, updated_at: new Date().toISOString() };
   cache.set(q, { at: Date.now(), body });
   return new Response(JSON.stringify(body), {

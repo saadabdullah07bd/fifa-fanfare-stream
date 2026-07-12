@@ -65,7 +65,7 @@ export default function Fixtures() {
       <div className="relative mt-6">
         <div
           ref={bracketScrollRef}
-          className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex justify-center"
         >
           <div className="flex min-w-max gap-6 pb-4">
             {ko.map(({ stage, matches }) => (
