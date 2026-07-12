@@ -35,6 +35,7 @@ export type Database = {
       channels: {
         Row: {
           category: string
+          direct_url: string | null
           epg_channel_id: string | null
           id: string
           logo_url: string | null
@@ -44,6 +45,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          direct_url?: string | null
           epg_channel_id?: string | null
           id?: string
           logo_url?: string | null
@@ -53,6 +55,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          direct_url?: string | null
           epg_channel_id?: string | null
           id?: string
           logo_url?: string | null
