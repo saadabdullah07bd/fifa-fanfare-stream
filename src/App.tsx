@@ -20,6 +20,8 @@ import Standings from "@/pages/Standings";
 import { BottomTabs } from "@/components/BottomTabs";
 import OnboardingModal from "@/components/OnboardingModal";
 import MobileSplash from "@/components/MobileSplash";
+import GoogleOneTap from "@/components/GoogleOneTap";
+import PushBootstrap from "@/components/PushBootstrap";
 
 /**
  * Internal hook to manage auth session state within the App component.
@@ -161,6 +163,8 @@ export default function App() {
 
       <MobileSplash />
       <AuthRedirector />
+      <GoogleOneTap />
+      <PushBootstrap />
       <OnboardingModal />
 
       <header className="sticky top-0 z-40 glass-nav">
