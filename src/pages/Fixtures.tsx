@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { MapPin } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { flagUrl, bdShortDate, bdTime } from "@/lib/flags";
 import { normalizeAppMatchStatus } from "@/lib/match-status";
+
 
 // Knockout stages ordered earliest → latest. Third-place playoff intentionally
 // omitted so the bracket squeezes cleanly from Round of 32 into the Final.
@@ -223,34 +224,90 @@ function KnockoutView({ matches }: { matches: MatchRow[] }) {
     }),
   }));
 
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const check = () => {
+      setCanLeft(el.scrollLeft > 8);
+      setCanRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    };
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      el.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [rounds.length]);
+
+  const scrollBy = (dir: 1 | -1) =>
+    scrollRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });
+
   return (
-    <div className="mt-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex min-w-max items-stretch gap-4 pb-4 md:gap-8">
-        {rounds.map(({ stage, matches: roundMatches }, idx) => (
-          <div key={stage} className="flex min-w-[220px] flex-col">
-            <h3 className="display mb-3 text-center text-xs uppercase tracking-[0.24em] text-primary md:text-sm">
-              {KO_LABEL[stage]}
-            </h3>
-            <div className="flex flex-1 flex-col justify-around gap-3">
-              {roundMatches.length === 0 &&
-                Array.from({ length: Math.max(1, 16 / Math.pow(2, idx)) }).map((_, i) => (
-                  <BracketPlaceholder key={i} isLast={idx === rounds.length - 1} />
+    <div className="relative mt-6">
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div className="flex min-w-max items-stretch gap-4 pb-4 pr-16 md:gap-8">
+          {rounds.map(({ stage, matches: roundMatches }, idx) => (
+            <div key={stage} className="flex min-w-[220px] flex-col">
+              <h3 className="display mb-3 text-center text-xs uppercase tracking-[0.24em] text-primary md:text-sm">
+                {KO_LABEL[stage]}
+              </h3>
+              <div className="flex flex-1 flex-col justify-around gap-3">
+                {roundMatches.length === 0 &&
+                  Array.from({ length: Math.max(1, 16 / Math.pow(2, idx)) }).map((_, i) => (
+                    <BracketPlaceholder key={i} isLast={idx === rounds.length - 1} />
+                  ))}
+                {roundMatches.map((m, i) => (
+                  <BracketCard
+                    key={m.id}
+                    match={m}
+                    isLast={idx === rounds.length - 1}
+                    index={i}
+                  />
                 ))}
-              {roundMatches.map((m, i) => (
-                <BracketCard
-                  key={m.id}
-                  match={m}
-                  isLast={idx === rounds.length - 1}
-                  index={i}
-                />
-              ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
+
+      <AnimatePresence>
+        {canLeft && (
+          <motion.button
+            key="left"
+            type="button"
+            onClick={() => scrollBy(-1)}
+            initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
+            className="pointer-events-auto absolute left-2 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+            aria-label="Scroll bracket left"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </motion.button>
+        )}
+        {canRight && (
+          <motion.button
+            key="right"
+            type="button"
+            onClick={() => scrollBy(1)}
+            initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}
+            className="pointer-events-auto absolute right-2 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+            aria-label="Scroll bracket right"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+
 
 /**
  * Empty slot shown while a knockout round is still to be decided.
