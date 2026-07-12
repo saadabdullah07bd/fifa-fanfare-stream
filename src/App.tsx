@@ -134,26 +134,27 @@ export default function App() {
       <AuthRedirector />
       <OnboardingModal />
       <header className="sticky top-0 z-40 glass-nav">
+        <div className="tri-ribbon" />
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground display text-xl">26</span>
+          <Link to="/" className="flex items-center gap-2.5">
+            <span className="grid h-9 w-9 place-items-center rounded-md bg-primary text-primary-foreground display text-xl leading-none">26</span>
             <span className="display text-2xl tracking-wider text-foreground">PITCH<span className="text-primary">26</span></span>
           </Link>
           <nav className="hidden items-center gap-1 lg:flex"><Nav /></nav>
           <div className="flex items-center gap-2">
             {admin && (
               <Link to="/settings" aria-label="Admin settings"
-                className="hidden lg:inline-flex items-center gap-2 rounded-md bg-secondary/70 border border-border px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground/80 hover:text-primary hover:border-primary/60 transition-colors">
+                className="hidden lg:inline-flex items-center gap-2 rounded-md bg-secondary border border-border px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground/80 hover:text-primary hover:border-primary/60 transition-colors">
                 <SettingsIcon size={14} /> Admin
               </Link>
             )}
             {admin && (
               <Link to="/settings" aria-label="Admin settings"
-                className="lg:hidden grid h-9 w-9 place-items-center rounded-md bg-secondary/70 border border-border text-foreground/80 hover:text-primary hover:border-primary/60 transition-colors">
+                className="lg:hidden grid h-9 w-9 place-items-center rounded-md bg-secondary border border-border text-foreground/80 hover:text-primary hover:border-primary/60 transition-colors">
                 <SettingsIcon size={16} />
               </Link>
             )}
-            <Link to="/live-tv" className="hidden lg:inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow hover:bg-primary/90 transition-colors">
+            <Link to="/live-tv" className="hidden lg:inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow hover:brightness-110 transition">
               <span className="live-dot mr-2 align-middle" />Watch
             </Link>
           </div>
