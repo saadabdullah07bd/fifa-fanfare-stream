@@ -1,7 +1,8 @@
 import { Routes, Route, NavLink, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, type ReactNode } from "react";
-import { Home as HomeIcon, CalendarDays, Trophy, Newspaper, Tv } from "lucide-react";
+import { Home as HomeIcon, CalendarDays, Trophy, Newspaper, Tv, Settings as SettingsIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsAdmin } from "@/hooks/useAuth";
 import Home from "@/pages/Home";
 import Fixtures from "@/pages/Fixtures";
 import News from "@/pages/News";
@@ -127,6 +128,7 @@ const MOBILE_TABS = [
  * Main application component that defines routing and layout.
  */
 export default function App() {
+  const { admin } = useIsAdmin();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <AuthRedirector />
@@ -138,9 +140,17 @@ export default function App() {
             <span className="display text-2xl tracking-wider text-foreground">PITCH<span className="text-primary">26</span></span>
           </Link>
           <nav className="hidden items-center gap-1 lg:flex"><Nav /></nav>
-          <Link to="/live-tv" className="hidden lg:inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow hover:bg-primary/90 transition-colors">
-            <span className="live-dot mr-2 align-middle" />Watch
-          </Link>
+          <div className="flex items-center gap-2">
+            {admin && (
+              <Link to="/settings" aria-label="Admin settings"
+                className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 px-3 py-2 text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/10">
+                <SettingsIcon size={14} /> <span className="hidden sm:inline">Admin</span>
+              </Link>
+            )}
+            <Link to="/live-tv" className="hidden lg:inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow hover:bg-primary/90 transition-colors">
+              <span className="live-dot mr-2 align-middle" />Watch
+            </Link>
+          </div>
         </div>
       </header>
       <main className="pb-24 lg:pb-0">
