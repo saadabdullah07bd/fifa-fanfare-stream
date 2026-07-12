@@ -1,5 +1,6 @@
 import { Routes, Route, NavLink, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, type ReactNode } from "react";
+import { Home as HomeIcon, CalendarDays, Trophy, Newspaper, Tv } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Home from "@/pages/Home";
 import Fixtures from "@/pages/Fixtures";
