@@ -49,8 +49,8 @@
   --color-usa: var(--usa);
   --color-mex: var(--mex);
   --color-can: var(--can);
-  --font-display: "Anton", "Bebas Neue", "Inter", ui-sans-serif, system-ui;
-  --font-sans: "Noto Sans", "Inter", ui-sans-serif, system-ui;
+  --font-display: "Bebas Neue", "Anton", "Inter", ui-sans-serif, system-ui;
+  --font-sans: "Inter", "Noto Sans", ui-sans-serif, system-ui;
 }
 
 :root {
@@ -309,4 +309,31 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 /* Reasonable border radii — official FIFA identity is sharper than before */
 button, input, textarea, select {
   border-radius: 0.5rem;
+}
+
+/* ============ Mobile utilities ============ */
+
+/* Fade left/right edges on horizontal scroll rails so users can see there is
+ * more content off-screen — replaces hidden scrollbars visually. */
+.scroll-fade-x {
+  mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+}
+
+/* Guarantees tap targets clear the WCAG 44×44 baseline on mobile. */
+.tap-target { min-height: 44px; min-width: 44px; }
+
+/* Respect iOS/Android safe-area at the bottom for pages that render right
+ * above the floating BottomTabs. */
+.pb-safe-tabs {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 6.5rem);
+}
+@media (min-width: 1024px) {
+  .pb-safe-tabs { padding-bottom: 0; }
+}
+
+/* Improve typography rendering on high-density mobile displays. */
+@media (max-width: 640px) {
+  html { font-size: 15.5px; }
+  h1, h2, h3, .display { letter-spacing: 0.02em; }
 }
