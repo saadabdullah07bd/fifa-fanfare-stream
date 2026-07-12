@@ -1,0 +1,29 @@
+# SPA fallback — React Router client-side routes
+# Serves index.html for any path that isn't a real file/directory so page
+# refreshes and deep links (e.g. /fixtures, /live-tv) don't 404.
+
+Options -MultiViews
+RewriteEngine On
+RewriteBase /
+
+# Don't rewrite requests for actual files or directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Everything else -> index.html (SPA entry)
+RewriteRule ^ index.html [L]
+
+# Long-cache hashed build assets
+<IfModule mod_headers.c>
+  <FilesMatch "\.(?:js|css|woff2?|ttf|otf|eot|svg|png|jpe?g|gif|webp|avif|mp4|webm|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+# Correct MIME for mp4 (some shared hosts miss this)
+AddType video/mp4 .mp4
+AddType image/png .png
