@@ -150,6 +150,8 @@ export default function LiveTV() {
       void playVideo();
     })().catch((e) => toast.error((e as Error).message));
     return () => {
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
       hls?.destroy();
       try { mts?.pause(); mts?.unload(); mts?.detachMediaElement(); mts?.destroy(); } catch { /* ignore */ }
     };
