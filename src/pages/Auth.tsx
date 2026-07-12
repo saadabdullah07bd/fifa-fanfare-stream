@@ -34,10 +34,9 @@ export default function Auth() {
       <p className="mt-2 text-sm text-muted-foreground">
         Sign in with Google to save favorite teams, submit predictions, and stream live matches.
       </p>
-
-        // Store redirect path before starting OAuth flow.
       <button onClick={() => { window.sessionStorage.setItem("postAuthRedirect", "/"); google(); }}
         className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90">
+
         <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
           <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.46c-.28 1.48-1.13 2.74-2.4 3.58v2.98h3.87c2.26-2.09 3.56-5.17 3.56-8.8z"/>
           <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-2.98c-1.07.72-2.44 1.16-4.06 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/>
