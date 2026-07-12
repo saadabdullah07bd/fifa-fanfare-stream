@@ -9,7 +9,7 @@ import Hls from "hls.js";
 import mpegts from "mpegts.js";
 import { toast } from "sonner";
 import {
-  Tv, Radio, Play, Pause, Sparkles, X, ChevronLeft, ChevronRight,
+  Tv, Play, Pause, X, Radio,
   Volume2, VolumeX, Maximize, Minimize, Loader2, PictureInPicture2,
   LogOut, RotateCw, Expand, Shrink,
 } from "lucide-react";
