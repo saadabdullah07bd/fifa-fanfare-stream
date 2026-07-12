@@ -151,6 +151,15 @@ export default function LiveTV() {
     return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
   }, [channels]);
 
+  // Auto-tune to TSN 1 (or the fallback hero) once channels load.
+  useEffect(() => {
+    if (autoStarted || active || !heroChannel) return;
+    setAutoStarted(true);
+    setActive(heroChannel);
+  }, [heroChannel, active, autoStarted]);
+
+
+
   const filtered = useMemo(
     () =>
       channels.filter(
