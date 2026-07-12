@@ -1,21 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { flagUrl, bdShortDate, bdTime } from "@/lib/flags";
 import { normalizeAppMatchStatus } from "@/lib/match-status";
 
-// Knockout stages, ordered earliest → latest.
-const KO_STAGES = ["LAST_32", "LAST_16", "QUARTER_FINALS", "SEMI_FINALS", "THIRD_PLACE", "FINAL"] as const;
+// Knockout stages ordered earliest → latest. Third-place playoff intentionally
+// omitted so the bracket squeezes cleanly from Round of 32 into the Final.
+const KO_STAGES = ["LAST_32", "LAST_16", "QUARTER_FINALS", "SEMI_FINALS", "FINAL"] as const;
 const KO_LEGACY: Record<string, string> = {
   "last-32": "LAST_32",
   "last-16": "LAST_16",
   "quarter-finals": "QUARTER_FINALS",
   "semi-finals": "SEMI_FINALS",
-  "third-place": "THIRD_PLACE",
   "final": "FINAL",
 };
 const KO_LABEL: Record<string, string> = {
@@ -23,30 +23,52 @@ const KO_LABEL: Record<string, string> = {
   LAST_16: "Round of 16",
   QUARTER_FINALS: "Quarter-finals",
   SEMI_FINALS: "Semi-finals",
-  THIRD_PLACE: "Third Place",
   FINAL: "Final",
+};
+
+type MatchRow = {
+  id: string;
+  external_id: string | null;
+  stage: string | null;
+  date_utc: string;
+  home_team_code: string | null;
+  away_team_code: string | null;
+  home_score: number | null;
+  away_score: number | null;
+  status: string | null;
+  venues: { name: string | null; city: string | null } | null;
 };
 
 type ViewMode = "all" | "knockout";
 
 /**
- * Fixtures page. Two views: full match list (default) and knockout bracket.
+ * Fixtures page — full match list (default) and knockout bracket view.
  */
 export default function Fixtures() {
   const [params, setParams] = useSearchParams();
   const view: ViewMode = params.get("view") === "knockout" ? "knockout" : "all";
 
-  const { data = [] } = useQuery({
-    queryKey: ["matches"],
+  const { data = [] } = useQuery<MatchRow[]>({
+    queryKey: ["matches-with-venues"],
     refetchInterval: 60_000,
-    queryFn: async () => (await supabase.from("matches").select("*").order("date_utc")).data ?? [],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("matches")
+        .select("*, venues(name, city)")
+        .order("date_utc");
+      return (data as MatchRow[] | null) ?? [];
+    },
   });
 
-  const sorted = useMemo(() => [...data].sort((a, b) => a.date_utc.localeCompare(b.date_utc)), [data]);
+  const sorted = useMemo(
+    () => [...data].sort((a, b) => a.date_utc.localeCompare(b.date_utc)),
+    [data],
+  );
 
   const setView = (v: ViewMode) => {
     const next = new URLSearchParams(params);
-    if (v === "all") next.delete("view"); else next.set("view", v);
+    if (v === "all") next.delete("view");
+    else next.set("view", v);
     setParams(next, { replace: true });
   };
 
@@ -59,7 +81,7 @@ export default function Fixtures() {
         title={view === "knockout"
           ? "FIFA World Cup 2026 Knockout Bracket & Kickoff Times | Pitch26"
           : "FIFA World Cup 2026 Fixtures & Kickoff Times | Pitch26"}
-        description="Full FIFA World Cup 2026 fixtures list, knockout bracket, quarter-final, semifinal and final schedule with kickoff times, venues and live scores."
+        description="Full FIFA World Cup 2026 fixtures list, knockout bracket, quarter-final, semifinal and final schedule with kickoff times, stadiums and live scores."
         path="/fixtures"
       />
 
@@ -99,11 +121,12 @@ export default function Fixtures() {
 }
 
 /**
- * Full fixture list grouped by calendar date, from first kickoff to the final.
+ * Full fixture list grouped by calendar date (Asia/Dhaka, GMT+6),
+ * from the opening match through to the Final.
  */
-function AllMatchesView({ matches }: { matches: any[] }) {
+function AllMatchesView({ matches }: { matches: MatchRow[] }) {
   const groups = useMemo(() => {
-    const map = new Map<string, any[]>();
+    const map = new Map<string, MatchRow[]>();
     for (const m of matches) {
       const key = (m.date_utc ?? "").slice(0, 10);
       if (!map.has(key)) map.set(key, []);
@@ -129,24 +152,53 @@ function AllMatchesView({ matches }: { matches: any[] }) {
               >
                 <Link
                   to={`/match/${(m.external_id ?? "").replace(/^fd_/, "") || m.id}`}
-                  className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-lg border border-border bg-card/70 px-4 py-3 shadow-sm hover:border-primary transition-colors"
+                  className="flex flex-col gap-2 rounded-lg border border-border bg-card/70 px-4 py-3 shadow-sm hover:border-primary transition-colors"
                 >
-                  <TeamLabel code={m.home_team_code} align="right" />
-                  <div className="flex flex-col items-center gap-0.5 min-w-[92px]">
-                    {(m.home_score != null || m.away_score != null) ? (
-                      <span className="display text-2xl tabular-nums text-primary">
-                        {m.home_score ?? "–"} : {m.away_score ?? "–"}
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                    {/* Home team pushed to the far left. */}
+                    <div className="flex items-center gap-2 justify-start min-w-0">
+                      {flagUrl(m.home_team_code, 40) ? (
+                        <img src={flagUrl(m.home_team_code, 40)!} alt={m.home_team_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                      ) : (
+                        <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
+                      )}
+                      <span className="display truncate text-lg">{m.home_team_code ?? "TBD"}</span>
+                    </div>
+                    {/* Centered scoreline / kickoff. */}
+                    <div className="flex min-w-[100px] flex-col items-center gap-0.5">
+                      {(m.home_score != null || m.away_score != null) ? (
+                        <span className="display text-2xl tabular-nums text-primary">
+                          {m.home_score ?? "–"} : {m.away_score ?? "–"}
+                        </span>
+                      ) : (
+                        <span className="display text-sm tabular-nums text-foreground/80">{bdTime(m.date_utc)}</span>
+                      )}
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                        {normalizeAppMatchStatus(m.status) === "live"
+                          ? <><span className="live-dot mr-1 align-middle" />Live</>
+                          : (KO_LABEL[KO_LEGACY[(m.stage ?? "").toString()] ?? ""] ?? "Group")}
                       </span>
-                    ) : (
-                      <span className="display text-sm tabular-nums text-foreground/80">{bdTime(m.date_utc)}</span>
-                    )}
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                      {normalizeAppMatchStatus(m.status) === "live"
-                        ? <><span className="live-dot mr-1 align-middle" />Live</>
-                        : (KO_LABEL[KO_LEGACY[(m.stage ?? "").toString()] ?? ""] ?? "Group")}
-                    </span>
+                    </div>
+                    {/* Away team at the right side of its column. */}
+                    <div className="flex items-center gap-2 justify-start min-w-0">
+                      {flagUrl(m.away_team_code, 40) ? (
+                        <img src={flagUrl(m.away_team_code, 40)!} alt={m.away_team_code ?? ""} className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                      ) : (
+                        <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
+                      )}
+                      <span className="display truncate text-lg">{m.away_team_code ?? "TBD"}</span>
+                    </div>
                   </div>
-                  <TeamLabel code={m.away_team_code} align="left" />
+                  {/* Stadium + kickoff footer. Times are Asia/Dhaka (GMT+6). */}
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="h-3 w-3" aria-hidden="true" />
+                      {m.venues?.name
+                        ? `${m.venues.name}${m.venues.city ? ` · ${m.venues.city}` : ""}`
+                        : "Venue TBD"}
+                    </span>
+                    <span>{bdTime(m.date_utc)} BDT</span>
+                  </div>
                 </Link>
               </motion.li>
             ))}
@@ -158,30 +210,12 @@ function AllMatchesView({ matches }: { matches: any[] }) {
 }
 
 /**
- * Team row inside the fixtures list.
+ * Horizontal knockout bracket — each round holds half the matches of the
+ * previous, so the layout narrows into the Final. Vertical connectors on the
+ * right edge of every card indicate how sides progress into the next round.
  */
-function TeamLabel({ code, align }: { code: string | null; align: "left" | "right" }) {
-  const url = flagUrl(code, 40);
-  return (
-    <div className={`flex items-center gap-2 ${align === "right" ? "justify-end flex-row-reverse" : ""}`}>
-      {url ? (
-        <img src={url} alt={code ?? ""} className="h-4 w-6 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-      ) : (
-        <span className="h-4 w-6 rounded-[2px] bg-secondary/40" />
-      )}
-      <span className="display text-lg">{code ?? "TBD"}</span>
-    </div>
-  );
-}
-
-/**
- * Knockout bracket view — Round of 32 through the Final.
- */
-function KnockoutView({ matches }: { matches: any[] }) {
-  const bracketScrollRef = useRef<HTMLDivElement | null>(null);
-  const [bracketHasOverflow, setBracketHasOverflow] = useState(false);
-
-  const ko = KO_STAGES.map((stage) => ({
+function KnockoutView({ matches }: { matches: MatchRow[] }) {
+  const rounds = KO_STAGES.map((stage) => ({
     stage,
     matches: matches.filter((m) => {
       const s = (m.stage ?? "").toString();
@@ -189,77 +223,105 @@ function KnockoutView({ matches }: { matches: any[] }) {
     }),
   }));
 
-  useEffect(() => {
-    const el = bracketScrollRef.current;
-    if (!el) return;
-    const check = () => setBracketHasOverflow(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
-    check();
-    el.addEventListener("scroll", check);
-    window.addEventListener("resize", check);
-    return () => { el.removeEventListener("scroll", check); window.removeEventListener("resize", check); };
-  }, [ko.length]);
-
   return (
-    <div className="relative mt-6">
-      <div
-        ref={bracketScrollRef}
-        className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <div className="flex min-w-max gap-6 pb-4">
-          {ko.map(({ stage, matches }) => (
-            <div key={stage} className="flex min-w-[240px] flex-col gap-4">
-              <h3 className="display text-center text-sm uppercase tracking-[0.2em] text-primary">{KO_LABEL[stage]}</h3>
-              <div className="flex flex-1 flex-col justify-around gap-4">
-                {matches.length === 0 && (
-                  <div className="rounded-lg border border-dashed border-border bg-card/20 p-4 text-center text-xs text-muted-foreground">TBD</div>
-                )}
-                {matches.map((m, i) => (
-                  <motion.div key={m.id}
-                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                    whileHover={{ y: -3 }}
-                  >
-                    <Link
-                      to={`/match/${(m.external_id ?? "").replace(/^fd_/, "") || m.id}`}
-                      className="block rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md hover:border-primary transition-colors"
-                    >
-                      <BracketRow code={m.home_team_code} score={m.home_score} />
-                      <div className="my-1 h-px bg-border/60" />
-                      <BracketRow code={m.away_team_code} score={m.away_score} />
-                      <p className="mt-2 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                        <span>{bdShortDate(m.date_utc)} · {bdTime(m.date_utc)}</span>
-                        <span>
-                          {normalizeAppMatchStatus(m.status) === "live"
-                            ? <><span className="live-dot mr-1 align-middle" />Live</>
-                            : normalizeAppMatchStatus(m.status)}
-                        </span>
-                      </p>
-                    </Link>
-                  </motion.div>
+    <div className="mt-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex min-w-max items-stretch gap-4 pb-4 md:gap-8">
+        {rounds.map(({ stage, matches: roundMatches }, idx) => (
+          <div key={stage} className="flex min-w-[220px] flex-col">
+            <h3 className="display mb-3 text-center text-xs uppercase tracking-[0.24em] text-primary md:text-sm">
+              {KO_LABEL[stage]}
+            </h3>
+            <div className="flex flex-1 flex-col justify-around gap-3">
+              {roundMatches.length === 0 &&
+                Array.from({ length: Math.max(1, 16 / Math.pow(2, idx)) }).map((_, i) => (
+                  <BracketPlaceholder key={i} isLast={idx === rounds.length - 1} />
                 ))}
-              </div>
+              {roundMatches.map((m, i) => (
+                <BracketCard
+                  key={m.id}
+                  match={m}
+                  isLast={idx === rounds.length - 1}
+                  index={i}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
-      <AnimatePresence>
-        {bracketHasOverflow && (
-          <motion.button
-            type="button"
-            onClick={() => bracketScrollRef.current?.scrollBy({ left: 300, behavior: "smooth" })}
-            initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}
-            className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur hover:bg-primary hover:text-primary-foreground transition"
-            aria-label="Scroll bracket right"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
 
 /**
- * Individual team row within the knockout bracket.
+ * Empty slot shown while a knockout round is still to be decided.
+ */
+function BracketPlaceholder({ isLast }: { isLast: boolean }) {
+  return (
+    <div className="relative">
+      <div className="rounded-lg border border-dashed border-border bg-card/20 px-3 py-4 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+        TBD
+      </div>
+      {!isLast && <BracketConnector />}
+    </div>
+  );
+}
+
+/**
+ * Single match card inside the bracket. Draws a horizontal connector line to
+ * the next round unless it is the Final.
+ */
+function BracketCard({ match, isLast, index }: { match: MatchRow; isLast: boolean; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.03, 0.2) }}
+      className="relative"
+      whileHover={{ y: -2 }}
+    >
+      <Link
+        to={`/match/${(match.external_id ?? "").replace(/^fd_/, "") || match.id}`}
+        className="block rounded-lg border border-border bg-card/70 p-3 text-sm shadow-md transition-colors hover:border-primary"
+      >
+        <BracketRow code={match.home_team_code} score={match.home_score} />
+        <div className="my-1 h-px bg-border/60" />
+        <BracketRow code={match.away_team_code} score={match.away_score} />
+        <p className="mt-2 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          <span>{bdShortDate(match.date_utc)} · {bdTime(match.date_utc)}</span>
+          <span>
+            {normalizeAppMatchStatus(match.status) === "live"
+              ? <><span className="live-dot mr-1 align-middle" />Live</>
+              : normalizeAppMatchStatus(match.status)}
+          </span>
+        </p>
+        {match.venues?.name && (
+          <p className="mt-1 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <MapPin className="h-3 w-3" aria-hidden="true" />
+            <span className="truncate">{match.venues.name}{match.venues.city ? ` · ${match.venues.city}` : ""}</span>
+          </p>
+        )}
+      </Link>
+      {!isLast && <BracketConnector />}
+    </motion.div>
+  );
+}
+
+/**
+ * Horizontal line + short vertical stub that visually links a match card to
+ * the next round in the bracket.
+ */
+function BracketConnector() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute top-1/2 left-full h-px -translate-y-1/2 bg-border"
+      style={{ width: "calc(1rem)" }}
+    />
+  );
+}
+
+/**
+ * Individual team row within a bracket card.
  */
 function BracketRow({ code, score }: { code: string | null; score: number | null }) {
   const url = flagUrl(code, 40);
