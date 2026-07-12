@@ -218,7 +218,7 @@ export default function App() {
 
       <main id="main-content" className="flex-1 pb-24 lg:pb-0">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
           <Route path="/fixtures" element={<Fixtures />} />
           <Route path="/standings" element={<Standings />} />
           <Route path="/news" element={<News />} />
