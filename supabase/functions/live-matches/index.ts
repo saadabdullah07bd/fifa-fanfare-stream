@@ -20,8 +20,8 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 30s cache — free tier allows 10 requests/min
-  if (cache && Date.now() - cache.at < 30_000) {
+  // 10s cache — keep live minute fresh while free-tier is polled every 30s from the client.
+  if (cache && Date.now() - cache.at < 10_000) {
     return new Response(JSON.stringify(cache.body), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
