@@ -52,7 +52,6 @@ export default function LiveTV() {
   });
 
   const [active, setActive] = useState<Channel | null>(null);
-  const [autoStarted, setAutoStarted] = useState(false);
   const [reloadNonce, setReloadNonce] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -176,7 +175,9 @@ export default function LiveTV() {
     };
   }, [active, reloadNonce]);
 
-  // Featured channel logic:
+  // Featured channel logic — used for the "start watching" hero button and
+  // channel selection heuristics. Playback does NOT start until the user
+  // explicitly picks a channel (autoplay is intentionally disabled).
   //   1. Admin-selected default (from app_settings)
   //   2. TSN 1 non-4K
   //   3. Any non-4K channel
@@ -190,14 +191,6 @@ export default function LiveTV() {
       ?? channels.find((c) => /\btsn\s*1\b/i.test(c.name));
     return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
   }, [channels, defaultStreamId]);
-
-  // Auto-tune to TSN 1 (or the fallback hero) once channels load.
-  // HLS/MPEGTS stream initialization and playback logic.
-  useEffect(() => {
-    if (autoStarted || active || !heroChannel) return;
-    setAutoStarted(true);
-    setActive(heroChannel);
-  }, [heroChannel, active, autoStarted]);
 
   const rows = useMemo(() => {
     const cats = Array.from(new Set(channels.map((c) => c.category))).sort();
@@ -320,24 +313,52 @@ export default function LiveTV() {
           >
             <ModernPlayer videoRef={videoRef} channel={active} onClose={() => setActive(null)} onReload={() => setReloadNonce((n) => n + 1)} />
           </motion.div>
-        ) : isLoading || heroChannel ? (
+        ) : isLoading ? (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="grid aspect-video place-items-center rounded-3xl border border-primary/30 bg-black"
             role="status" aria-live="polite"
           >
             <Loader2 className="h-12 w-12 animate-spin text-primary" aria-hidden="true" />
-            <span className="sr-only">Loading stream…</span>
+            <span className="sr-only">Loading channels…</span>
           </motion.div>
         ) : (
-          <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="rounded-3xl border border-border bg-card/40 p-10 text-center"
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="relative flex aspect-video flex-col items-center justify-center overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-black via-background to-card text-center"
           >
-            <Tv className="mx-auto h-10 w-10 text-primary" aria-hidden="true" />
-            <h2 className="display mt-3 text-2xl">Pick a channel to start watching</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{channels.length} channel{channels.length === 1 ? "" : "s"} available</p>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 opacity-60"
+              style={{
+                background:
+                  "radial-gradient(50% 60% at 50% 40%, hsl(var(--primary) / 0.18), transparent 70%)",
+              }}
+            />
+            <div className="relative flex flex-col items-center px-6">
+              <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 ring-1 ring-primary/40">
+                <Tv className="h-7 w-7 text-primary" aria-hidden="true" />
+              </span>
+              <h2 className="display mt-4 text-2xl sm:text-3xl">Pick a channel to start watching</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {channels.length} channel{channels.length === 1 ? "" : "s"} available · autoplay is off
+              </p>
+              {heroChannel && (
+                <button
+                  type="button"
+                  onClick={() => play(heroChannel)}
+                  className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold uppercase tracking-wider text-primary-foreground shadow-lg transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <Play className="h-4 w-4 fill-current" aria-hidden="true" />
+                  Start with {heroChannel.name}
+                </button>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" role="status" aria-live="polite">
@@ -617,7 +638,7 @@ function ModernPlayer({
     >
       <video
         ref={videoRef}
-        autoPlay playsInline
+        playsInline
         controlsList="nodownload noremoteplayback noplaybackrate"
         disablePictureInPicture={false}
         onContextMenu={(e) => e.preventDefault()}
@@ -626,8 +647,8 @@ function ModernPlayer({
         className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
       />
 
-      {/* Right-side vertical volume rocker (mobile only). Constrained so it
-          never swallows taps on the top or bottom control bars. */}
+      {/* Right-side vertical volume rocker (mobile only). Purely a gesture
+          surface — decorative, not a labeled interactive element. */}
       {isMobile && (
         <div
           onTouchStart={onVolTouchStart}
@@ -635,7 +656,7 @@ function ModernPlayer({
           onTouchEnd={onVolTouchEnd}
           className="absolute right-0 top-20 bottom-24 z-10 w-24"
           style={{ touchAction: "none" }}
-          aria-label="Volume rocker"
+          aria-hidden="true"
         />
       )}
 
@@ -665,21 +686,38 @@ function ModernPlayer({
         {showUI && (
           <motion.div key="top"
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/80 to-transparent p-4"
+            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/85 via-black/40 to-transparent p-3 sm:p-4"
           >
-            <div className="pointer-events-auto flex items-center gap-3">
-              <span className="flex items-center gap-1.5 rounded-full bg-primary/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary-foreground">
-                <span className="live-dot" /> Live
+            <div className="pointer-events-auto flex min-w-0 items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-lg">
+                <span className="live-dot" aria-hidden="true" /> Live
               </span>
-              <div>
-                <p className="display text-lg leading-tight text-white">{channel.name}</p>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/60">
+              <div className="min-w-0">
+                <p className="display truncate text-base leading-tight text-white sm:text-lg" title={channel.name}>
+                  {channel.name}
+                </p>
+                <p className="truncate text-[10px] uppercase tracking-[0.2em] text-white/60">
                   {CAT_LABEL[channel.category] ?? channel.category}
                 </p>
               </div>
               {is4k(channel.name) && (
-                <span className="rounded bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[10px] font-black tracking-wider text-black">4K UHD</span>
+                <span className="hidden rounded bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[10px] font-black tracking-wider text-black sm:inline-block">
+                  4K UHD
+                </span>
               )}
+            </div>
+
+            <div className="pointer-events-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                title="Close player (Esc)"
+                aria-label="Close player"
+                className="inline-flex h-10 min-w-10 items-center gap-1.5 rounded-full bg-white/10 px-3 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:h-9"
+              >
+                <LogOut className="h-4 w-4 rotate-180" aria-hidden="true" />
+                <span className="hidden sm:inline">Change channel</span>
+              </button>
             </div>
           </motion.div>
         )}
@@ -688,12 +726,12 @@ function ModernPlayer({
       <AnimatePresence>
         {!playing && !buffering && (
           <motion.button key="center"
-            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }}
             onClick={toggle}
-            className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-primary/90 text-primary-foreground shadow-2xl transition hover:scale-110"
+            className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_0_0_8px_hsl(var(--primary)/0.15),0_20px_60px_-10px_hsl(var(--primary)/0.6)] transition hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
             aria-label="Play"
           >
-            <Play className="h-9 w-9 fill-current" />
+            <Play className="h-9 w-9 fill-current" aria-hidden="true" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -702,63 +740,60 @@ function ModernPlayer({
         {showUI && (
           <motion.div key="bot"
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-            className="absolute inset-x-0 bottom-0 z-20 flex items-center gap-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 sm:p-4"
+            className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 sm:p-4"
           >
-            <button onClick={toggle}
-              className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              {playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current" />}
-            </button>
-            <button onClick={toggleMute}
-              className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
-              aria-label={muted ? "Unmute" : "Mute"}
-            >
-              {muted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </button>
-            {(() => {
-              const v = muted ? 0 : volume;
-              const pct = Math.round(v * 100);
-              return (
-                <div className="volume-slider group/vol hidden items-center sm:flex">
-                  <input
-                    type="range" min={0} max={1} step={0.01}
-                    value={v}
-                    onChange={(e) => setVol(parseFloat(e.target.value))}
-                    style={{ ["--vol" as any]: `${pct}%` }}
-                    className="modern-range h-1.5 w-20 cursor-pointer appearance-none rounded-full transition-all group-hover/vol:w-28"
-                    aria-label="Volume"
-                  />
-                </div>
-              );
-            })()}
-            <div className="ml-auto flex items-center gap-2">
-              {/* Reload — resets the stream if it falls behind. */}
-              <button onClick={() => { toast.message("Reloading stream…"); onReload(); kick(); }}
-                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
-                aria-label="Reload stream"
-              >
-                <RotateCw className="h-4 w-4" />
-              </button>
-              {/* Fill / fit toggle — stretches to fill the screen. */}
-              <button onClick={() => { setFill((f) => !f); kick(); }}
-                className={`grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-primary hover:text-primary-foreground ${fill ? "bg-primary/80" : "bg-white/10"}`}
-                aria-label={fill ? "Fit to screen" : "Fill screen"}
-              >
-                {fill ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
-              </button>
-              <button onClick={togglePip}
-                className="hidden h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground sm:grid"
-                aria-label="Picture in picture"
-              >
-                <PictureInPicture2 className="h-4 w-4" />
-              </button>
-              <button onClick={toggleFs}
-                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
-                aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
-              >
-                {fullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-              </button>
+            <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 p-1 backdrop-blur-md sm:gap-2 sm:p-1.5">
+              <PlayerBtn onClick={toggle} label={playing ? "Pause (K)" : "Play (K)"} title={playing ? "Pause (K)" : "Play (K)"}>
+                {playing ? <Pause className="h-4 w-4 fill-current" aria-hidden="true" /> : <Play className="h-4 w-4 fill-current" aria-hidden="true" />}
+              </PlayerBtn>
+              <PlayerBtn onClick={toggleMute} label={muted ? "Unmute (M)" : "Mute (M)"} title={muted ? "Unmute (M)" : "Mute (M)"}>
+                {muted || volume === 0 ? <VolumeX className="h-4 w-4" aria-hidden="true" /> : <Volume2 className="h-4 w-4" aria-hidden="true" />}
+              </PlayerBtn>
+              {(() => {
+                const v = muted ? 0 : volume;
+                const pct = Math.round(v * 100);
+                return (
+                  <div className="volume-slider group/vol hidden items-center pl-1 pr-2 sm:flex">
+                    <input
+                      type="range" min={0} max={1} step={0.01}
+                      value={v}
+                      onChange={(e) => setVol(parseFloat(e.target.value))}
+                      style={{ ["--vol" as any]: `${pct}%` }}
+                      className="modern-range h-1.5 w-20 cursor-pointer appearance-none rounded-full transition-all group-hover/vol:w-32 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label="Volume"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={pct}
+                    />
+                  </div>
+                );
+              })()}
+
+              <span aria-hidden="true" className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
+
+              <span className="hidden items-center gap-1.5 rounded-full bg-destructive/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white sm:inline-flex">
+                <span className="live-dot" aria-hidden="true" /> Live
+              </span>
+
+              <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+                <PlayerBtn onClick={() => { toast.message("Reloading stream…"); onReload(); kick(); }} label="Reload stream" title="Reload stream">
+                  <RotateCw className="h-4 w-4" aria-hidden="true" />
+                </PlayerBtn>
+                <PlayerBtn
+                  onClick={() => { setFill((f) => !f); kick(); }}
+                  label={fill ? "Fit to screen" : "Fill screen"}
+                  title={fill ? "Fit to screen" : "Fill screen"}
+                  active={fill}
+                >
+                  {fill ? <Shrink className="h-4 w-4" aria-hidden="true" /> : <Expand className="h-4 w-4" aria-hidden="true" />}
+                </PlayerBtn>
+                <PlayerBtn onClick={togglePip} label="Picture in picture (P)" title="Picture in picture (P)" className="hidden sm:grid">
+                  <PictureInPicture2 className="h-4 w-4" aria-hidden="true" />
+                </PlayerBtn>
+                <PlayerBtn onClick={toggleFs} label={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"} title={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}>
+                  {fullscreen ? <Minimize className="h-4 w-4" aria-hidden="true" /> : <Maximize className="h-4 w-4" aria-hidden="true" />}
+                </PlayerBtn>
+              </div>
             </div>
           </motion.div>
         )}
@@ -766,3 +801,34 @@ function ModernPlayer({
     </div>
   );
 }
+
+function PlayerBtn({
+  children,
+  onClick,
+  label,
+  title,
+  active,
+  className = "",
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  label: string;
+  title?: string;
+  active?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={title ?? label}
+      className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-white transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        active ? "bg-primary/80" : "bg-white/5"
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
