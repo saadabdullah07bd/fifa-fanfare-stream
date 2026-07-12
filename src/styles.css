@@ -54,58 +54,59 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 
-  /* Core: ink black · chalk white · vibrant FWC26 gold */
-  --background: #06060a;
-  --foreground: #f6f3ea;
-  --card: #111114;
-  --card-foreground: #f6f3ea;
-  --popover: #111114;
-  --popover-foreground: #f6f3ea;
-  --primary: #f5c518;                 /* bright trophy gold — high visibility */
-  --primary-foreground: #0a0a0a;
-  --secondary: #16161b;
-  --secondary-foreground: #f6f3ea;
-  --muted: #16161b;
-  --muted-foreground: #b6b1a4;
-  --accent: #f5c518;
-  --accent-foreground: #0a0a0a;
-  --destructive: #e0271a;
+  /* Official FIFA World Cup 26 identity: black · white · trophy gold · trophy green */
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0d0d0d;
+  --card-foreground: #ffffff;
+  --popover: #0d0d0d;
+  --popover-foreground: #ffffff;
+  --primary: #d4af37;                 /* trophy gold */
+  --primary-foreground: #000000;
+  --secondary: #141414;
+  --secondary-foreground: #ffffff;
+  --muted: #141414;
+  --muted-foreground: #a3a3a3;
+  --accent: #d4af37;
+  --accent-foreground: #000000;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: rgba(246, 243, 234, 0.12);
-  --input: rgba(246, 243, 234, 0.06);
-  --ring: #f5c518;
+  --border: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: #d4af37;
 
-  --live: #e0271a;
-  --gold: #f5c518;
-  --gold-warm: #ffd94a;
-  --pitch: #06060a;
-  --usa: #2f5cff;                     /* USA blue (brighter) */
-  --can: #e0271a;                     /* Canada red */
-  --mex: #10b981;                     /* Mexico green (brighter) */
+  --live: #dc2626;
+  --gold: #d4af37;
+  --gold-warm: #e8c568;
+  --pitch: #000000;
+  --trophy-green: #1f6b46;            /* malachite from trophy base */
+  --usa: #1e3a8a;
+  --can: #d52b1e;
+  --mex: #1f6b46;
 }
 
 .dark {
-  --background: #06060a;
-  --foreground: #f6f3ea;
-  --card: #111114;
-  --card-foreground: #f6f3ea;
-  --popover: #111114;
-  --popover-foreground: #f6f3ea;
-  --primary: #f5c518;
-  --primary-foreground: #0a0a0a;
-  --secondary: #16161b;
-  --secondary-foreground: #f6f3ea;
-  --muted: #16161b;
-  --muted-foreground: #b6b1a4;
-  --accent: #f5c518;
-  --accent-foreground: #0a0a0a;
-  --destructive: #e0271a;
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0d0d0d;
+  --card-foreground: #ffffff;
+  --popover: #0d0d0d;
+  --popover-foreground: #ffffff;
+  --primary: #d4af37;
+  --primary-foreground: #000000;
+  --secondary: #141414;
+  --secondary-foreground: #ffffff;
+  --muted: #141414;
+  --muted-foreground: #a3a3a3;
+  --accent: #d4af37;
+  --accent-foreground: #000000;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: rgba(246, 243, 234, 0.12);
-  --input: rgba(246, 243, 234, 0.06);
-  --ring: #f5c518;
+  --border: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: #d4af37;
 }
 
 @layer base {
@@ -128,10 +129,8 @@
 /* ============ Ambient tri-nation glow (subtle, institutional) ============ */
 body {
   background:
-    radial-gradient(1100px 800px at 0% -10%, rgba(47, 92, 255, 0.28), transparent 60%),
-    radial-gradient(1000px 800px at 100% 0%, rgba(224, 39, 26, 0.24), transparent 55%),
-    radial-gradient(1000px 800px at 50% 120%, rgba(245, 197, 24, 0.22), transparent 60%),
-    radial-gradient(800px 700px at 85% 95%, rgba(16, 185, 129, 0.18), transparent 55%),
+    radial-gradient(900px 700px at 50% -10%, rgba(212, 175, 55, 0.14), transparent 60%),
+    radial-gradient(700px 600px at 100% 100%, rgba(31, 107, 70, 0.10), transparent 55%),
     var(--color-background);
   background-attachment: fixed;
 }
