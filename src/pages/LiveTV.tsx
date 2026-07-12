@@ -296,7 +296,7 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
         <ChannelLogo url={c.logo_url} name={c.name} />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         {is4k(c.name) && (
-          <span className="absolute bottom-2 right-2 rounded bg-gradient-to-r from-amber-400 to-orange-500 px-1.5 py-0.5 text-[10px] font-black tracking-wider text-black shadow">
+          <span className="absolute bottom-2 right-2 whitespace-nowrap rounded bg-gradient-to-r from-amber-400 to-orange-500 px-1.5 py-0.5 text-[9px] font-black leading-none tracking-wider text-black shadow">
             4K UHD
           </span>
         )}
