@@ -23,6 +23,16 @@ export default function MobileSplash() {
 
   useEffect(() => {
     if (!visible) return;
+    const v = videoRef.current;
+    if (v) {
+      v.muted = false;
+      v.volume = 0.2;
+      v.play().catch(() => {
+        // Autoplay with sound blocked — fall back to muted playback
+        v.muted = true;
+        v.play().catch(() => {});
+      });
+    }
     // Safety timeout in case video fails/blocked
     const failSafe = window.setTimeout(() => dismiss(), 6000);
     return () => window.clearTimeout(failSafe);
@@ -47,7 +57,6 @@ export default function MobileSplash() {
         ref={videoRef}
         src={splashVideo.url}
         autoPlay
-        muted
         playsInline
         preload="auto"
         onEnded={dismiss}
