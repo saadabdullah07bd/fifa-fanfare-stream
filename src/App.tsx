@@ -18,6 +18,7 @@ import Privacy from "@/pages/Privacy";
 import Standings from "@/pages/Standings";
 import { BottomTabs } from "@/components/BottomTabs";
 import OnboardingModal from "@/components/OnboardingModal";
+import MobileSplash from "@/components/MobileSplash";
 
 /**
  * Internal hook to manage auth session state within the App component.
@@ -131,6 +132,7 @@ export default function App() {
   const { admin } = useIsAdmin();
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <MobileSplash />
       <AuthRedirector />
       <OnboardingModal />
       <header className="sticky top-0 z-40 glass-nav">
