@@ -120,7 +120,7 @@ function HomeOnlyFooter() {
 
 const MOBILE_TABS = [
   { to: "/", label: "Home", icon: HomeIcon },
-  { to: "/fixtures", label: "Knockout", icon: CalendarDays },
+  { to: "/fixtures?view=knockout", label: "Knockout", icon: CalendarDays },
   { to: "/live-tv", label: "Live", icon: Tv, featured: true },
   { to: "/standings", label: "Table", icon: Trophy },
   { to: "/news", label: "News", icon: Newspaper },
