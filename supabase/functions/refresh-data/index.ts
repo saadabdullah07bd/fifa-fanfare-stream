@@ -33,6 +33,11 @@ Deno.serve(async (req) => {
   const results: Record<string, string> = {};
   const now = new Date().toISOString();
 
+  // mode=matches → per-minute cron only re-syncs match rows (fast, cheap).
+  // Default mode → full 3-hourly refresh (teams, matches, standings, scorers, news).
+  const url = new URL(req.url);
+  const mode = url.searchParams.get("mode") ?? "full";
+
   async function record(source: string, status: string, detail?: string) {
     await admin.from("scrape_runs").upsert({ source, status, detail: detail ?? null, last_run_at: now });
     results[source] = status + (detail ? `: ${detail}` : "");
@@ -45,8 +50,8 @@ Deno.serve(async (req) => {
   if (fdToken) {
     const fdHeaders = { "X-Auth-Token": fdToken };
 
-    // Teams
-    try {
+    // Teams (skip in matches-only mode)
+    if (mode !== "matches") try {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/teams`, { headers: fdHeaders });
       if (res.ok) {
         const { teams } = await res.json() as { teams: Array<{ tla: string; name: string; crest: string; area: { name: string } }> };
@@ -97,8 +102,8 @@ Deno.serve(async (req) => {
       } else await record("matches", "error", `HTTP ${res.status}`);
     } catch (e) { await record("matches", "error", (e as Error).message.slice(0, 200)); }
 
-    // Standings
-    try {
+    // Standings (skip in matches-only mode)
+    if (mode !== "matches") try {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/standings`, { headers: fdHeaders });
       if (res.ok) {
         const { standings } = await res.json() as { standings: Array<{ group?: string; type: string; table: Array<any> }> };
@@ -124,8 +129,8 @@ Deno.serve(async (req) => {
       } else await record("standings", "error", `HTTP ${res.status}`);
     } catch (e) { await record("standings", "error", (e as Error).message.slice(0, 200)); }
 
-    // Scorers
-    try {
+    // Scorers (skip in matches-only mode)
+    if (mode !== "matches") try {
       const res = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/scorers?limit=50`, { headers: fdHeaders });
       if (res.ok) {
         const { scorers } = await res.json() as { scorers: Array<any> };
@@ -142,29 +147,32 @@ Deno.serve(async (req) => {
     await record("football-data", "skipped", "FOOTBALL_DATA_API_TOKEN not set");
   }
 
-  // ---- NewsAPI ----
-  if (newsKey) {
-    try {
-      const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent("FIFA World Cup 2026")}&sortBy=publishedAt&language=en&pageSize=30&apiKey=${newsKey}`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const { articles } = await res.json() as { articles: Array<any> };
-        const newsRows = articles
-          .filter((a) => !!a.url && !!a.title)
-          .map((a) => ({
-            url: a.url, title: a.title,
-            summary: a.description ?? null,
-            source: a.source?.name ?? new URL(a.url).hostname.replace(/^www\./, ""),
-            image_url: a.urlToImage ?? null,
-            published_at: a.publishedAt ?? now,
-          }));
-        if (newsRows.length) await admin.from("news").upsert(newsRows, { onConflict: "url" });
-        await record("news", "ok", `${articles.length} items`);
-      } else await record("news", "error", `HTTP ${res.status}`);
-    } catch (e) { await record("news", "error", (e as Error).message.slice(0, 200)); }
-  } else {
-    await record("news", "skipped", "NEWSAPI_KEY not set");
+  // ---- NewsAPI (skip in matches-only mode) ----
+  if (mode !== "matches") {
+    if (newsKey) {
+      try {
+        const newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent("FIFA World Cup 2026")}&sortBy=publishedAt&language=en&pageSize=30&apiKey=${newsKey}`;
+        const res = await fetch(newsUrl);
+        if (res.ok) {
+          const { articles } = await res.json() as { articles: Array<any> };
+          const newsRows = articles
+            .filter((a) => !!a.url && !!a.title)
+            .map((a) => ({
+              url: a.url, title: a.title,
+              summary: a.description ?? null,
+              source: a.source?.name ?? new URL(a.url).hostname.replace(/^www\./, ""),
+              image_url: a.urlToImage ?? null,
+              published_at: a.publishedAt ?? now,
+            }));
+          if (newsRows.length) await admin.from("news").upsert(newsRows, { onConflict: "url" });
+          await record("news", "ok", `${articles.length} items`);
+        } else await record("news", "error", `HTTP ${res.status}`);
+      } catch (e) { await record("news", "error", (e as Error).message.slice(0, 200)); }
+    } else {
+      await record("news", "skipped", "NEWSAPI_KEY not set");
+    }
   }
+
 
   return new Response(JSON.stringify({ ok: true, results }), {
     headers: { ...cors, "Content-Type": "application/json" },
