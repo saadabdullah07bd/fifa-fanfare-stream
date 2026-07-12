@@ -355,7 +355,7 @@ function ChannelRow({
 }
 
 function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPlay: (c: Channel) => void; isActive: boolean }) {
-  const catLabel = CAT_LABEL[c.category] ?? c.category;
+  const catLabel = "FIFA World Cup 2026";
   return (
     <motion.button
       onClick={() => onPlay(c)}
