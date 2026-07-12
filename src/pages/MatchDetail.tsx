@@ -122,54 +122,92 @@ export default function MatchDetail() {
         )}
       </motion.div>
 
-      {/* Goals */}
-      <section className="mt-10">
-        <h2 className="display text-2xl text-primary">Goals</h2>
-        {m.goals.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            {m.home_score == null ? "Match not yet played." : "No goals recorded."}
-          </p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-2">
-            {m.goals.map((g, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/50 p-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 border-primary bg-background text-sm">⚽</span>
-                  <p className="truncate font-semibold">
-                    {g.player}
-                    {g.type === "OG" && <span className="ml-1 text-[10px] uppercase tracking-widest text-muted-foreground">(OG)</span>}
-                    {g.type === "PEN" && <span className="ml-1 text-[10px] uppercase tracking-widest text-muted-foreground">(Pen)</span>}
-                  </p>
-                </div>
-                <span className="display shrink-0 text-sm tabular-nums text-primary">
-                  {g.minute}{g.injury ? `+${g.injury}` : ""}'
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* Cards */}
-      {cards.length > 0 && (
-        <section className="mt-10">
-          <h2 className="display text-2xl text-primary">Cards</h2>
-          <ul className="mt-4 flex flex-col gap-2">
-            {cards.map((c, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/50 p-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span aria-hidden className={`inline-block h-5 w-3.5 shrink-0 rounded-[2px] ${c.card === "RED" ? "bg-red-500" : "bg-yellow-400"}`} />
+      {/* Goals — Google-style split by team */}
+      {m.goals.length > 0 ? (
+        <section className="mt-8">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6">
+            {/* Home goals column */}
+            <ul className="flex flex-col gap-2 pr-2 sm:pr-4 border-r border-border">
+              {homeGoals.length === 0 ? (
+                <li className="text-xs text-muted-foreground/60">—</li>
+              ) : homeGoals.map((g, i) => (
+                <li key={`h${i}`} className="flex items-start justify-end gap-2 text-right">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold">{c.player}</p>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{c.team}</p>
+                    <p className="truncate text-sm font-semibold">{g.player}</p>
+                    {(g.type === "OG" || g.type === "PEN") && (
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {g.type === "OG" ? "Own goal" : "Penalty"}
+                      </p>
+                    )}
                   </div>
-                </div>
-                <span className="display shrink-0 text-sm tabular-nums text-primary">
-                  {c.minute}{c.injury ? `+${c.injury}` : ""}'
-                </span>
-              </li>
-            ))}
-          </ul>
+                  <span className="tabular-nums text-sm text-muted-foreground shrink-0">
+                    {g.minute}{g.injury ? `+${g.injury}` : ""}'
+                  </span>
+                  <span aria-hidden className="text-sm shrink-0">⚽</span>
+                </li>
+              ))}
+            </ul>
+            {/* Away goals column */}
+            <ul className="flex flex-col gap-2 pl-2 sm:pl-4">
+              {awayGoals.length === 0 ? (
+                <li className="text-xs text-muted-foreground/60">—</li>
+              ) : awayGoals.map((g, i) => (
+                <li key={`a${i}`} className="flex items-start justify-start gap-2 text-left">
+                  <span aria-hidden className="text-sm shrink-0">⚽</span>
+                  <span className="tabular-nums text-sm text-muted-foreground shrink-0">
+                    {g.minute}{g.injury ? `+${g.injury}` : ""}'
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{g.player}</p>
+                    {(g.type === "OG" || g.type === "PEN") && (
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {g.type === "OG" ? "Own goal" : "Penalty"}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ) : (
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          {m.home_score == null ? "Match not yet played." : "No goals recorded."}
+        </p>
+      )}
+
+      {/* Cards — split by team */}
+      {allCards.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Bookings</h2>
+          <div className="grid grid-cols-2 gap-3 sm:gap-6">
+            <ul className="flex flex-col gap-2 pr-2 sm:pr-4 border-r border-border">
+              {homeCards.length === 0 ? (
+                <li className="text-xs text-muted-foreground/60 text-right">—</li>
+              ) : homeCards.map((c, i) => (
+                <li key={`hc${i}`} className="flex items-center justify-end gap-2 text-right">
+                  <p className="truncate text-sm">{c.player}</p>
+                  <span className="tabular-nums text-xs text-muted-foreground shrink-0">
+                    {c.minute}{c.injury ? `+${c.injury}` : ""}'
+                  </span>
+                  <span aria-hidden className={`inline-block h-4 w-3 shrink-0 rounded-[2px] ${c.card === "RED" ? "bg-red-500" : "bg-yellow-400"}`} />
+                </li>
+              ))}
+            </ul>
+            <ul className="flex flex-col gap-2 pl-2 sm:pl-4">
+              {awayCards.length === 0 ? (
+                <li className="text-xs text-muted-foreground/60">—</li>
+              ) : awayCards.map((c, i) => (
+                <li key={`ac${i}`} className="flex items-center justify-start gap-2 text-left">
+                  <span aria-hidden className={`inline-block h-4 w-3 shrink-0 rounded-[2px] ${c.card === "RED" ? "bg-red-500" : "bg-yellow-400"}`} />
+                  <span className="tabular-nums text-xs text-muted-foreground shrink-0">
+                    {c.minute}{c.injury ? `+${c.injury}` : ""}'
+                  </span>
+                  <p className="truncate text-sm">{c.player}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       )}
 
@@ -188,13 +226,6 @@ export default function MatchDetail() {
               <p className="mt-1 text-sm tabular-nums">{m.attendance.toLocaleString()}</p>
             </div>
           )}
-        </section>
-      )}
-
-      {m.notes && (
-        <section className="mt-8 rounded-lg border border-border bg-card/40 p-4 text-sm text-muted-foreground">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-primary">Notes</p>
-          <p className="mt-1">{m.notes}</p>
         </section>
       )}
     </motion.div>
