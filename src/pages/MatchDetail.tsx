@@ -116,7 +116,7 @@ export default function MatchDetail() {
 
       <motion.div
         layout
-        className={`mt-4 relative overflow-hidden rounded-2xl border border-border bg-card/85 p-6 shadow-2xl ${isLive ? "live-shimmer" : ""}`}
+        className={`mt-4 relative overflow-hidden rounded-2xl border border-border bg-card/85 p-4 sm:p-6 shadow-2xl ${isLive ? "live-shimmer" : ""}`}
       >
         {isLive && (
           <motion.div
