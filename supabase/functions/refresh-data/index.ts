@@ -27,30 +27,16 @@ Deno.serve(async (req) => {
   // CORS Preflight
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
-  // Authorization check for scheduled tasks
+  // Authorization: only the scheduled-job secret can trigger a refresh.
+  // Previously any request bearing the public anon key was accepted, which
+  // meant anyone on the internet could force a full sync (blowing external-
+  // API quotas and DB churn). CRON_SECRET is server-only.
   const expected = Deno.env.get("CRON_SECRET");
-  const anonKey =
-    Deno.env.get("SUPABASE_ANON_KEY") ??
-    Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ??
-    "";
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   const cronHeader = req.headers.get("x-cron-secret") ?? "";
-  const apikeyHeader = req.headers.get("apikey") ?? "";
-  
-  /** Validates if a JWT bearer token represents an anonymous user */
-  const looksLikeAnon = (v: string) => {
-    if (!v) return false;
-    try {
-      const payload = JSON.parse(atob(v.split(".")[1] ?? ""));
-      return payload?.role === "anon";
-    } catch { return false; }
-  };
 
-  const authorized =
-    (expected && (cronHeader === expected || bearer === expected)) ||
-    (anonKey && (apikeyHeader === anonKey || bearer === anonKey)) ||
-    looksLikeAnon(apikeyHeader) || looksLikeAnon(bearer);
-    
+  const authorized = !!expected && (cronHeader === expected || bearer === expected);
+
   if (!authorized) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,

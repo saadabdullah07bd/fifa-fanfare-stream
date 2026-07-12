@@ -91,20 +91,22 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   const q = url.searchParams.get("q") ?? '"World Cup 2026" OR "FIFA World Cup 2026"';
 
+  const CDN = {
+    "Cache-Control": "public, max-age=300, s-maxage=600, stale-while-revalidate=1800",
+  };
+
   const hit = cache.get(q);
   if (hit && Date.now() - hit.at < CACHE_MS) {
     return new Response(JSON.stringify(hit.body), {
-      headers: { ...cors, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json", ...CDN },
     });
   }
 
   let articles = (await fromNewsApi(q)) ?? [];
   let source: "newsapi" | "google" = "newsapi";
-  console.log("news-feed", { q, newsapi_count: articles.length, has_key: !!Deno.env.get("NEWSAPI_KEY") });
   if (articles.length === 0) {
     articles = await fromGoogleRss(q);
     source = "google";
-    console.log("news-feed fallback google-rss", { count: articles.length });
   }
 
   // De-duplicate by URL and by normalized title
@@ -122,6 +124,6 @@ Deno.serve(async (req) => {
   const body = { articles, source, updated_at: new Date().toISOString() };
   cache.set(q, { at: Date.now(), body });
   return new Response(JSON.stringify(body), {
-    headers: { ...cors, "Content-Type": "application/json" },
+    headers: { ...cors, "Content-Type": "application/json", ...CDN },
   });
 });

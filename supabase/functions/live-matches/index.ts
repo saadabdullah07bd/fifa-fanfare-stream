@@ -21,6 +21,13 @@ const cors = {
 const FD = "https://api.football-data.org/v4";
 let cache: { at: number; body: unknown } | null = null;
 
+// Cache-Control tuned for 50k concurrent viewers: 10s browser cache, 15s
+// shared CDN cache with stale-while-revalidate so a burst hitting a cold
+// isolate is served from Cloudflare instead of stampeding football-data.org.
+const CDN_CACHE_HEADERS = {
+  "Cache-Control": "public, max-age=10, s-maxage=15, stale-while-revalidate=30",
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
@@ -31,10 +38,10 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 10s cache — keep live minute fresh
-  if (cache && Date.now() - cache.at < 10_000) {
+  // 15s in-memory cache on the warm isolate (matches CDN s-maxage).
+  if (cache && Date.now() - cache.at < 15_000) {
     return new Response(JSON.stringify(cache.body), {
-      headers: { ...cors, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json", ...CDN_CACHE_HEADERS },
     });
   }
 
@@ -267,6 +274,6 @@ Deno.serve(async (req) => {
   cache = { at: Date.now(), body };
 
   return new Response(JSON.stringify(body), {
-    headers: { ...cors, "Content-Type": "application/json" },
+    headers: { ...cors, "Content-Type": "application/json", ...CDN_CACHE_HEADERS },
   });
 });

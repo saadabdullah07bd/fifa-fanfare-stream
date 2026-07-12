@@ -148,10 +148,19 @@ Deno.serve(async (req) => {
   }
 });
 
-/** Standard JSON response helper */
+/** Standard JSON response helper. Adds CDN cache headers on 2xx replies so
+ *  peak traffic (target: 50k concurrent) can be served from Cloudflare. */
 function json(body: unknown, status = 200) {
+  const cacheable = status >= 200 && status < 300;
   return new Response(JSON.stringify(body), {
-    status, headers: { ...cors, "Content-Type": "application/json" },
+    status,
+    headers: {
+      ...cors,
+      "Content-Type": "application/json",
+      ...(cacheable
+        ? { "Cache-Control": "public, max-age=30, s-maxage=60, stale-while-revalidate=120" }
+        : {}),
+    },
   });
 }
 
