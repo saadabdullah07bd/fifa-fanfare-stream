@@ -301,13 +301,10 @@ function ChannelRow({
   return (
     <section className="space-y-3">
       <h3 className="display flex items-center gap-2 text-2xl text-primary">
-/**
- * Interactive card for a single TV channel.
- */
-
         <span className="inline-block h-4 w-1 rounded bg-primary" />{title}
         <span className="ml-1 text-xs text-muted-foreground tabular-nums">· {items.length}</span>
       </h3>
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {items.map((c) => (
           <ChannelCard key={title + c.id} channel={c} onPlay={onPlay} isActive={activeId === c.id} />
