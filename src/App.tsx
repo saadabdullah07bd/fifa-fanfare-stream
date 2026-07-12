@@ -91,9 +91,9 @@ function Nav() {
 const MOBILE_TABS = [
   { to: "/", label: "Home", icon: HomeIcon },
   { to: "/fixtures", label: "Knockout", icon: CalendarDays },
+  { to: "/live-tv", label: "Live", icon: Tv, featured: true },
   { to: "/standings", label: "Table", icon: Trophy },
   { to: "/news", label: "News", icon: Newspaper },
-  { to: "/live-tv", label: "Live", icon: Tv },
 ];
 
 
@@ -131,7 +131,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <footer className="glass-nav mt-8 py-8 pb-24 text-center text-xs text-muted-foreground lg:pb-8">
+      <footer className="hidden lg:block glass-nav mt-8 py-8 text-center text-xs text-muted-foreground">
         Pitch26 · Independent fan hub · Not affiliated with FIFA
       </footer>
       <BottomTabs tabs={MOBILE_TABS} accentColor="#e6b800" />
