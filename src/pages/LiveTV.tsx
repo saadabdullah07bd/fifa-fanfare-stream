@@ -176,13 +176,20 @@ export default function LiveTV() {
     };
   }, [active, reloadNonce]);
 
-  // Featured channel logic, defaults to TSN 1 if available.
+  // Featured channel logic:
+  //   1. Admin-selected default (from app_settings)
+  //   2. TSN 1 non-4K
+  //   3. Any non-4K channel
+  //   4. First channel available
   const heroChannel = useMemo(() => {
-    // Prefer TSN 1 as the default featured channel.
+    if (defaultStreamId) {
+      const picked = channels.find((c) => c.stream_id === defaultStreamId);
+      if (picked) return picked;
+    }
     const tsn1 = channels.find((c) => /\btsn\s*1\b/i.test(c.name) && !is4k(c.name))
       ?? channels.find((c) => /\btsn\s*1\b/i.test(c.name));
     return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
-  }, [channels]);
+  }, [channels, defaultStreamId]);
 
   // Auto-tune to TSN 1 (or the fallback hero) once channels load.
   // HLS/MPEGTS stream initialization and playback logic.
