@@ -1,12 +1,17 @@
 import raw from "./wc26-matches.json";
 
 export type Wc26Goal = {
-  team: string;
-  team_code: string | null;
   player: string;
   minute: number;
   injury: number | null;
   type: "REGULAR" | "OG" | "PEN" | string;
+};
+
+export type Wc26Card = {
+  player: string;
+  team: string;
+  minute: number;
+  injury: number | null;
 };
 
 export type Wc26Match = {
@@ -26,6 +31,10 @@ export type Wc26Match = {
   penalty_shootout: string | null;
   extra_time: boolean;
   goals: Wc26Goal[];
+  yellow_cards: Wc26Card[];
+  red_cards: Wc26Card[];
+  referee: string | null;
+  attendance: number | null;
   notes: string | null;
 };
 
