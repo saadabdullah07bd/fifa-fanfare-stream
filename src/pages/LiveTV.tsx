@@ -628,7 +628,7 @@ function ModernPlayer({
                   {channel.name}
                 </p>
                 <p className="truncate text-[10px] uppercase tracking-[0.2em] text-white/60">
-                  {CAT_LABEL[channel.category] ?? channel.category}
+                  FIFA World Cup 2026
                 </p>
               </div>
               {is4k(channel.name) && (
