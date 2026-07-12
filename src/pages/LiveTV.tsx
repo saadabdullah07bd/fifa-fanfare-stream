@@ -36,6 +36,21 @@ export default function LiveTV() {
     },
   });
 
+  // Admin-selected default channel. Falls back to TSN 1 heuristic if unset.
+  // Cached for 60s in react-query; the edge function also sets s-maxage=60.
+  const { data: defaultStreamId } = useQuery({
+    queryKey: ["default-channel"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("default_stream_id")
+        .eq("id", 1)
+        .maybeSingle();
+      return (data?.default_stream_id as string | null) ?? null;
+    },
+    staleTime: 60_000,
+  });
+
   const [active, setActive] = useState<Channel | null>(null);
   const [autoStarted, setAutoStarted] = useState(false);
   const [reloadNonce, setReloadNonce] = useState(0);
