@@ -23,13 +23,17 @@ export default function MobileSplash() {
     if (!visible) return;
     const v = videoRef.current;
     if (v) {
-      // Autoplay requires muted playback — keep it muted so the video keeps
-      // playing after the first frame instead of getting paused on unmute.
+      // Start muted so autoplay works, then unmute at 50% once playback has begun.
       v.muted = true;
-      v.volume = 0;
+      v.volume = 0.5;
       const p = v.play();
+      const tryUnmute = () => {
+        try { v.muted = false; v.volume = 0.5; } catch { /* ignore */ }
+      };
       if (p && typeof p.then === "function") {
-        p.catch(() => { /* keep muted, still plays */ });
+        p.then(tryUnmute).catch(() => { /* stay muted if browser blocks */ });
+      } else {
+        tryUnmute();
       }
     }
     const failSafe = window.setTimeout(() => dismiss(), 12000);
@@ -60,7 +64,7 @@ export default function MobileSplash() {
         preload="auto"
         onEnded={dismiss}
         onError={dismiss}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain"
       />
       <button
         type="button"

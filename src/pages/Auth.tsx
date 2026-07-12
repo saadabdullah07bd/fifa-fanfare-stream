@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { toast } from "sonner";
@@ -10,10 +10,12 @@ import { toast } from "sonner";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const from = "/";
+  const location = useLocation();
+  const fromState = (location.state as { from?: string } | null)?.from;
+  const from = typeof fromState === "string" && fromState.startsWith("/") && fromState !== "/auth" ? fromState : "/live-tv";
 
   useEffect(() => {
-    // Check if user is already logged in and redirect to home if so.
+    // If already signed in, go straight to intended destination (Live by default).
     supabase.auth.getSession().then(({ data }) => { if (data.session) navigate(from, { replace: true }); });
   }, [from, navigate]);
 
@@ -34,7 +36,7 @@ export default function Auth() {
       <p className="mt-2 text-sm text-muted-foreground">
         Sign in with Google to save favorite teams, submit predictions, and stream live matches.
       </p>
-      <button onClick={() => { window.sessionStorage.setItem("postAuthRedirect", "/"); google(); }}
+      <button onClick={() => { window.sessionStorage.setItem("postAuthRedirect", from); google(); }}
         className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90">
 
         <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
