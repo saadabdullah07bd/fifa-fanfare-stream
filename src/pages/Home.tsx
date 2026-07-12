@@ -5,6 +5,7 @@ import { Seo } from "@/lib/seo";
 import LiveTicker, { useLiveMatches } from "@/components/LiveTicker";
 
 import heroImg from "@/assets/hero-stadium.jpg";
+import wc26Emblem from "@/assets/wc26-emblem.png";
 import { bdTime, bdDate } from "@/lib/flags";
 
 type Article = {
@@ -55,19 +56,24 @@ export default function Home() {
         }}
       />
       <section className="relative isolate overflow-hidden">
-        <img src={heroImg} alt="" width={1920} height={1080} fetchPriority="high" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-40" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/60 via-background/70 to-background" />
-        <div className="mx-auto max-w-7xl px-4 pb-12 pt-16 md:pt-24">
-          <p className="display text-primary tracking-[0.3em] text-sm">USA · CANADA · MEXICO · 2026</p>
-          <h1 className="display mt-2 text-5xl md:text-7xl leading-none">
-            The tournament,<br /><span className="text-primary">by the second.</span>
+        <img src={heroImg} alt="" width={1920} height={1080} fetchPriority="high" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-30" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/70 via-background/80 to-background" />
+        <img src={wc26Emblem} alt="" aria-hidden="true" className="pointer-events-none absolute -right-16 top-4 -z-10 h-[420px] w-[420px] opacity-25 md:h-[560px] md:w-[560px] md:opacity-40 md:-right-10 md:top-2" />
+        <div className="tri-ribbon mb-6" />
+        <div className="mx-auto max-w-7xl px-4 pb-12 pt-10 md:pt-16">
+          <div className="flex items-center gap-3">
+            <img src={wc26Emblem} alt="World Cup 26" width={72} height={72} className="h-14 w-14 md:h-20 md:w-20 object-contain" />
+            <p className="display text-primary tracking-[0.3em] text-xs md:text-sm">USA · CANADA · MEXICO · 2026</p>
+          </div>
+          <h1 className="display mt-4 text-5xl md:text-8xl leading-[0.9]">
+            The tournament,<br /><span className="tri-text">by the second.</span>
           </h1>
           <p className="mt-4 max-w-xl text-muted-foreground">
             Live scores, live timelines, live goals — for the World Cup and every big football match happening right now.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/fixtures" className="rounded-md bg-primary px-5 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground">See fixtures</Link>
-            <Link to="/live-tv" className="rounded-md border border-border bg-secondary/60 px-5 py-3 text-sm font-bold uppercase tracking-wider">Live TV</Link>
+            <Link to="/fixtures" className="rounded-md bg-primary px-5 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/30 hover:brightness-110 transition">See fixtures</Link>
+            <Link to="/live-tv" className="rounded-md border border-border bg-secondary/60 px-5 py-3 text-sm font-bold uppercase tracking-wider hover:border-primary transition">Live TV</Link>
           </div>
 
           {/* Featured Hero Match Card */}
