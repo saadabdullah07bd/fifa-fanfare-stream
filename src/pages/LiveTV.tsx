@@ -726,12 +726,12 @@ function ModernPlayer({
       <AnimatePresence>
         {!playing && !buffering && (
           <motion.button key="center"
-            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }}
             onClick={toggle}
-            className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-primary/90 text-primary-foreground shadow-2xl transition hover:scale-110"
+            className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_0_0_8px_hsl(var(--primary)/0.15),0_20px_60px_-10px_hsl(var(--primary)/0.6)] transition hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
             aria-label="Play"
           >
-            <Play className="h-9 w-9 fill-current" />
+            <Play className="h-9 w-9 fill-current" aria-hidden="true" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -740,67 +740,96 @@ function ModernPlayer({
         {showUI && (
           <motion.div key="bot"
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-            className="absolute inset-x-0 bottom-0 z-20 flex items-center gap-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 sm:p-4"
+            className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 sm:p-4"
           >
-            <button onClick={toggle}
-              className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              {playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current" />}
-            </button>
-            <button onClick={toggleMute}
-              className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
-              aria-label={muted ? "Unmute" : "Mute"}
-            >
-              {muted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </button>
-            {(() => {
-              const v = muted ? 0 : volume;
-              const pct = Math.round(v * 100);
-              return (
-                <div className="volume-slider group/vol hidden items-center sm:flex">
-                  <input
-                    type="range" min={0} max={1} step={0.01}
-                    value={v}
-                    onChange={(e) => setVol(parseFloat(e.target.value))}
-                    style={{ ["--vol" as any]: `${pct}%` }}
-                    className="modern-range h-1.5 w-20 cursor-pointer appearance-none rounded-full transition-all group-hover/vol:w-28"
-                    aria-label="Volume"
-                  />
-                </div>
-              );
-            })()}
-            <div className="ml-auto flex items-center gap-2">
-              {/* Reload — resets the stream if it falls behind. */}
-              <button onClick={() => { toast.message("Reloading stream…"); onReload(); kick(); }}
-                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
-                aria-label="Reload stream"
-              >
-                <RotateCw className="h-4 w-4" />
-              </button>
-              {/* Fill / fit toggle — stretches to fill the screen. */}
-              <button onClick={() => { setFill((f) => !f); kick(); }}
-                className={`grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-primary hover:text-primary-foreground ${fill ? "bg-primary/80" : "bg-white/10"}`}
-                aria-label={fill ? "Fit to screen" : "Fill screen"}
-              >
-                {fill ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
-              </button>
-              <button onClick={togglePip}
-                className="hidden h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground sm:grid"
-                aria-label="Picture in picture"
-              >
-                <PictureInPicture2 className="h-4 w-4" />
-              </button>
-              <button onClick={toggleFs}
-                className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-primary hover:text-primary-foreground"
-                aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
-              >
-                {fullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-              </button>
+            <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 p-1 backdrop-blur-md sm:gap-2 sm:p-1.5">
+              <PlayerBtn onClick={toggle} label={playing ? "Pause (K)" : "Play (K)"} title={playing ? "Pause (K)" : "Play (K)"}>
+                {playing ? <Pause className="h-4 w-4 fill-current" aria-hidden="true" /> : <Play className="h-4 w-4 fill-current" aria-hidden="true" />}
+              </PlayerBtn>
+              <PlayerBtn onClick={toggleMute} label={muted ? "Unmute (M)" : "Mute (M)"} title={muted ? "Unmute (M)" : "Mute (M)"}>
+                {muted || volume === 0 ? <VolumeX className="h-4 w-4" aria-hidden="true" /> : <Volume2 className="h-4 w-4" aria-hidden="true" />}
+              </PlayerBtn>
+              {(() => {
+                const v = muted ? 0 : volume;
+                const pct = Math.round(v * 100);
+                return (
+                  <div className="volume-slider group/vol hidden items-center pl-1 pr-2 sm:flex">
+                    <input
+                      type="range" min={0} max={1} step={0.01}
+                      value={v}
+                      onChange={(e) => setVol(parseFloat(e.target.value))}
+                      style={{ ["--vol" as any]: `${pct}%` }}
+                      className="modern-range h-1.5 w-20 cursor-pointer appearance-none rounded-full transition-all group-hover/vol:w-32 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label="Volume"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={pct}
+                    />
+                  </div>
+                );
+              })()}
+
+              <span aria-hidden="true" className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
+
+              <span className="hidden items-center gap-1.5 rounded-full bg-destructive/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white sm:inline-flex">
+                <span className="live-dot" aria-hidden="true" /> Live
+              </span>
+
+              <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+                <PlayerBtn onClick={() => { toast.message("Reloading stream…"); onReload(); kick(); }} label="Reload stream" title="Reload stream">
+                  <RotateCw className="h-4 w-4" aria-hidden="true" />
+                </PlayerBtn>
+                <PlayerBtn
+                  onClick={() => { setFill((f) => !f); kick(); }}
+                  label={fill ? "Fit to screen" : "Fill screen"}
+                  title={fill ? "Fit to screen" : "Fill screen"}
+                  active={fill}
+                >
+                  {fill ? <Shrink className="h-4 w-4" aria-hidden="true" /> : <Expand className="h-4 w-4" aria-hidden="true" />}
+                </PlayerBtn>
+                <PlayerBtn onClick={togglePip} label="Picture in picture (P)" title="Picture in picture (P)" className="hidden sm:grid">
+                  <PictureInPicture2 className="h-4 w-4" aria-hidden="true" />
+                </PlayerBtn>
+                <PlayerBtn onClick={toggleFs} label={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"} title={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}>
+                  {fullscreen ? <Minimize className="h-4 w-4" aria-hidden="true" /> : <Maximize className="h-4 w-4" aria-hidden="true" />}
+                </PlayerBtn>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
+}
+
+function PlayerBtn({
+  children,
+  onClick,
+  label,
+  title,
+  active,
+  className = "",
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  label: string;
+  title?: string;
+  active?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={title ?? label}
+      className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-white transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        active ? "bg-primary/80" : "bg-white/5"
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 }
