@@ -20,13 +20,15 @@
         "player": "Julián Andrés Quinones",
         "minute": 9,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Mexico"
       },
       {
         "player": "Raúl Alonso Jimenez",
         "minute": 67,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Mexico"
       }
     ],
     "yellow_cards": [
@@ -94,19 +96,22 @@
         "player": "Ladislav Krejci",
         "minute": 59,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Czechia"
       },
       {
         "player": "Inbeom Hwang",
         "minute": 67,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "South Korea"
       },
       {
         "player": "Hyeongyu Oh",
         "minute": 80,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "South Korea"
       }
     ],
     "yellow_cards": [
@@ -143,13 +148,15 @@
         "player": "Jovo Lukic",
         "minute": 21,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Bosnia and Herzegovina"
       },
       {
         "player": "Cyle Christopher Larin",
         "minute": 78,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Canada"
       }
     ],
     "yellow_cards": [
@@ -210,31 +217,36 @@
         "player": "Damián Josue Bobadilla",
         "minute": 7,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "USA"
       },
       {
         "player": "Folarin Jolaoluwa Balogun",
         "minute": 31,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       },
       {
         "player": "Folarin Jolaoluwa Balogun",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       },
       {
         "player": "Mauricio Mauricio",
         "minute": 73,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       },
       {
         "player": "Giovanni Alejandro Reyna",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       }
     ],
     "yellow_cards": [
@@ -301,13 +313,15 @@
         "player": "Breel Donald Embolo",
         "minute": 17,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Switzerland"
       },
       {
         "player": "Miro Max Maria Muheim",
         "minute": 90,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Switzerland"
       }
     ],
     "yellow_cards": [
@@ -356,13 +370,15 @@
         "player": "Ismael Saibari",
         "minute": 21,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Brazil"
       },
       {
         "player": "José Vinicius",
         "minute": 32,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       }
     ],
     "yellow_cards": [
@@ -405,7 +421,8 @@
         "player": "Mc",
         "minute": 28,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Scotland"
       }
     ],
     "yellow_cards": [
@@ -460,13 +477,15 @@
         "player": "Nestory Irankunda",
         "minute": 27,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Australia"
       },
       {
         "player": "Connor Isaac Metcalfe",
         "minute": 75,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Australia"
       }
     ],
     "yellow_cards": [
@@ -503,49 +522,57 @@
         "player": "Felix Kalu Nmecha",
         "minute": 6,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Germany"
       },
       {
         "player": "Livano Shyron Liomar Comenencia",
         "minute": 21,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Curaçao"
       },
       {
         "player": "Nico Cédric Schlotterbeck",
         "minute": 38,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Germany"
       },
       {
         "player": "Kai Lukas Havertz",
         "minute": 45,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Germany"
       },
       {
         "player": "Jamal Musiala",
         "minute": 47,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Germany"
       },
       {
         "player": "Nathaniel Christopher Brown",
         "minute": 68,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Germany"
       },
       {
         "player": "Deniz Undav",
         "minute": 78,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Germany"
       },
       {
         "player": "Kai Lukas Havertz",
         "minute": 88,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Germany"
       }
     ],
     "yellow_cards": [],
@@ -575,25 +602,29 @@
         "player": "Virgil Van Dijk",
         "minute": 50,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       },
       {
         "player": "Keito Nakamura",
         "minute": 57,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Japan"
       },
       {
         "player": "Crysencio Jilbert Sylverio Cir Summerville",
         "minute": 64,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       },
       {
         "player": "Daichi Kamada",
         "minute": 88,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Japan"
       }
     ],
     "yellow_cards": [
@@ -642,7 +673,8 @@
         "player": "Amad Diallo",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Côte d'Ivoire"
       }
     ],
     "yellow_cards": [
@@ -697,37 +729,43 @@
         "player": "Yasin Ayari",
         "minute": 7,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Sweden"
       },
       {
         "player": "Alexander Isak",
         "minute": 30,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Sweden"
       },
       {
         "player": "Omar Rekik",
         "minute": 43,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Sweden"
       },
       {
         "player": "Viktor Einar Gyokeres",
         "minute": 59,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Sweden"
       },
       {
         "player": "Mattias Olof Svanberg",
         "minute": 84,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Tunisia"
       },
       {
         "player": "Yasin Ayari",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Sweden"
       }
     ],
     "yellow_cards": [
@@ -800,13 +838,15 @@
         "player": "Ashour Metwaly Emam",
         "minute": 19,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Egypt"
       },
       {
         "player": "Hany Gamal Mohamed Hany",
         "minute": 66,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Egypt"
       }
     ],
     "yellow_cards": [
@@ -861,13 +901,15 @@
         "player": "Ali Abdulelah Alamri",
         "minute": 41,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Saudi Arabia"
       },
       {
         "player": "Maximiliano Javier Araujo",
         "minute": 80,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Uruguay"
       }
     ],
     "yellow_cards": [
@@ -904,25 +946,29 @@
         "player": "Elijah Henry Just",
         "minute": 7,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "New Zealand"
       },
       {
         "player": "Ramin Rezaeian",
         "minute": 32,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "IR Iran"
       },
       {
         "player": "Elijah Henry Just",
         "minute": 54,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "New Zealand"
       },
       {
         "player": "Mohammad Mohebbi",
         "minute": 64,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "IR Iran"
       }
     ],
     "yellow_cards": [
@@ -959,25 +1005,29 @@
         "player": "Kylian Mbappe",
         "minute": 66,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Bradley Jean-Manuel Essolisa Barcola",
         "minute": 82,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Kylian Mbappe",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Ibrahim Mbaye",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Senegal"
       }
     ],
     "yellow_cards": [],
@@ -1007,31 +1057,36 @@
         "player": "Erling Braut Haaland",
         "minute": 29,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Iraq"
       },
       {
         "player": "Hussein Ghadhban Aymen",
         "minute": 39,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Iraq"
       },
       {
         "player": "Erling Braut Haaland",
         "minute": 43,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       },
       {
         "player": "Leo Skiri Ostigard",
         "minute": 76,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       },
       {
         "player": "Hussein Ghadhban Aymen",
         "minute": 90,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Iraq"
       }
     ],
     "yellow_cards": [
@@ -1068,19 +1123,22 @@
         "player": "Lionel Andrés Messi",
         "minute": 17,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Lionel Andrés Messi",
         "minute": 60,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Lionel Andrés Messi",
         "minute": 76,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       }
     ],
     "yellow_cards": [],
@@ -1110,25 +1168,29 @@
         "player": "Romano Schmid",
         "minute": 20,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Austria"
       },
       {
         "player": "Iyad Ali Ali Olwan",
         "minute": 50,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Jordan"
       },
       {
         "player": "Mousa Mahmoud Yazan Alarab",
         "minute": 76,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Jordan"
       },
       {
         "player": "Marko Arnautovic",
         "minute": 90,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Austria"
       }
     ],
     "yellow_cards": [
@@ -1165,13 +1227,15 @@
         "player": "Pedro Joao Neves",
         "minute": 6,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Portugal"
       },
       {
         "player": "Yoane Wissa",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Congo DR"
       }
     ],
     "yellow_cards": [
@@ -1226,37 +1290,43 @@
         "player": "Harry Edward Kane",
         "minute": 12,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "England"
       },
       {
         "player": "Martin Baturina",
         "minute": 36,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       },
       {
         "player": "Harry Edward Kane",
         "minute": 42,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "England"
       },
       {
         "player": "Petar Musa",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Croatia"
       },
       {
         "player": "Jude Victor William Bellingham",
         "minute": 47,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       },
       {
         "player": "Marcus Rashford",
         "minute": 85,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Croatia"
       }
     ],
     "yellow_cards": [],
@@ -1286,7 +1356,8 @@
         "player": "Caleb Marfo Yirenkyi",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Ghana"
       }
     ],
     "yellow_cards": [
@@ -1335,25 +1406,29 @@
         "player": "Daniel Munoz",
         "minute": 40,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Uzbekistan"
       },
       {
         "player": "Abbosbek Fayzullaev",
         "minute": 60,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Colombia"
       },
       {
         "player": "Luis Fernando Diaz",
         "minute": 65,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Colombia"
       },
       {
         "player": "Jaminton Leandro Campaz",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Colombia"
       }
     ],
     "yellow_cards": [
@@ -1396,7 +1471,8 @@
         "player": "Luis Francisco Romo",
         "minute": 50,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Mexico"
       }
     ],
     "yellow_cards": [
@@ -1439,13 +1515,15 @@
         "player": "Michal Sadilek",
         "minute": 6,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Czechia"
       },
       {
         "player": "Teboho Mokoena",
         "minute": 83,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "South Africa"
       }
     ],
     "yellow_cards": [
@@ -1494,37 +1572,43 @@
         "player": "Cyle Christopher Larin",
         "minute": 16,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Canada"
       },
       {
         "player": "Jonathan Christian David",
         "minute": 29,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Canada"
       },
       {
         "player": "Jonathan Christian David",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Canada"
       },
       {
         "player": "Nathan-Dylan Saliba",
         "minute": 64,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Canada"
       },
       {
         "player": "Naceur Mohamed Manai",
         "minute": 75,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Qatar"
       },
       {
         "player": "Jonathan Christian David",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Canada"
       }
     ],
     "yellow_cards": [
@@ -1580,31 +1664,36 @@
         "player": "Johan Kula Manzambi",
         "minute": 74,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Switzerland"
       },
       {
         "player": "Ruben Estephan Vargas",
         "minute": 84,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Switzerland"
       },
       {
         "player": "Johan Kula Manzambi",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Switzerland"
       },
       {
         "player": "Granit Xhaka",
         "minute": 90,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Switzerland"
       },
       {
         "player": "Ermin Mahmic",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Bosnia and Herzegovina"
       }
     ],
     "yellow_cards": [
@@ -1660,19 +1749,22 @@
         "player": "Matheus Matheus Cunha",
         "minute": 23,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Brazil"
       },
       {
         "player": "Matheus Matheus Cunha",
         "minute": 36,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Brazil"
       },
       {
         "player": "José Vinicius",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Brazil"
       }
     ],
     "yellow_cards": [
@@ -1727,7 +1819,8 @@
         "player": "Ismael Saibari",
         "minute": 2,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       }
     ],
     "yellow_cards": [
@@ -1770,13 +1863,15 @@
         "player": "Cameron Robert Burgess",
         "minute": 11,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Australia"
       },
       {
         "player": "Alexander Michael Freeman",
         "minute": 43,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       }
     ],
     "yellow_cards": [
@@ -1849,7 +1944,8 @@
         "player": "Matias Galarza",
         "minute": 2,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Paraguay"
       }
     ],
     "yellow_cards": [
@@ -1899,19 +1995,22 @@
         "player": "Franck Yannick Kessie",
         "minute": 30,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Côte d'Ivoire"
       },
       {
         "player": "Deniz Undav",
         "minute": 68,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Germany"
       },
       {
         "player": "Deniz Undav",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Germany"
       }
     ],
     "yellow_cards": [],
@@ -2001,37 +2100,43 @@
         "player": "Brian Ebenezer Adjei Brobbey",
         "minute": 5,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       },
       {
         "player": "Brian Ebenezer Adjei Brobbey",
         "minute": 17,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       },
       {
         "player": "Cody Mathès Gakpo",
         "minute": 47,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       },
       {
         "player": "Cody Mathès Gakpo",
         "minute": 54,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       },
       {
         "player": "Anthony David Junior Elanga",
         "minute": 59,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Sweden"
       },
       {
         "player": "Crysencio Jilbert Sylverio Cir Summerville",
         "minute": 89,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       }
     ],
     "yellow_cards": [
@@ -2080,25 +2185,29 @@
         "player": "Daichi Kamada",
         "minute": 4,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Japan"
       },
       {
         "player": "Ayase Ueda",
         "minute": 31,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Japan"
       },
       {
         "player": "Junya Ito",
         "minute": 69,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Japan"
       },
       {
         "player": "Ayase Ueda",
         "minute": 83,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Japan"
       }
     ],
     "yellow_cards": [],
@@ -2171,25 +2280,29 @@
         "player": "Finn Surman",
         "minute": 15,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "New Zealand"
       },
       {
         "player": "Mohamed Zaky Mostafa Zico",
         "minute": 58,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Egypt"
       },
       {
         "player": "Hamed Mahrous Mohamed Salah",
         "minute": 67,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Egypt"
       },
       {
         "player": "Ahmed Ibrahim Trezeguet",
         "minute": 82,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Egypt"
       }
     ],
     "yellow_cards": [
@@ -2238,25 +2351,29 @@
         "player": "Lamine Yamal Yamal",
         "minute": 10,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       },
       {
         "player": "Mikel Oyarzabal",
         "minute": 21,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       },
       {
         "player": "Mikel Oyarzabal",
         "minute": 24,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       },
       {
         "player": "Mohammed Hassan Altambakti",
         "minute": 49,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Saudi Arabia"
       }
     ],
     "yellow_cards": [
@@ -2299,25 +2416,29 @@
         "player": "Lenini Kevin Pina",
         "minute": 21,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Uruguay"
       },
       {
         "player": "Maximiliano Javier Araujo",
         "minute": 44,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Uruguay"
       },
       {
         "player": "Agustin Canobbio",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Cabo Verde"
       },
       {
         "player": "Sandro Helio Varela",
         "minute": 61,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Cabo Verde"
       }
     ],
     "yellow_cards": [
@@ -2372,19 +2493,22 @@
         "player": "Kylian Mbappe",
         "minute": 14,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Kylian Mbappe",
         "minute": 54,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Masour Ousmane Dembele",
         "minute": 66,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       }
     ],
     "yellow_cards": [
@@ -2421,31 +2545,36 @@
         "player": "Marcus Holmgren Holmgren Pedersen",
         "minute": 43,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       },
       {
         "player": "Erling Braut Haaland",
         "minute": 48,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       },
       {
         "player": "Ismaila Sarr",
         "minute": 53,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       },
       {
         "player": "Erling Braut Haaland",
         "minute": 58,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Senegal"
       },
       {
         "player": "Ismaila Sarr",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Senegal"
       }
     ],
     "yellow_cards": [],
@@ -2475,13 +2604,15 @@
         "player": "Lionel Andrés Messi",
         "minute": 38,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Lionel Andrés Messi",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       }
     ],
     "yellow_cards": [
@@ -2536,19 +2667,22 @@
         "player": "Mahmoud Ahmed Nizar Alrashdan",
         "minute": 36,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Jordan"
       },
       {
         "player": "Ahmed Nadhir Benbouali",
         "minute": 69,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Algeria"
       },
       {
         "player": "Amine Ferid Gouiri",
         "minute": 82,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Algeria"
       }
     ],
     "yellow_cards": [
@@ -2591,31 +2725,36 @@
         "player": "Ronaldo Cristiano Ronaldo",
         "minute": 6,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Portugal"
       },
       {
         "player": "Alexandre Nuno",
         "minute": 17,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Portugal"
       },
       {
         "player": "Ronaldo Cristiano Ronaldo",
         "minute": 39,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Portugal"
       },
       {
         "player": "Abdukodir Khusanov",
         "minute": 60,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Uzbekistan"
       },
       {
         "player": "Alexandre Rafael Leao",
         "minute": 87,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Portugal"
       }
     ],
     "yellow_cards": [
@@ -2658,7 +2797,8 @@
         "player": "Daniel Munoz",
         "minute": 76,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Colombia"
       }
     ],
     "yellow_cards": [
@@ -2743,7 +2883,8 @@
         "player": "Ante Budimir",
         "minute": 54,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Croatia"
       }
     ],
     "yellow_cards": [
@@ -2786,19 +2927,22 @@
         "player": "Mateo Chavez",
         "minute": 55,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Mexico"
       },
       {
         "player": "Julián Andrés Quinones",
         "minute": 61,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Mexico"
       },
       {
         "player": "Álvaro Fidalgo",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Mexico"
       }
     ],
     "yellow_cards": [
@@ -2835,7 +2979,8 @@
         "player": "Thapelo Maseko",
         "minute": 63,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "South Africa"
       }
     ],
     "yellow_cards": [
@@ -2878,19 +3023,22 @@
         "player": "Ruben Estephan Vargas",
         "minute": 46,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Switzerland"
       },
       {
         "player": "Johan Kula Manzambi",
         "minute": 57,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Switzerland"
       },
       {
         "player": "Promise Oluwatobi Emmanuel David",
         "minute": 76,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Canada"
       }
     ],
     "yellow_cards": [
@@ -2939,25 +3087,29 @@
         "player": "Kerim Alajbegovic",
         "minute": 29,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Bosnia and Herzegovina"
       },
       {
         "player": "Ibrahim Mahmoud Abunada",
         "minute": 34,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Qatar"
       },
       {
         "player": "Khalid Hassan Alhaydos",
         "minute": 42,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Qatar"
       },
       {
         "player": "Ermin Mahmic",
         "minute": 82,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Bosnia and Herzegovina"
       }
     ],
     "yellow_cards": [
@@ -3000,19 +3152,22 @@
         "player": "José Vinicius",
         "minute": 7,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Brazil"
       },
       {
         "player": "José Vinicius",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Brazil"
       },
       {
         "player": "Matheus Matheus Cunha",
         "minute": 60,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Brazil"
       }
     ],
     "yellow_cards": [
@@ -3061,37 +3216,43 @@
         "player": "Yassine Bounou",
         "minute": 10,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Morocco"
       },
       {
         "player": "Achraf Hakimi",
         "minute": 39,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       },
       {
         "player": "Wilson Isidor",
         "minute": 43,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       },
       {
         "player": "Ismael Saibari",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       },
       {
         "player": "Soufiane Rahimi",
         "minute": 78,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       },
       {
         "player": "Gessime Ben Youssef Mustapha Yassine",
         "minute": 89,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Haiti"
       }
     ],
     "yellow_cards": [
@@ -3140,31 +3301,36 @@
         "player": "Auston Levi-Jesaiah Trusty",
         "minute": 3,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Türkiye"
       },
       {
         "player": "Arda Guler",
         "minute": 10,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Türkiye"
       },
       {
         "player": "Orkun Kokcu",
         "minute": 31,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Türkiye"
       },
       {
         "player": "Sebastian Matthew Berhalter",
         "minute": 49,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       },
       {
         "player": "Kaan Ayhan",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       }
     ],
     "yellow_cards": [
@@ -3237,19 +3403,22 @@
         "player": "Leroy Aziz Sane",
         "minute": 2,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Ecuador"
       },
       {
         "player": "Nilson David Angulo",
         "minute": 9,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Germany"
       },
       {
         "player": "Gonzalo Jordy Plata",
         "minute": 77,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Ecuador"
       }
     ],
     "yellow_cards": [
@@ -3304,13 +3473,15 @@
         "player": "Nicolas Pepe",
         "minute": 7,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Côte d'Ivoire"
       },
       {
         "player": "Nicolas Pepe",
         "minute": 64,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Côte d'Ivoire"
       }
     ],
     "yellow_cards": [
@@ -3359,25 +3530,29 @@
         "player": "Ellyes Joris Skhiri",
         "minute": 3,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Tunisia"
       },
       {
         "player": "Brian Ebenezer Adjei Brobbey",
         "minute": 7,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Tunisia"
       },
       {
         "player": "Hazem Mastouri",
         "minute": 54,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       },
       {
         "player": "Paul Jan-Paul Van Hecke",
         "minute": 62,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       }
     ],
     "yellow_cards": [],
@@ -3407,13 +3582,15 @@
         "player": "Daizen Maeda",
         "minute": 56,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Japan"
       },
       {
         "player": "Anthony David Junior Elanga",
         "minute": 62,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Sweden"
       }
     ],
     "yellow_cards": [
@@ -3462,37 +3639,43 @@
         "player": "Leandro Trossard",
         "minute": 28,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Leandro Trossard",
         "minute": 50,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Kevin De Bruyne",
         "minute": 66,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Elijah Henry Just",
         "minute": 84,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "New Zealand"
       },
       {
         "player": "Romelu Lukaku",
         "minute": 86,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Alexis Jesse Saelemaekers",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       }
     ],
     "yellow_cards": [
@@ -3535,13 +3718,15 @@
         "player": "Saber Abdelmohsen Mahmoud",
         "minute": 5,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Egypt"
       },
       {
         "player": "Ramin Rezaeian",
         "minute": 14,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "IR Iran"
       }
     ],
     "yellow_cards": [
@@ -3614,7 +3799,8 @@
         "player": "Alejandro Baena",
         "minute": 42,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       }
     ],
     "yellow_cards": [
@@ -3717,31 +3903,36 @@
         "player": "Masour Ousmane Dembele",
         "minute": 7,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       },
       {
         "player": "Masour Ousmane Dembele",
         "minute": 20,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Thelonious Gerard Aasgaard",
         "minute": 21,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Masour Ousmane Dembele",
         "minute": 32,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Désiré Nonka-Maho Doue",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       }
     ],
     "yellow_cards": [
@@ -3784,31 +3975,36 @@
         "player": "Habib Mbacke Diarra",
         "minute": 4,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Senegal"
       },
       {
         "player": "Ismaila Sarr",
         "minute": 56,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Senegal"
       },
       {
         "player": "Pape Alassane Gueye",
         "minute": 59,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Senegal"
       },
       {
         "player": "Pape Alassane Gueye",
         "minute": 71,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Senegal"
       },
       {
         "player": "Iliman Cheikh Baroy Ndiaye",
         "minute": 82,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Senegal"
       }
     ],
     "yellow_cards": [
@@ -3870,25 +4066,29 @@
         "player": "Giovani Lo Celso",
         "minute": 19,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Jordan"
       },
       {
         "player": "Lautaro Javier Martinez",
         "minute": 31,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Argentina"
       },
       {
         "player": "Mohammad Mousa Mousa Altamari",
         "minute": 55,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Lionel Andrés Messi",
         "minute": 80,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       }
     ],
     "yellow_cards": [
@@ -3937,37 +4137,43 @@
         "player": "Marko Arnautovic",
         "minute": 28,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Austria"
       },
       {
         "player": "Rafik Belghali",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Algeria"
       },
       {
         "player": "Marcel Sabitzer",
         "minute": 55,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Austria"
       },
       {
         "player": "Riyad Karim Mahrez",
         "minute": 60,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Algeria"
       },
       {
         "player": "Riyad Karim Mahrez",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Algeria"
       },
       {
         "player": "SaÅ¡a Kalajdzic",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Austria"
       }
     ],
     "yellow_cards": [
@@ -4034,25 +4240,29 @@
         "player": "Eldor Shomurodov",
         "minute": 10,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Congo DR"
       },
       {
         "player": "Yoane Wissa",
         "minute": 68,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Congo DR"
       },
       {
         "player": "Mayele Fiston Mayele",
         "minute": 78,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Congo DR"
       },
       {
         "player": "Yoane Wissa",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Uzbekistan"
       }
     ],
     "yellow_cards": [
@@ -4113,13 +4323,15 @@
         "player": "Jude Victor William Bellingham",
         "minute": 62,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       },
       {
         "player": "Harry Edward Kane",
         "minute": 67,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       }
     ],
     "yellow_cards": [
@@ -4168,19 +4380,22 @@
         "player": "Petar Sucic",
         "minute": 31,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Croatia"
       },
       {
         "player": "Derrick Luckassen",
         "minute": 73,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Croatia"
       },
       {
         "player": "Nikola Vlasic",
         "minute": 83,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Ghana"
       }
     ],
     "yellow_cards": [
@@ -4223,7 +4438,8 @@
         "player": "Stephen Eustaquio",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Canada"
       }
     ],
     "yellow_cards": [
@@ -4266,19 +4482,22 @@
         "player": "Kaishu Sano",
         "minute": 29,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Japan"
       },
       {
         "player": "Henrique",
         "minute": 56,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Brazil"
       },
       {
         "player": "MARTINELLIGabriel Gabriel",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Brazil"
       }
     ],
     "yellow_cards": [
@@ -4345,13 +4564,15 @@
         "player": "Julio Cesar Enciso",
         "minute": 42,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Paraguay"
       },
       {
         "player": "Kai Lukas Havertz",
         "minute": 54,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Germany"
       }
     ],
     "yellow_cards": [
@@ -4418,13 +4639,15 @@
         "player": "Cody Mathès Gakpo",
         "minute": 72,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Netherlands"
       },
       {
         "player": "Issa Laye Lucas Jean Diop",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       }
     ],
     "yellow_cards": [
@@ -4467,19 +4690,22 @@
         "player": "Antonio Eromonsele Nordby Nusa",
         "minute": 39,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       },
       {
         "player": "Amad Diallo",
         "minute": 74,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Côte d'Ivoire"
       },
       {
         "player": "Erling Braut Haaland",
         "minute": 86,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       }
     ],
     "yellow_cards": [
@@ -4516,19 +4742,22 @@
         "player": "Kylian Mbappe",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Bradley Jean-Manuel Essolisa Barcola",
         "minute": 53,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Kylian Mbappe",
         "minute": 74,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       }
     ],
     "yellow_cards": [],
@@ -4558,13 +4787,15 @@
         "player": "Julián Andrés Quinones",
         "minute": 22,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Mexico"
       },
       {
         "player": "Raúl Alonso Jimenez",
         "minute": 31,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Mexico"
       }
     ],
     "yellow_cards": [
@@ -4620,19 +4851,22 @@
         "player": "Kibambe Brian Cipenga",
         "minute": 7,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       },
       {
         "player": "Harry Edward Kane",
         "minute": 75,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       },
       {
         "player": "Harry Edward Kane",
         "minute": 86,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Congo DR"
       }
     ],
     "yellow_cards": [
@@ -4675,31 +4909,36 @@
         "player": "Habib Mbacke Diarra",
         "minute": 25,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Ismaila Sarr",
         "minute": 51,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Romelu Lukaku",
         "minute": 86,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Youri Marion Tielemans",
         "minute": 89,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Senegal"
       },
       {
         "player": "Youri Marion Tielemans",
         "minute": 120,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Senegal"
       }
     ],
     "yellow_cards": [
@@ -4742,13 +4981,15 @@
         "player": "Folarin Jolaoluwa Balogun",
         "minute": 45,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       },
       {
         "player": "Malik Leon Tillman",
         "minute": 82,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       }
     ],
     "yellow_cards": [
@@ -4792,19 +5033,22 @@
         "player": "Mikel Oyarzabal",
         "minute": 36,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       },
       {
         "player": "Pedro Antonio Porro",
         "minute": 66,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       },
       {
         "player": "Mikel Oyarzabal",
         "minute": 89,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       }
     ],
     "yellow_cards": [
@@ -4841,19 +5085,22 @@
         "player": "Ivan Perisic",
         "minute": 53,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Croatia"
       },
       {
         "player": "Ronaldo Cristiano Ronaldo",
         "minute": 68,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Portugal"
       },
       {
         "player": "RAMOSGonçalo Goncalo",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Portugal"
       }
     ],
     "yellow_cards": [
@@ -4902,13 +5149,15 @@
         "player": "Breel Donald Embolo",
         "minute": 10,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Switzerland"
       },
       {
         "player": "Dan Ndoye",
         "minute": 46,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Switzerland"
       }
     ],
     "yellow_cards": [
@@ -4951,13 +5200,15 @@
         "player": "Ashour Metwaly Emam",
         "minute": 13,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Egypt"
       },
       {
         "player": "Hany Gamal Mohamed Hany",
         "minute": 55,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Egypt"
       }
     ],
     "yellow_cards": [],
@@ -4987,31 +5238,36 @@
         "player": "Lionel Andrés Messi",
         "minute": 29,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Deroy Deroy Duarte",
         "minute": 59,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Lisandro Martinez",
         "minute": 92,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Cabo Verde"
       },
       {
         "player": "CABRALSidny Sidny Lopes",
         "minute": 103,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Cabo Verde"
       },
       {
         "player": "Alberto Diney",
         "minute": 111,
         "injury": null,
-        "type": "OG"
+        "type": "OG",
+        "team": "Cabo Verde"
       }
     ],
     "yellow_cards": [],
@@ -5041,7 +5297,8 @@
         "player": "Jhon Adolfo Arias",
         "minute": 14,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Colombia"
       }
     ],
     "yellow_cards": [],
@@ -5071,7 +5328,8 @@
         "player": "Kylian Mbappe",
         "minute": 70,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "France"
       }
     ],
     "yellow_cards": [],
@@ -5101,19 +5359,22 @@
         "player": "Azz-Eddine Ounahi",
         "minute": 50,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       },
       {
         "player": "Azz-Eddine Ounahi",
         "minute": 82,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       },
       {
         "player": "Soufiane Rahimi",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Morocco"
       }
     ],
     "yellow_cards": [],
@@ -5143,19 +5404,22 @@
         "player": "Erling Braut Haaland",
         "minute": 79,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       },
       {
         "player": "Neymar Neymar Jr",
         "minute": 90,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Brazil"
       },
       {
         "player": "Erling Braut Haaland",
         "minute": 90,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       }
     ],
     "yellow_cards": [
@@ -5192,31 +5456,36 @@
         "player": "Jude Victor William Bellingham",
         "minute": 36,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       },
       {
         "player": "Jude Victor William Bellingham",
         "minute": 38,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       },
       {
         "player": "Julián Andrés Quinones",
         "minute": 42,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Mexico"
       },
       {
         "player": "Harry Edward Kane",
         "minute": 60,
         "injury": null,
-        "type": "PEN"
+        "type": "PEN",
+        "team": "Mexico"
       },
       {
         "player": "Raúl Alonso Jimenez",
         "minute": 69,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       }
     ],
     "yellow_cards": [
@@ -5290,7 +5559,8 @@
         "player": "Mikel Merino",
         "minute": 90,
         "injury": 1,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       }
     ],
     "yellow_cards": [
@@ -5339,31 +5609,36 @@
         "player": "Charles Marc De Ketelaere",
         "minute": 9,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Malik Leon Tillman",
         "minute": 31,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "USA"
       },
       {
         "player": "Charles Marc De Ketelaere",
         "minute": 33,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Hans Vanaken",
         "minute": 57,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       },
       {
         "player": "Romelu Lukaku",
         "minute": 90,
         "injury": 3,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       }
     ],
     "yellow_cards": [
@@ -5406,31 +5681,36 @@
         "player": "Ahmed Ibrahim Yasser",
         "minute": 15,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Egypt"
       },
       {
         "player": "Cristian Gabriel Romero",
         "minute": 26,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Lionel Andrés Messi",
         "minute": 40,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Julián Alvarez",
         "minute": 55,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Mohamed Zaky Mostafa Zico",
         "minute": 67,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Egypt"
       }
     ],
     "yellow_cards": [
@@ -5545,13 +5825,15 @@
         "player": "Kylian Mbappe",
         "minute": 60,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       },
       {
         "player": "Masour Ousmane Dembele",
         "minute": 66,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "France"
       }
     ],
     "yellow_cards": [
@@ -5588,19 +5870,22 @@
         "player": "Fabian Ruiz",
         "minute": 30,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       },
       {
         "player": "Charles Marc De Ketelaere",
         "minute": 41,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Spain"
       },
       {
         "player": "Mikel Merino",
         "minute": 88,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Belgium"
       }
     ],
     "yellow_cards": [
@@ -5655,19 +5940,22 @@
         "player": "Andreas Rædergård Schjelderup",
         "minute": 36,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Norway"
       },
       {
         "player": "Jude Victor William Bellingham",
         "minute": 45,
         "injury": 2,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       },
       {
         "player": "Jude Victor William Bellingham",
         "minute": 93,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "England"
       }
     ],
     "yellow_cards": [
@@ -5704,25 +5992,29 @@
         "player": "Alexis Mac Allister",
         "minute": 10,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Dan Ndoye",
         "minute": 67,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       },
       {
         "player": "Julián Alvarez",
         "minute": 112,
         "injury": null,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Switzerland"
       },
       {
         "player": "Lautaro Javier Martinez",
         "minute": 120,
         "injury": 1,
-        "type": "REGULAR"
+        "type": "REGULAR",
+        "team": "Argentina"
       }
     ],
     "yellow_cards": [
