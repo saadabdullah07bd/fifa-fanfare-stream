@@ -1,24 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { flagUrl, countryName, bdShortDate, bdTime } from "@/lib/flags";
-import { normalizeAppMatchStatus } from "@/lib/match-status";
+import { WC26_MATCHES, type Wc26Match } from "@/data/wc26-matches";
 
 
 // Knockout stages ordered earliest → latest. Third-place playoff intentionally
 // omitted so the bracket squeezes cleanly from Round of 32 into the Final.
 const KO_STAGES = ["LAST_32", "LAST_16", "QUARTER_FINALS", "SEMI_FINALS", "FINAL"] as const;
-const KO_LEGACY: Record<string, string> = {
-  "last-32": "LAST_32",
-  "last-16": "LAST_16",
-  "quarter-finals": "QUARTER_FINALS",
-  "semi-finals": "SEMI_FINALS",
-  "final": "FINAL",
-};
 const KO_LABEL: Record<string, string> = {
   LAST_32: "Round of 32",
   LAST_16: "Round of 16",
@@ -27,43 +18,30 @@ const KO_LABEL: Record<string, string> = {
   FINAL: "Final",
 };
 
-type MatchRow = {
-  id: string;
-  external_id: string | null;
-  stage: string | null;
-  date_utc: string;
-  home_team_code: string | null;
-  away_team_code: string | null;
-  home_score: number | null;
-  away_score: number | null;
-  status: string | null;
-  venues: { name: string | null; city: string | null } | null;
+// Legacy alias table (kept for backwards-compat with earlier URL params).
+const KO_LEGACY: Record<string, string> = {
+  "last-32": "LAST_32", "last-16": "LAST_16",
+  "quarter-finals": "QUARTER_FINALS", "semi-finals": "SEMI_FINALS", "final": "FINAL",
 };
+
+type MatchRow = Wc26Match;
 
 type ViewMode = "all" | "knockout";
 
 /**
- * Fixtures page — full match list (default) and knockout bracket view.
+ * Fixtures page — full match list (default) and knockout bracket view. All
+ * data is sourced from the bundled FIFA World Cup 2026 workbook (see
+ * `src/data/wc26-matches.json`), never from live APIs.
  */
 export default function Fixtures() {
   const [params, setParams] = useSearchParams();
   const view: ViewMode = params.get("view") === "knockout" ? "knockout" : "all";
 
-  const { data = [] } = useQuery<MatchRow[]>({
-    queryKey: ["matches-with-venues"],
-    refetchInterval: 60_000,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("matches")
-        .select("*, venues(name, city)")
-        .order("date_utc");
-      return (data as MatchRow[] | null) ?? [];
-    },
-  });
-
   const sorted = useMemo(
-    () => [...data].sort((a, b) => a.date_utc.localeCompare(b.date_utc)),
-    [data],
+    () => [...WC26_MATCHES]
+      .filter((m) => m.date_utc)
+      .sort((a, b) => (a.date_utc ?? "").localeCompare(b.date_utc ?? "")),
+    [],
   );
 
   const setView = (v: ViewMode) => {
