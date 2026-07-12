@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
 
+/**
+ * 404 Error page shown when a route does not exist.
+ */
+
 export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center bg-background px-4">

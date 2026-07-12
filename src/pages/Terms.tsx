@@ -1,5 +1,9 @@
 import { Seo } from "@/lib/seo";
 
+/**
+ * Terms of Service page.
+ */
+
 export default function Terms() {
   return (
     <article className="mx-auto max-w-3xl px-4 py-16 prose prose-invert">

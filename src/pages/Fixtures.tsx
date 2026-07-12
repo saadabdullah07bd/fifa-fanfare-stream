@@ -18,18 +18,25 @@ const KO_LABEL: Record<string, string> = {
   FINAL: "Final",
 };
 
+/**
+ * Knockout bracket page showing the final stages of the tournament.
+ */
+
 export default function Fixtures() {
   const { data = [] } = useQuery({
+    // Fetch all matches and refresh every minute.
     queryKey: ["matches"],
     refetchInterval: 60_000,
     queryFn: async () => (await supabase.from("matches").select("*").order("date_utc")).data ?? [],
   });
 
+  // Ensure matches are always ordered by UTC date.
   const sorted = useMemo(() => [...data].sort((a, b) => a.date_utc.localeCompare(b.date_utc)), [data]);
 
   const bracketScrollRef = useRef<HTMLDivElement | null>(null);
   const [bracketHasOverflow, setBracketHasOverflow] = useState(false);
 
+  // Group matches into knockout stages (Semi-finals, Final).
   const ko = KO_STAGES.map((stage) => ({
     stage,
     matches: sorted.filter((m) => {
@@ -38,6 +45,7 @@ export default function Fixtures() {
     }),
   }));
 
+  // Monitor scroll state for horizontal bracket navigation on mobile.
   useEffect(() => {
     const el = bracketScrollRef.current;
     if (!el) return;
@@ -113,6 +121,10 @@ export default function Fixtures() {
               aria-label="Scroll bracket right"
             >
               <ChevronRight className="h-5 w-5" />
+/**
+ * Individual team row within the knockout bracket.
+ */
+
             </motion.button>
           )}
         </AnimatePresence>

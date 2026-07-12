@@ -13,11 +13,16 @@ async function fetchWiki(title: string) {
   }>;
 }
 
+/**
+ * Team detail page fetching information from Wikipedia.
+ */
+
 export default function TeamDetail() {
   const { name } = useParams();
   const decoded = decodeURIComponent(name ?? "");
 
   const { data, isLoading } = useQuery({
+    // Attempt to find the most relevant Wikipedia summary for the team.
     queryKey: ["wiki-team", decoded],
     enabled: !!decoded,
     queryFn: async () => {

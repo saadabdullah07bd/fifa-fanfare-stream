@@ -4,14 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { toast } from "sonner";
 
+/**
+ * Auth page component handling Google OAuth sign-in and session redirection.
+ */
+
 export default function Auth() {
   const navigate = useNavigate();
   const from = "/";
 
   useEffect(() => {
+    // Check if user is already logged in and redirect to home if so.
     supabase.auth.getSession().then(({ data }) => { if (data.session) navigate(from, { replace: true }); });
   }, [from, navigate]);
 
+  /** Initiates Google OAuth sign-in flow. */
   async function google() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -29,6 +35,7 @@ export default function Auth() {
         Sign in with Google to save favorite teams, submit predictions, and stream live matches.
       </p>
 
+        // Store redirect path before starting OAuth flow.
       <button onClick={() => { window.sessionStorage.setItem("postAuthRedirect", "/"); google(); }}
         className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-border bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90">
         <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">

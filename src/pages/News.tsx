@@ -9,8 +9,13 @@ type Article = {
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
 
+/**
+ * Full news feed page displaying the latest football headlines.
+ */
+
 export default function News() {
   const { data, isLoading, isError, error } = useQuery({
+    // Fetch news articles from the Edge Function, cached for 1 hour.
     queryKey: ["news-feed"],
     refetchInterval: 3600_000,
     refetchOnWindowFocus: false,
