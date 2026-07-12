@@ -8,11 +8,16 @@ import { bdDate, bdTime } from "@/lib/flags";
 type Profile = { favorite_club_name: string | null; favorite_club_logo: string | null };
 type Team = { code: string; name: string; group: string | null; confederation: string | null; flag_url: string | null };
 type Match = {
-  id: string; stage: string; group: string | null; date_utc: string;
+  id: string; external_id: string | null; stage: string; group: string | null; date_utc: string;
   home_team_code: string; away_team_code: string;
   home_score: number | null; away_score: number | null;
   status: string; minute: string | null;
 };
+
+function matchRouteId(m: { external_id: string | null; id: string }) {
+  return (m.external_id ?? "").replace(/^fd_/, "") || m.id;
+}
+
 
 function getFavCode(): string | null {
   try { return window.localStorage.getItem("fav_team_code"); } catch { return null; }
@@ -74,7 +79,7 @@ export default function FavoriteClubCard() {
     (async () => {
       const [mx, gt] = await Promise.all([
         supabase.from("matches")
-          .select("id, stage, group, date_utc, home_team_code, away_team_code, home_score, away_score, status, minute")
+          .select("id, external_id, stage, group, date_utc, home_team_code, away_team_code, home_score, away_score, status, minute")
           .or(`home_team_code.eq.${team.code},away_team_code.eq.${team.code}`)
           .order("date_utc", { ascending: true }),
         team.group
@@ -140,7 +145,7 @@ export default function FavoriteClubCard() {
               <ul className="space-y-2">
                 {next.map((m) => (
                   <li key={m.id}>
-                    <Link to={`/match/${m.id}`}
+                    <Link to={`/match/${matchRouteId(m)}`}
                       className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background/50 px-3 py-2 text-sm transition hover:border-primary">
                       <div className="flex min-w-0 items-center gap-2">
                         {flagFor(m.home_team_code) && <img src={flagFor(m.home_team_code)!} alt="" className="h-4 w-6 rounded-sm object-cover" />}
