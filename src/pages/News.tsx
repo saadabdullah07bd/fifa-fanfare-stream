@@ -12,10 +12,10 @@ const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
 export default function News() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["news-feed"],
-    refetchInterval: 120_000,
-    refetchOnWindowFocus: true,
+    refetchInterval: 3600_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
-      const res = await fetch(`${FN_URL}?t=${Math.floor(Date.now() / 120_000)}`, {
+      const res = await fetch(`${FN_URL}?t=${Math.floor(Date.now() / 3600_000)}`, {
         headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
       });
       if (!res.ok) throw new Error(`News request failed (${res.status})`);
@@ -28,7 +28,6 @@ export default function News() {
     <div className="mx-auto max-w-6xl px-4 py-8 pb-12">
       <Seo title="News — Pitch26" description="Latest World Cup 2026 and football headlines, live." />
       <h1 className="display text-4xl sm:text-5xl">The Daily Pitch</h1>
-      <p className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">Live headlines</p>
       <div className="mt-4 h-px w-full bg-border" />
 
       {isLoading && <p className="mt-8 text-sm text-muted-foreground">Loading headlines…</p>}

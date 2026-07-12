@@ -67,8 +67,7 @@ function Nav() {
   const items = [
     ["/", "Home"], ["/fixtures", "Fixtures"],
     ["/standings", "Standings"],
-    ["/predictions", "Predict"],
-    ["/news", "News"], ["/live-tv", "Live TV"],
+    ["/news", "News"],
   ] as const;
   return (
     <>
@@ -121,7 +120,7 @@ export default function App() {
           <Route path="/standings" element={<Standings />} />
           <Route path="/news" element={<News />} />
           <Route path="/live-tv" element={<RequireAuth><LiveTV /></RequireAuth>} />
-          <Route path="/predictions" element={<Predictions />} />
+          <Route path="/predictions" element={<Navigate to="/" replace />} />
           <Route path="/match/:id" element={<MatchDetail />} />
           <Route path="/team/:name" element={<TeamDetail />} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
