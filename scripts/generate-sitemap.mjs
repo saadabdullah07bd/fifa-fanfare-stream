@@ -26,7 +26,7 @@ async function fetchDynamic() {
 
     const { data: matches } = await sb
       .from("matches")
-      .select("external_id, id, utc_date")
+      .select("external_id, id, date_utc")
       .limit(2000);
     for (const m of matches ?? []) {
       const id = (m.external_id ?? "").toString().replace(/^fd_/, "") || m.id;
@@ -35,25 +35,7 @@ async function fetchDynamic() {
         path: `/match/${id}`,
         changefreq: "hourly",
         priority: "0.7",
-        lastmod: today,
-      });
-    }
-
-    const { data: teams } = await sb
-      .from("matches")
-      .select("home_team_name, away_team_name")
-      .limit(2000);
-    const teamNames = new Set();
-    for (const t of teams ?? []) {
-      if (t.home_team_name) teamNames.add(t.home_team_name);
-      if (t.away_team_name) teamNames.add(t.away_team_name);
-    }
-    for (const name of teamNames) {
-      entries.push({
-        path: `/team/${encodeURIComponent(name)}`,
-        changefreq: "weekly",
-        priority: "0.5",
-        lastmod: today,
+        lastmod: (m.date_utc ?? "").slice(0, 10) || today,
       });
     }
 
@@ -62,6 +44,7 @@ async function fetchDynamic() {
     return [];
   }
 }
+
 
 function generateSitemap(entries) {
   const urls = entries.map((e) =>
