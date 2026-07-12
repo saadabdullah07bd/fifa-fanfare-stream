@@ -292,12 +292,16 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
               </td>
               <td className="py-2.5">
                 <div className="flex items-center gap-2 min-w-0">
-                  {r.team.crest ? (
-                    <img src={r.team.crest} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
-                  ) : (
-                    <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
-                  )}
+                  {(() => {
+                    const flag = r.team.crest ?? flagUrl(r.team.tla, 80);
+                    return flag ? (
+                      <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                    ) : (
+                      <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
+                    );
+                  })()}
                   <span className="truncate font-medium">{r.team.name}</span>
+
                 </div>
               </td>
               <td className="py-2.5 text-center text-muted-foreground">{r.played}</td>
