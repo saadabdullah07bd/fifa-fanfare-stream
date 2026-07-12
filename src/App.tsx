@@ -95,25 +95,43 @@ function Nav() {
           to={to}
           end={to === "/"}
           className={({ isActive }) =>
-            `px-3 py-2 text-sm font-semibold uppercase tracking-wider transition-colors hover:text-primary ${
-              isActive ? "text-primary border-b-2 border-primary" : "text-foreground/80"
+            `relative rounded-md px-3 py-2 text-sm font-semibold uppercase tracking-wider transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+              isActive ? "text-primary" : "text-foreground/80"
             }`
           }
-        >{label}</NavLink>
+        >
+          {({ isActive }) => (
+            <>
+              {label}
+              {isActive && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-2 -bottom-[3px] h-[2px] rounded-full bg-primary"
+                />
+              )}
+            </>
+          )}
+        </NavLink>
       ))}
     </>
   );
 }
 
 /**
- * Renders the footer only on the homepage.
+ * Site footer — visible on all pages, with responsive layout.
  */
-function HomeOnlyFooter() {
+function SiteFooter() {
   const { pathname } = useLocation();
-  if (pathname !== "/") return null;
+  if (pathname === "/live-tv" || pathname === "/auth") return null;
   return (
-    <footer className="hidden lg:block glass-nav mt-8 py-8 text-center text-xs text-muted-foreground">
-      Pitch26 · Independent fan hub · Not affiliated with FIFA
+    <footer className="mt-8 hidden border-t border-border bg-card/40 py-8 lg:block">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-xs text-muted-foreground sm:flex-row">
+        <p>© {new Date().getFullYear()} Pitch26 · Independent fan hub · Not affiliated with FIFA</p>
+        <nav aria-label="Legal" className="flex items-center gap-4">
+          <Link to="/terms" className="rounded hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Terms</Link>
+          <Link to="/privacy" className="rounded hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Privacy</Link>
+        </nav>
+      </div>
     </footer>
   );
 }
@@ -132,40 +150,73 @@ const MOBILE_TABS = [
 export default function App() {
   const { admin } = useIsAdmin();
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+      {/* Skip to content link for keyboard/screen-reader users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-primary-foreground focus:shadow-lg"
+      >
+        Skip to content
+      </a>
+
       <MobileSplash />
       <AuthRedirector />
       <OnboardingModal />
+
       <header className="sticky top-0 z-40 glass-nav">
-        <div className="tri-ribbon" />
-        
-        
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src={wc26Emblem.url} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
-            <span className="display text-2xl tracking-wider text-foreground">PITCH<span className="text-primary">26</span></span>
+        <div className="tri-ribbon" aria-hidden="true" />
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
+          <Link
+            to="/"
+            aria-label="Pitch26 home"
+            className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <img src={wc26Emblem.url} alt="" aria-hidden="true" width={40} height={40} className="h-9 w-9 object-contain sm:h-10 sm:w-10" />
+            <span className="display text-xl tracking-wider text-foreground sm:text-2xl">
+              PITCH<span className="text-primary">26</span>
+            </span>
           </Link>
-          <nav className="hidden items-center gap-1 lg:flex"><Nav /></nav>
+
+          <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex"><Nav /></nav>
+
           <div className="flex items-center gap-2">
             {admin && (
-              <Link to="/settings" aria-label="Admin settings"
-                className="hidden lg:inline-flex items-center gap-2 rounded-md bg-secondary border border-border px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground/80 hover:text-primary hover:border-primary/60 transition-colors">
-                <SettingsIcon size={14} /> Admin
-              </Link>
+              <>
+                <Link
+                  to="/settings"
+                  aria-label="Admin settings"
+                  className="hidden min-h-9 items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground/80 transition-colors hover:border-primary/60 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:inline-flex"
+                >
+                  <SettingsIcon size={14} aria-hidden="true" /> Admin
+                </Link>
+                <Link
+                  to="/settings"
+                  aria-label="Admin settings"
+                  className="grid h-10 w-10 place-items-center rounded-md border border-border bg-secondary text-foreground/80 transition-colors hover:border-primary/60 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:hidden"
+                >
+                  <SettingsIcon size={16} aria-hidden="true" />
+                </Link>
+              </>
             )}
-            {admin && (
-              <Link to="/settings" aria-label="Admin settings"
-                className="lg:hidden grid h-9 w-9 place-items-center rounded-md bg-secondary border border-border text-foreground/80 hover:text-primary hover:border-primary/60 transition-colors">
-                <SettingsIcon size={16} />
-              </Link>
-            )}
-            <Link to="/live-tv" className="hidden lg:inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow hover:brightness-110 transition">
-              <span className="live-dot mr-2 align-middle" />Watch
+            <Link
+              to="/live-tv"
+              aria-label="Watch live"
+              className="hidden min-h-10 items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:inline-flex"
+            >
+              <span className="live-dot mr-2 align-middle" aria-hidden="true" />Watch
+            </Link>
+            <Link
+              to="/live-tv"
+              aria-label="Watch live"
+              className="grid h-10 w-10 place-items-center rounded-md bg-primary text-primary-foreground shadow transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:hidden"
+            >
+              <Tv size={16} aria-hidden="true" />
             </Link>
           </div>
         </div>
       </header>
-      <main className="pb-24 lg:pb-0">
+
+      <main id="main-content" className="flex-1 pb-24 lg:pb-0">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/fixtures" element={<Fixtures />} />
@@ -182,8 +233,10 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <HomeOnlyFooter />
+
+      <SiteFooter />
       <BottomTabs tabs={MOBILE_TABS} accentColor="#e6b800" />
     </div>
   );
 }
+

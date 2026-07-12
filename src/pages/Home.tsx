@@ -97,7 +97,7 @@ export default function Home() {
     : { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4 } };
 
   return (
-    <main id="main" className="mx-auto max-w-7xl px-3 pb-14 pt-4 sm:px-6 sm:pt-6">
+    <div className="mx-auto max-w-7xl px-3 pb-14 pt-4 sm:px-6 sm:pt-6">
       <Seo
         title="Watch FIFA World Cup 2026 Live Free — Semifinals, Final & Every Match | Pitch26"
         description="Watch FIFA World Cup 2026 live free — semifinals, final and every match in HD & 4K. Live scores, fixtures, groups, standings and top scorers, updated by the second."
@@ -168,7 +168,7 @@ export default function Home() {
         <GoldenBootTile scorer={topScorer} />
         <FanZoneTile />
       </motion.div>
-    </main>
+    </div>
   );
 }
 
