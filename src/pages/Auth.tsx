@@ -3,9 +3,13 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/lib/seo";
 import { toast } from "sonner";
+import { getAppConfig } from "@/lib/appConfig";
 
 /**
  * Auth page component handling Google OAuth sign-in and session redirection.
+ * On web: uses Supabase's signInWithOAuth redirect flow.
+ * On Capacitor native (Android/iOS): uses the native Google Sign-In SDK
+ * (One Tap-style bottom sheet) and exchanges the ID token with Supabase.
  */
 
 export default function Auth() {
@@ -19,14 +23,37 @@ export default function Auth() {
     supabase.auth.getSession().then(({ data }) => { if (data.session) navigate(from, { replace: true }); });
   }, [from, navigate]);
 
-  /** Initiates Google OAuth sign-in flow. */
+  /** Initiates Google OAuth sign-in. On Capacitor native we use the native
+   *  Google Sign-In SDK for a real "One Tap" style bottom sheet; on the web we
+   *  fall back to Supabase's redirect-based OAuth. */
   async function google() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) toast.error(error.message);
+    try {
+      const capCore = await import("@capacitor/core").catch(() => null);
+      if (capCore?.Capacitor?.isNativePlatform?.()) {
+        const { GoogleAuth } = await import("@codetrix-studio/capacitor-google-auth");
+        const cfg = await getAppConfig();
+        await GoogleAuth.initialize({
+          clientId: cfg.googleClientId,
+          scopes: ["profile", "email"],
+          grantOfflineAccess: false,
+        });
+        const result = await GoogleAuth.signIn();
+        const idToken = result.authentication?.idToken;
+        if (!idToken) throw new Error("Google did not return an ID token");
+        const { error } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken });
+        if (error) throw error;
+        return;
+      }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   }
+
 
   return (
     <div className="mx-auto max-w-md px-4 py-24">
