@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MapPin, Trophy, CircleDot } from "lucide-react";
 import { Seo } from "@/lib/seo";
 import { flagUrl, countryName, bdShortDate, bdTime } from "@/lib/flags";
 import { WC26_MATCHES, type Wc26Match } from "@/data/wc26-matches";
-
 
 // Knockout stages ordered earliest → latest. Third-place playoff intentionally
 // omitted so the bracket squeezes cleanly from Round of 32 into the Final.
@@ -19,7 +18,15 @@ const KO_LABEL: Record<string, string> = {
 };
 
 // Stage filter chips available in the "All Matches" view.
-type StageFilter = "ALL" | "GROUP" | "LAST_32" | "LAST_16" | "QUARTER_FINALS" | "SEMI_FINALS" | "FINAL" | "THIRD_PLACE";
+type StageFilter =
+  | "ALL"
+  | "GROUP"
+  | "LAST_32"
+  | "LAST_16"
+  | "QUARTER_FINALS"
+  | "SEMI_FINALS"
+  | "FINAL"
+  | "THIRD_PLACE";
 const STAGE_CHIPS: { id: StageFilter; label: string }[] = [
   { id: "ALL", label: "All Stages" },
   { id: "GROUP", label: "Group Stage" },
@@ -45,9 +52,10 @@ export default function Fixtures() {
   const stage: StageFilter = STAGE_CHIPS.some((c) => c.id === stageParam) ? stageParam : "ALL";
 
   const sorted = useMemo(
-    () => [...WC26_MATCHES]
-      .filter((m) => m.date_utc)
-      .sort((a, b) => (a.date_utc ?? "").localeCompare(b.date_utc ?? "")),
+    () =>
+      [...WC26_MATCHES]
+        .filter((m) => m.date_utc)
+        .sort((a, b) => (a.date_utc ?? "").localeCompare(b.date_utc ?? "")),
     [],
   );
 
@@ -66,14 +74,13 @@ export default function Fixtures() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
-      className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8"
-    >
+    <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8">
       <Seo
-        title={view === "knockout"
-          ? "FIFA World Cup 2026 Knockout Bracket & Kickoff Times | Pitch26"
-          : "FIFA World Cup 2026 Fixtures & Kickoff Times | Pitch26"}
+        title={
+          view === "knockout"
+            ? "FIFA World Cup 2026 Knockout Bracket & Kickoff Times | Pitch26"
+            : "FIFA World Cup 2026 Fixtures & Kickoff Times | Pitch26"
+        }
         description="Full FIFA World Cup 2026 fixtures list, knockout bracket, quarter-final, semifinal and final schedule with kickoff times, stadiums and live scores."
         path="/fixtures"
       />
@@ -102,7 +109,9 @@ export default function Fixtures() {
               aria-selected={view === v}
               onClick={() => setView(v)}
               className={`tap-target rounded-xl px-4 py-2.5 transition-colors md:px-5 md:py-2 ${
-                view === v ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+                view === v
+                  ? "bg-primary text-primary-foreground shadow"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {v === "all" ? "All Matches" : "Knockouts"}
@@ -110,7 +119,6 @@ export default function Fixtures() {
           ))}
         </div>
       </div>
-
 
       {/* ─────────── Sticky stage-filter chips (All view only) ─────────── */}
       {view === "all" && (
@@ -143,10 +151,12 @@ export default function Fixtures() {
         </div>
       )}
 
-      {view === "all"
-        ? <AllMatchesView matches={sorted} stage={stage} />
-        : <KnockoutView matches={sorted} />}
-    </motion.div>
+      {view === "all" ? (
+        <AllMatchesView matches={sorted} stage={stage} />
+      ) : (
+        <KnockoutView matches={sorted} />
+      )}
+    </div>
   );
 }
 
@@ -161,7 +171,7 @@ function displayName(code: string | null, fallback: string): string {
  */
 function AllMatchesView({ matches, stage }: { matches: Wc26Match[]; stage: StageFilter }) {
   const filtered = useMemo(
-    () => stage === "ALL" ? matches : matches.filter((m) => m.stage === stage),
+    () => (stage === "ALL" ? matches : matches.filter((m) => m.stage === stage)),
     [matches, stage],
   );
 
@@ -208,7 +218,12 @@ function AllMatchesView({ matches, stage }: { matches: Wc26Match[]; stage: Stage
   return (
     <div className="mt-6 flex flex-col gap-8 sm:mt-8 sm:gap-10">
       {groups.map(([day, list]) => (
-        <section key={day} ref={(el) => { dayRefs.current[day] = el; }}>
+        <section
+          key={day}
+          ref={(el) => {
+            dayRefs.current[day] = el;
+          }}
+        >
           <div className="mb-3 flex items-center gap-3 px-1 sm:mb-4 sm:gap-4">
             <h2 className="display text-xl tracking-wider text-primary sm:text-3xl">
               {bdShortDate(day + "T00:00:00Z")}
@@ -219,7 +234,9 @@ function AllMatchesView({ matches, stage }: { matches: Wc26Match[]; stage: Stage
             {list.map((m, i) => (
               <motion.li
                 key={m.match_no}
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.2) }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i * 0.02, 0.2) }}
               >
                 <FixtureCard match={m} />
               </motion.li>
@@ -261,7 +278,9 @@ function FixtureCard({ match: m }: { match: Wc26Match }) {
         <div className="flex w-16 shrink-0 flex-col items-center justify-center rounded-xl border border-border/60 bg-black/40 px-1 py-1.5 sm:w-24 sm:rounded-2xl sm:py-2">
           {played ? (
             <>
-              <span className="display text-base leading-none tabular-nums text-primary sm:text-2xl">FT</span>
+              <span className="display text-base leading-none tabular-nums text-primary sm:text-2xl">
+                FT
+              </span>
               <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground sm:text-[10px]">
                 Result
               </span>
@@ -297,7 +316,9 @@ function FixtureCard({ match: m }: { match: Wc26Match }) {
             <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
             <span className="truncate">{venueLine}</span>
           </p>
-        ) : <span />}
+        ) : (
+          <span />
+        )}
         <span
           className={`shrink-0 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.2em] sm:text-[10px] ${
             m.stage === "GROUP"
@@ -316,7 +337,11 @@ function FixtureCard({ match: m }: { match: Wc26Match }) {
  * One team row inside a compact FixtureCard.
  */
 function TeamRow({
-  crest, name, score, played, winner,
+  crest,
+  name,
+  score,
+  played,
+  winner,
 }: {
   crest: string | null;
   name: string;
@@ -324,6 +349,7 @@ function TeamRow({
   played: boolean;
   winner: boolean;
 }) {
+  const navigate = useNavigate();
   return (
     <div className="flex min-w-0 items-center gap-2.5">
       {crest ? (
@@ -338,14 +364,22 @@ function TeamRow({
       ) : (
         <span className="h-5 w-7 shrink-0 rounded-[3px] bg-secondary sm:h-6 sm:w-9" />
       )}
-      <span
-        className={`display flex-1 truncate text-base leading-tight tracking-tight sm:text-xl ${
+      <button
+        type="button"
+        onClick={(e) => {
+          // The whole fixture card is a link to the match; clicking the team
+          // name should open the team page instead, without nested <a> tags.
+          e.preventDefault();
+          e.stopPropagation();
+          navigate(`/team/${encodeURIComponent(name)}`);
+        }}
+        className={`display min-w-0 flex-1 truncate rounded-sm text-left text-base leading-tight tracking-tight transition hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xl ${
           winner ? "text-primary" : played ? "text-foreground/60" : "text-foreground"
         }`}
-        title={name}
+        title={`${name} — squad, tactics & history`}
       >
         {name}
-      </span>
+      </button>
       {played && (
         <span
           className={`display shrink-0 text-lg tabular-nums sm:text-2xl ${
@@ -358,7 +392,6 @@ function TeamRow({
     </div>
   );
 }
-
 
 /**
  * Horizontal knockout bracket. Broadcast-style with stage jumper, snap
@@ -441,7 +474,9 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
               {stage === "FINAL" && <Trophy className="mr-1 inline h-3 w-3" aria-hidden="true" />}
               {KO_LABEL[stage]}
               {total > 0 && (
-                <span className={`ml-1.5 tabular-nums ${on ? "text-primary-foreground/80" : "text-muted-foreground/70"}`}>
+                <span
+                  className={`ml-1.5 tabular-nums ${on ? "text-primary-foreground/80" : "text-muted-foreground/70"}`}
+                >
                   {played}/{total}
                 </span>
               )}
@@ -452,8 +487,14 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
 
       <div className="relative">
         {/* Fade edges */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent"
+        />
 
         <div
           ref={scrollRef}
@@ -472,7 +513,9 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
               return (
                 <div
                   key={stage}
-                  ref={(el) => { columnRefs.current[stage] = el; }}
+                  ref={(el) => {
+                    columnRefs.current[stage] = el;
+                  }}
                   className="flex min-w-[240px] snap-center flex-col md:min-w-[280px] md:snap-align-none"
                 >
                   <div className="mb-4 flex items-center justify-center gap-2">
@@ -486,7 +529,12 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
                       <BracketPair key={pi} isLast={isLast} single={pair.length === 1}>
                         {pair.map((m, ii) =>
                           m ? (
-                            <BracketCard key={m.match_no} match={m} index={pi * 2 + ii} isFinal={isLast} />
+                            <BracketCard
+                              key={m.match_no}
+                              match={m}
+                              index={pi * 2 + ii}
+                              isFinal={isLast}
+                            />
                           ) : (
                             <BracketPlaceholder key={ii} />
                           ),
@@ -506,7 +554,9 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
               key="left"
               type="button"
               onClick={() => scrollBy(-1)}
-              initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
               className="pointer-events-auto absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:grid"
               aria-label="Scroll bracket left"
             >
@@ -518,7 +568,9 @@ function KnockoutView({ matches }: { matches: Wc26Match[] }) {
               key="right"
               type="button"
               onClick={() => scrollBy(1)}
-              initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 8 }}
               className="pointer-events-auto absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:grid"
               aria-label="Scroll bracket right"
             >
@@ -580,7 +632,15 @@ function BracketPlaceholder() {
   );
 }
 
-function BracketCard({ match, index, isFinal }: { match: Wc26Match; index: number; isFinal?: boolean }) {
+function BracketCard({
+  match,
+  index,
+  isFinal,
+}: {
+  match: Wc26Match;
+  index: number;
+  isFinal?: boolean;
+}) {
   const hs = match.home_score;
   const as = match.away_score;
   const decided = hs != null && as != null;
@@ -594,33 +654,58 @@ function BracketCard({ match, index, isFinal }: { match: Wc26Match; index: numbe
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.2) }}
       whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
     >
       <Link
         to={`/match/${match.match_no}`}
         aria-label={`${displayName(match.home_code, match.home_name)} vs ${displayName(match.away_code, match.away_name)}${decided ? `, final score ${hs}-${as}` : ""}`}
         className={`group relative block cursor-pointer overflow-hidden rounded-2xl border bg-card p-3 text-sm shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-          isFinal ? "border-primary/60 bg-gradient-to-br from-card to-primary/5" : "border-border hover:border-primary/60"
+          isFinal
+            ? "border-primary/60 bg-gradient-to-br from-card to-primary/5"
+            : "border-border hover:border-primary/60"
         }`}
       >
         {isFinal && (
-          <span aria-hidden="true" className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-primary/10 blur-2xl" />
+          <span
+            aria-hidden="true"
+            className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-primary/10 blur-2xl"
+          />
         )}
         {isLive && (
           <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-destructive/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-destructive">
             <CircleDot className="h-2.5 w-2.5 animate-pulse" aria-hidden="true" /> Live
           </span>
         )}
-        <BracketRow code={match.home_code} fallback={match.home_name} score={hs} winner={homeWin} loser={awayWin} />
+        <BracketRow
+          code={match.home_code}
+          fallback={match.home_name}
+          score={hs}
+          winner={homeWin}
+          loser={awayWin}
+        />
         <div className="my-1.5 h-px bg-border/60" />
-        <BracketRow code={match.away_code} fallback={match.away_name} score={as} winner={awayWin} loser={homeWin} />
+        <BracketRow
+          code={match.away_code}
+          fallback={match.away_name}
+          score={as}
+          winner={awayWin}
+          loser={homeWin}
+        />
         <p className="mt-2.5 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          <span>{match.date_utc ? `${bdShortDate(match.date_utc)} · ${bdTime(match.date_utc)}` : "TBD"}</span>
-          <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100">View →</span>
+          <span>
+            {match.date_utc ? `${bdShortDate(match.date_utc)} · ${bdTime(match.date_utc)}` : "TBD"}
+          </span>
+          <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100">
+            View →
+          </span>
         </p>
         {match.venue_name && (
           <p className="mt-1 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             <MapPin className="h-3 w-3" aria-hidden="true" />
-            <span className="truncate">{match.venue_name}{match.venue_city ? ` · ${match.venue_city}` : ""}</span>
+            <span className="truncate">
+              {match.venue_name}
+              {match.venue_city ? ` · ${match.venue_city}` : ""}
+            </span>
           </p>
         )}
       </Link>
@@ -663,7 +748,9 @@ function BracketRow({
       >
         {name}
       </span>
-      <span className={`display shrink-0 tabular-nums ${winner ? "text-primary" : "text-muted-foreground"}`}>
+      <span
+        className={`display shrink-0 tabular-nums ${winner ? "text-primary" : "text-muted-foreground"}`}
+      >
         {score ?? "–"}
       </span>
     </div>

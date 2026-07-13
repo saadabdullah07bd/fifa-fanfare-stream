@@ -15,10 +15,12 @@ export default function PushBootstrap() {
     async function bootFor(userId: string) {
       if (cancelled) return;
       // Prefer native registration when running inside the Capacitor shell.
-      const isNative = typeof (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } })
-        .Capacitor?.isNativePlatform === "function"
-        && (window as unknown as { Capacitor: { isNativePlatform: () => boolean } })
-          .Capacitor.isNativePlatform();
+      const isNative =
+        typeof (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor
+          ?.isNativePlatform === "function" &&
+        (
+          window as unknown as { Capacitor: { isNativePlatform: () => boolean } }
+        ).Capacitor.isNativePlatform();
       if (isNative) {
         await registerNativePush(userId);
       } else {
@@ -32,7 +34,10 @@ export default function PushBootstrap() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (session?.user?.id) bootFor(session.user.id);
     });
-    return () => { cancelled = true; sub.subscription.unsubscribe(); };
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   return null;

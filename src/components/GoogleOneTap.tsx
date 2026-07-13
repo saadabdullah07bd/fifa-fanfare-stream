@@ -10,7 +10,7 @@ import { getAppConfig } from "@/lib/appConfig";
  * signed-out. Uses `signInWithIdToken` so Supabase can verify the Google ID
  * token directly — no redirect round-trip.
  *
- * One Tap does NOT render inside Lovable's editor iframe (Google refuses to
+ * One Tap does NOT render inside an editor/preview iframe (Google refuses to
  * embed cross-origin), only in the published site or the preview URL opened
  * in its own tab.
  */
@@ -46,7 +46,11 @@ async function sha256Base64Url(input: string): Promise<string> {
 }
 
 function isInIframe() {
-  try { return window.self !== window.top; } catch { return true; }
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
 }
 
 export default function GoogleOneTap() {
@@ -62,9 +66,9 @@ export default function GoogleOneTap() {
   }, []);
 
   useEffect(() => {
-    if (authed !== false) return;                 // wait for signed-out
-    if (pathname === "/auth") return;             // dedicated page owns UI
-    if (isInIframe()) return;                     // won't render inside editor
+    if (authed !== false) return; // wait for signed-out
+    if (pathname === "/auth") return; // dedicated page owns UI
+    if (isInIframe()) return; // won't render inside editor
     if (shown.current) return;
 
     let cancelled = false;
@@ -111,7 +115,9 @@ export default function GoogleOneTap() {
       shown.current = true;
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [authed, pathname]);
 
   return null;

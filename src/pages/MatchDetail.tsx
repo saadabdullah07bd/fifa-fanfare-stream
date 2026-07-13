@@ -5,6 +5,14 @@ import { Seo } from "@/lib/seo";
 import { bdTime, bdDate, countryName, flagUrl } from "@/lib/flags";
 import { getWc26Match } from "@/data/wc26-matches";
 import { toast } from "sonner";
+import { springSoft, useCountUp } from "@/lib/motion";
+import MatchStatsPanel from "@/components/MatchStatsPanel";
+
+/** Animated score digit — counts up from 0 on mount, snaps if reduced-motion. */
+function ScoreValue({ value }: { value: number }) {
+  const shown = useCountUp(value, 800);
+  return <>{shown}</>;
+}
 
 type EventKind = "GOAL" | "YELLOW" | "RED";
 type TimelineEvent = {
@@ -65,13 +73,16 @@ export default function MatchDetail() {
   // Split goals by scoring team (OG credits opposite side).
   const goalSide = (g: { team?: string; type: string }): "home" | "away" => {
     const scorerTeam = g.team ?? m.home_name;
-    const creditedTeam = g.type === "OG"
-      ? (scorerTeam === m.home_name ? m.away_name : m.home_name)
-      : scorerTeam;
+    const creditedTeam =
+      g.type === "OG" ? (scorerTeam === m.home_name ? m.away_name : m.home_name) : scorerTeam;
     return creditedTeam === m.home_name ? "home" : "away";
   };
-  const homeGoals = m.goals.filter((g) => goalSide(g) === "home").sort((a, b) => a.minute - b.minute);
-  const awayGoals = m.goals.filter((g) => goalSide(g) === "away").sort((a, b) => a.minute - b.minute);
+  const homeGoals = m.goals
+    .filter((g) => goalSide(g) === "home")
+    .sort((a, b) => a.minute - b.minute);
+  const awayGoals = m.goals
+    .filter((g) => goalSide(g) === "away")
+    .sort((a, b) => a.minute - b.minute);
 
   const allCards = [
     ...m.yellow_cards.map((c) => ({ ...c, card: "YELLOW" as const })),
@@ -109,14 +120,13 @@ export default function MatchDetail() {
         await navigator.clipboard.writeText(url);
         toast.success("Link copied");
       }
-    } catch { /* user cancelled */ }
+    } catch {
+      /* user cancelled */
+    }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
-      className="mx-auto max-w-5xl px-4 py-6 pb-16 sm:py-8"
-    >
+    <div className="mx-auto max-w-5xl px-4 py-6 pb-16 sm:py-8">
       <Seo
         title={`${homeName} vs ${awayName} — FIFA World Cup 2026 | Pitch26`}
         description={`${m.stage_label} · ${homeName} vs ${awayName}. Score, scorers, venue and kickoff time for the FIFA World Cup 2026 match on Pitch26.`}
@@ -133,7 +143,9 @@ export default function MatchDetail() {
           ],
         }}
       />
-      <h1 className="sr-only">{homeName} vs {awayName} — {m.stage_label}</h1>
+      <h1 className="sr-only">
+        {homeName} vs {awayName} — {m.stage_label}
+      </h1>
 
       {/* Top action bar */}
       <div className="flex items-center justify-between gap-2">
@@ -171,15 +183,21 @@ export default function MatchDetail() {
 
         <div className="relative flex items-center justify-between text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
           <span className="inline-flex items-center gap-2">
-            <StatusBadge decided={decided} live={isLive} upcoming={isUpcoming} label={statusLabel} />
+            <StatusBadge
+              decided={decided}
+              live={isLive}
+              upcoming={isUpcoming}
+              label={statusLabel}
+            />
             <span className="text-primary">{m.stage_label}</span>
           </span>
           <span className="hidden text-right sm:inline">
-            {kickoffDate}{kickoffTime && ` · ${kickoffTime}`}
+            {kickoffDate}
+            {kickoffTime && ` · ${kickoffTime}`}
           </span>
         </div>
 
-        <div className="relative mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-6">
+        <div className="relative mt-6 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-6">
           <TeamBlock
             side="left"
             code={m.home_code}
@@ -191,14 +209,21 @@ export default function MatchDetail() {
 
           <div className="text-center">
             {decided ? (
-              <p
+              <motion.p
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={springSoft}
                 className="display text-4xl leading-none text-primary tabular-nums whitespace-nowrap sm:text-6xl md:text-7xl"
                 aria-label={`Final score ${hs} to ${as}`}
               >
-                <span className={homeWin ? "" : awayWin ? "opacity-70" : ""}>{hs}</span>
+                <span className={homeWin ? "" : awayWin ? "opacity-70" : ""}>
+                  <ScoreValue value={hs} />
+                </span>
                 <span className="mx-2 text-muted-foreground/60">:</span>
-                <span className={awayWin ? "" : homeWin ? "opacity-70" : ""}>{as}</span>
-              </p>
+                <span className={awayWin ? "" : homeWin ? "opacity-70" : ""}>
+                  <ScoreValue value={as} />
+                </span>
+              </motion.p>
             ) : (
               <div className="flex flex-col items-center">
                 <p className="display text-xl leading-none tabular-nums text-primary sm:text-3xl md:text-4xl">
@@ -242,13 +267,17 @@ export default function MatchDetail() {
 
         {/* Mobile kickoff row */}
         <p className="relative mt-2 text-center text-[10px] uppercase tracking-[0.24em] text-muted-foreground sm:hidden">
-          {kickoffDate}{kickoffTime && ` · ${kickoffTime}`}
+          {kickoffDate}
+          {kickoffTime && ` · ${kickoffTime}`}
         </p>
       </motion.section>
 
       {/* Google-style split summary (still helpful at a glance) */}
       {m.goals.length > 0 && (
-        <section aria-label="Goalscorers" className="mt-8 rounded-3xl border border-border bg-card/40 p-4 sm:p-6">
+        <section
+          aria-label="Goalscorers"
+          className="mt-8 rounded-3xl border border-border bg-card/40 p-4 sm:p-6"
+        >
           <h2 className="mb-4 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             Goalscorers
           </h2>
@@ -256,42 +285,52 @@ export default function MatchDetail() {
             <ul className="flex flex-col gap-2 border-r border-border/60 pr-2 sm:pr-4">
               {homeGoals.length === 0 ? (
                 <li className="text-right text-xs text-muted-foreground/60">—</li>
-              ) : homeGoals.map((g, i) => (
-                <li key={`h${i}`} className="flex items-start justify-end gap-2 text-right">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{g.player}</p>
-                    {(g.type === "OG" || g.type === "PEN") && (
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {g.type === "OG" ? "Own goal" : "Penalty"}
-                      </p>
-                    )}
-                  </div>
-                  <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
-                    {g.minute}{g.injury ? `+${g.injury}` : ""}'
-                  </span>
-                  <span aria-hidden="true" className="shrink-0 text-sm">⚽</span>
-                </li>
-              ))}
+              ) : (
+                homeGoals.map((g, i) => (
+                  <li key={`h${i}`} className="flex items-start justify-end gap-2 text-right">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{g.player}</p>
+                      {(g.type === "OG" || g.type === "PEN") && (
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {g.type === "OG" ? "Own goal" : "Penalty"}
+                        </p>
+                      )}
+                    </div>
+                    <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
+                      {g.minute}
+                      {g.injury ? `+${g.injury}` : ""}'
+                    </span>
+                    <span aria-hidden="true" className="shrink-0 text-sm">
+                      ⚽
+                    </span>
+                  </li>
+                ))
+              )}
             </ul>
             <ul className="flex flex-col gap-2 pl-2 sm:pl-4">
               {awayGoals.length === 0 ? (
                 <li className="text-xs text-muted-foreground/60">—</li>
-              ) : awayGoals.map((g, i) => (
-                <li key={`a${i}`} className="flex items-start justify-start gap-2 text-left">
-                  <span aria-hidden="true" className="shrink-0 text-sm">⚽</span>
-                  <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
-                    {g.minute}{g.injury ? `+${g.injury}` : ""}'
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{g.player}</p>
-                    {(g.type === "OG" || g.type === "PEN") && (
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {g.type === "OG" ? "Own goal" : "Penalty"}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              ))}
+              ) : (
+                awayGoals.map((g, i) => (
+                  <li key={`a${i}`} className="flex items-start justify-start gap-2 text-left">
+                    <span aria-hidden="true" className="shrink-0 text-sm">
+                      ⚽
+                    </span>
+                    <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
+                      {g.minute}
+                      {g.injury ? `+${g.injury}` : ""}'
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{g.player}</p>
+                      {(g.type === "OG" || g.type === "PEN") && (
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {g.type === "OG" ? "Own goal" : "Penalty"}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
         </section>
@@ -320,9 +359,20 @@ export default function MatchDetail() {
         </section>
       )}
 
+      {/* Live stats + lineups with player headshots (API-Football) */}
+      <MatchStatsPanel
+        home={m.home_name}
+        away={m.away_name}
+        date={m.date_utc}
+        enabled={decided || (!!m.date_utc && new Date(m.date_utc).getTime() < Date.now())}
+      />
+
       {/* Cards summary (also under timeline for scanability) */}
       {allCards.length > 0 && (
-        <section aria-label="Bookings" className="mt-8 rounded-3xl border border-border bg-card/40 p-4 sm:p-6">
+        <section
+          aria-label="Bookings"
+          className="mt-8 rounded-3xl border border-border bg-card/40 p-4 sm:p-6"
+        >
           <h2 className="mb-4 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             Bookings
           </h2>
@@ -330,28 +380,34 @@ export default function MatchDetail() {
             <ul className="flex flex-col gap-2 border-r border-border/60 pr-2 sm:pr-4">
               {homeCards.length === 0 ? (
                 <li className="text-right text-xs text-muted-foreground/60">—</li>
-              ) : homeCards.map((c, i) => (
-                <li key={`hc${i}`} className="flex items-center justify-end gap-2 text-right">
-                  <p className="truncate text-sm">{c.player}</p>
-                  <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
-                    {c.minute}{c.injury ? `+${c.injury}` : ""}'
-                  </span>
-                  <CardChip color={c.card} />
-                </li>
-              ))}
+              ) : (
+                homeCards.map((c, i) => (
+                  <li key={`hc${i}`} className="flex items-center justify-end gap-2 text-right">
+                    <p className="truncate text-sm">{c.player}</p>
+                    <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
+                      {c.minute}
+                      {c.injury ? `+${c.injury}` : ""}'
+                    </span>
+                    <CardChip color={c.card} />
+                  </li>
+                ))
+              )}
             </ul>
             <ul className="flex flex-col gap-2 pl-2 sm:pl-4">
               {awayCards.length === 0 ? (
                 <li className="text-xs text-muted-foreground/60">—</li>
-              ) : awayCards.map((c, i) => (
-                <li key={`ac${i}`} className="flex items-center justify-start gap-2 text-left">
-                  <CardChip color={c.card} />
-                  <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
-                    {c.minute}{c.injury ? `+${c.injury}` : ""}'
-                  </span>
-                  <p className="truncate text-sm">{c.player}</p>
-                </li>
-              ))}
+              ) : (
+                awayCards.map((c, i) => (
+                  <li key={`ac${i}`} className="flex items-center justify-start gap-2 text-left">
+                    <CardChip color={c.card} />
+                    <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
+                      {c.minute}
+                      {c.injury ? `+${c.injury}` : ""}'
+                    </span>
+                    <p className="truncate text-sm">{c.player}</p>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
         </section>
@@ -376,7 +432,11 @@ export default function MatchDetail() {
       {(m.referee || m.attendance) && (
         <section aria-label="Match info" className="mt-8 grid gap-3 sm:grid-cols-2">
           {m.referee && (
-            <InfoCard icon={<Flag className="h-4 w-4" aria-hidden="true" />} label="Referee" value={m.referee} />
+            <InfoCard
+              icon={<Flag className="h-4 w-4" aria-hidden="true" />}
+              label="Referee"
+              value={m.referee}
+            />
           )}
           {m.attendance && (
             <InfoCard
@@ -387,14 +447,19 @@ export default function MatchDetail() {
           )}
         </section>
       )}
-    </motion.div>
+    </div>
   );
 }
 
 /* ---------- Small building blocks ---------- */
 
 function TeamBlock({
-  side, code, name, crest, winner, loser,
+  side,
+  code,
+  name,
+  crest,
+  winner,
+  loser,
 }: {
   side: "left" | "right";
   code: string | null;
@@ -416,7 +481,10 @@ function TeamBlock({
             className={`h-12 w-16 rounded object-cover ring-1 sm:h-14 sm:w-20 md:h-16 md:w-24 ${winner ? "ring-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]" : "ring-border"}`}
           />
         ) : (
-          <div className="h-12 w-16 rounded bg-secondary/40 ring-1 ring-border sm:h-14 sm:w-20 md:h-16 md:w-24" aria-hidden="true" />
+          <div
+            className="h-12 w-16 rounded bg-secondary/40 ring-1 ring-border sm:h-14 sm:w-20 md:h-16 md:w-24"
+            aria-hidden="true"
+          />
         )}
         {winner && (
           <span
@@ -427,12 +495,13 @@ function TeamBlock({
           </span>
         )}
       </div>
-      <p
-        className={`display w-full truncate text-base leading-tight sm:text-2xl md:text-3xl ${winner ? "text-primary" : ""}`}
-        title={name}
+      <Link
+        to={`/team/${encodeURIComponent(name)}`}
+        className={`display block w-full truncate rounded-sm text-base leading-tight transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-2xl md:text-3xl ${winner ? "text-primary" : ""}`}
+        title={`${name} — squad, tactics & history`}
       >
         {name}
-      </p>
+      </Link>
       {code && (
         <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">{code}</p>
       )}
@@ -441,8 +510,16 @@ function TeamBlock({
 }
 
 function StatusBadge({
-  decided, live, upcoming, label,
-}: { decided: boolean; live: boolean; upcoming: boolean; label: string }) {
+  decided,
+  live,
+  upcoming,
+  label,
+}: {
+  decided: boolean;
+  live: boolean;
+  upcoming: boolean;
+  label: string;
+}) {
   if (live) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-destructive">
@@ -457,7 +534,11 @@ function StatusBadge({
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.22em] ${
-        decided ? "bg-primary/15 text-primary" : upcoming ? "bg-secondary/60 text-foreground" : "bg-secondary/40 text-muted-foreground"
+        decided
+          ? "bg-primary/15 text-primary"
+          : upcoming
+            ? "bg-secondary/60 text-foreground"
+            : "bg-secondary/40 text-muted-foreground"
       }`}
     >
       {label}
@@ -468,24 +549,38 @@ function StatusBadge({
 function TimelineRow({ ev }: { ev: TimelineEvent }) {
   const isHome = ev.side === "home";
   const minute = `${ev.minute}${ev.injury ? `+${ev.injury}` : ""}'`;
-  const icon = ev.kind === "GOAL"
-    ? <span aria-hidden="true" className="text-base">⚽</span>
-    : <CardChip color={ev.kind} />;
-  const subline = ev.kind === "GOAL" && (ev.type === "OG" || ev.type === "PEN")
-    ? (ev.type === "OG" ? "Own goal" : "Penalty")
-    : ev.kind === "YELLOW" ? "Yellow card"
-    : ev.kind === "RED" ? "Red card"
-    : null;
+  const icon =
+    ev.kind === "GOAL" ? (
+      <span aria-hidden="true" className="text-base">
+        ⚽
+      </span>
+    ) : (
+      <CardChip color={ev.kind} />
+    );
+  const subline =
+    ev.kind === "GOAL" && (ev.type === "OG" || ev.type === "PEN")
+      ? ev.type === "OG"
+        ? "Own goal"
+        : "Penalty"
+      : ev.kind === "YELLOW"
+        ? "Yellow card"
+        : ev.kind === "RED"
+          ? "Red card"
+          : null;
 
   return (
-    <li className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+    <li className="relative grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
       {/* Home side */}
       <div className={`min-w-0 justify-self-end text-right ${isHome ? "" : "opacity-0"}`}>
         {isHome && (
-          <div className="inline-flex items-start gap-2 rounded-2xl border border-border/60 bg-card/60 px-3 py-2">
+          <div className="ml-auto flex max-w-full items-start gap-2 rounded-2xl border border-border/60 bg-card/60 px-2.5 py-2 sm:px-3">
             <div className="min-w-0 text-right">
               <p className="truncate text-sm font-semibold">{ev.player}</p>
-              {subline && <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{subline}</p>}
+              {subline && (
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {subline}
+                </p>
+              )}
             </div>
             <span className="shrink-0">{icon}</span>
           </div>
@@ -500,11 +595,15 @@ function TimelineRow({ ev }: { ev: TimelineEvent }) {
       {/* Away side */}
       <div className={`min-w-0 justify-self-start text-left ${isHome ? "opacity-0" : ""}`}>
         {!isHome && (
-          <div className="inline-flex items-start gap-2 rounded-2xl border border-border/60 bg-card/60 px-3 py-2">
+          <div className="mr-auto flex max-w-full items-start gap-2 rounded-2xl border border-border/60 bg-card/60 px-2.5 py-2 sm:px-3">
             <span className="shrink-0">{icon}</span>
             <div className="min-w-0 text-left">
               <p className="truncate text-sm font-semibold">{ev.player}</p>
-              {subline && <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{subline}</p>}
+              {subline && (
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {subline}
+                </p>
+              )}
             </div>
           </div>
         )}

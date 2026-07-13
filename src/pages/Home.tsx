@@ -10,8 +10,13 @@ import { bdTime, bdDate, bdShortDate, flagUrl, countryName } from "@/lib/flags";
 import wc26Emblem from "@/assets/wc26-trophy.png.asset.json";
 
 type Article = {
-  id: string; title: string; url: string; source: string;
-  summary: string; image_url: string | null; published_at: string | null;
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  summary: string;
+  image_url: string | null;
+  published_at: string | null;
 };
 
 const NEWS_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
@@ -46,11 +51,13 @@ export default function Home() {
     const upcoming = liveMatches.find((m) => m.status === "SCHEDULED" || m.status === "TIMED");
     if (upcoming) return fromLive(upcoming);
     const nowIso = new Date().toISOString();
-    const nextWc = WC26_MATCHES
-      .filter((m) => m.date_utc && m.home_score == null && m.date_utc >= nowIso)
-      .sort((a, b) => (a.date_utc ?? "").localeCompare(b.date_utc ?? ""))[0]
-      ?? WC26_MATCHES.filter((m) => m.date_utc)
-        .sort((a, b) => (b.date_utc ?? "").localeCompare(a.date_utc ?? ""))[0];
+    const nextWc =
+      WC26_MATCHES.filter((m) => m.date_utc && m.home_score == null && m.date_utc >= nowIso).sort(
+        (a, b) => (a.date_utc ?? "").localeCompare(b.date_utc ?? ""),
+      )[0] ??
+      WC26_MATCHES.filter((m) => m.date_utc).sort((a, b) =>
+        (b.date_utc ?? "").localeCompare(a.date_utc ?? ""),
+      )[0];
     return nextWc ? fromWc(nextWc) : null;
   }, [liveMatches]);
 
@@ -71,8 +78,7 @@ export default function Home() {
   }, []);
 
   const recentResults = useMemo(() => {
-    return WC26_MATCHES
-      .filter((m) => m.home_score != null && m.away_score != null && m.date_utc)
+    return WC26_MATCHES.filter((m) => m.home_score != null && m.away_score != null && m.date_utc)
       .sort((a, b) => (b.date_utc ?? "").localeCompare(a.date_utc ?? ""))
       .slice(0, 3);
   }, []);
@@ -83,18 +89,23 @@ export default function Home() {
     const upcoming = liveMatches.filter((m) => m.status === "SCHEDULED" || m.status === "TIMED");
     const picked = [...live, ...upcoming, ...finished].slice(0, 2);
     if (picked.length > 0) return picked.map(fromLive);
-    return WC26_MATCHES
-      .filter((m) => m.home_score != null && m.date_utc)
+    return WC26_MATCHES.filter((m) => m.home_score != null && m.date_utc)
       .sort((a, b) => (b.date_utc ?? "").localeCompare(a.date_utc ?? ""))
       .slice(0, 2)
       .map(fromWc);
   }, [liveMatches]);
 
-  const liveCount = liveMatches.filter((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status)).length;
+  const liveCount = liveMatches.filter((m) =>
+    ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status),
+  ).length;
 
   const enter = reduceMotion
     ? { initial: false, animate: { opacity: 1, y: 0 } }
-    : { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4 } };
+    : {
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.4 },
+      };
 
   return (
     <div className="mx-auto max-w-7xl px-3 pb-14 pt-4 sm:px-6 sm:pt-6">
@@ -105,9 +116,10 @@ export default function Home() {
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "WebPage",
-          "name": "Watch FIFA World Cup 2026 Live Free",
-          "description": "Stream every FIFA World Cup 2026 match live and free with live scores and stats.",
-          "url": "https://pitch26.muhammadsaadabdullah.com/",
+          name: "Watch FIFA World Cup 2026 Live Free",
+          description:
+            "Stream every FIFA World Cup 2026 match live and free with live scores and stats.",
+          url: "https://pitch26.muhammadsaadabdullah.com/",
         }}
       />
 
@@ -125,7 +137,11 @@ export default function Home() {
                 : "border-border bg-card/60 text-muted-foreground"
             }`}
           >
-            {liveCount > 0 ? <span className="live-dot" aria-hidden="true" /> : <Radio className="h-3 w-3" aria-hidden="true" />}
+            {liveCount > 0 ? (
+              <span className="live-dot" aria-hidden="true" />
+            ) : (
+              <Radio className="h-3 w-3" aria-hidden="true" />
+            )}
             {liveCount > 0 ? `${liveCount} live now` : "Standby"}
           </span>
           <span className="hidden text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/70 sm:inline">
@@ -147,7 +163,10 @@ export default function Home() {
         {hero ? (
           <HeroTile hero={hero} onWatch={() => navigate("/live-tv")} />
         ) : (
-          <SkeletonTile className="md:col-span-8 md:row-span-3 md:min-h-[520px]" label="Loading featured match…" />
+          <SkeletonTile
+            className="md:col-span-8 md:row-span-3 md:min-h-[520px]"
+            label="Loading featured match…"
+          />
         )}
 
         {scoreboard.length > 0 ? (
@@ -178,12 +197,16 @@ export default function Home() {
 
 type HeroMatch = {
   href: string;
-  homeName: string; awayName: string;
-  homeCode: string | null; awayCode: string | null;
-  homeScore: number | null; awayScore: number | null;
+  homeName: string;
+  awayName: string;
+  homeCode: string | null;
+  awayCode: string | null;
+  homeScore: number | null;
+  awayScore: number | null;
   utcDate: string | null;
   status: "LIVE" | "PAUSED" | "SCHEDULED" | "FINISHED";
-  minute: number | null; injury: number | null;
+  minute: number | null;
+  injury: number | null;
   competition: string;
   venue: string | null;
 };
@@ -191,18 +214,25 @@ type HeroMatch = {
 function fromLive(m: LiveMatch): HeroMatch {
   const wc = findWc26MatchByTeams(m.home.name, m.away.name, m.utc_date);
   const status: HeroMatch["status"] =
-    m.status === "IN_PLAY" || m.status === "LIVE" ? "LIVE"
-    : m.status === "PAUSED" ? "PAUSED"
-    : m.status === "FINISHED" ? "FINISHED"
-    : "SCHEDULED";
+    m.status === "IN_PLAY" || m.status === "LIVE"
+      ? "LIVE"
+      : m.status === "PAUSED"
+        ? "PAUSED"
+        : m.status === "FINISHED"
+          ? "FINISHED"
+          : "SCHEDULED";
   return {
     href: wc ? `/match/${wc.match_no}` : "/fixtures",
-    homeName: m.home.name, awayName: m.away.name,
-    homeCode: m.home.tla, awayCode: m.away.tla,
-    homeScore: m.score.full.home, awayScore: m.score.full.away,
+    homeName: m.home.name,
+    awayName: m.away.name,
+    homeCode: m.home.tla,
+    awayCode: m.away.tla,
+    homeScore: m.score.full.home,
+    awayScore: m.score.full.away,
     utcDate: m.utc_date,
     status,
-    minute: m.minute, injury: m.injury_time,
+    minute: m.minute,
+    injury: m.injury_time,
     competition: m.competition,
     venue: wc?.venue_name ?? null,
   };
@@ -213,11 +243,14 @@ function fromWc(m: Wc26Match): HeroMatch {
     href: `/match/${m.match_no}`,
     homeName: countryName(m.home_code) || m.home_name,
     awayName: countryName(m.away_code) || m.away_name,
-    homeCode: m.home_code, awayCode: m.away_code,
-    homeScore: m.home_score, awayScore: m.away_score,
+    homeCode: m.home_code,
+    awayCode: m.away_code,
+    homeScore: m.home_score,
+    awayScore: m.away_score,
     utcDate: m.date_utc,
     status: m.home_score != null ? "FINISHED" : "SCHEDULED",
-    minute: null, injury: null,
+    minute: null,
+    injury: null,
     competition: m.stage_label,
     venue: m.venue_name,
   };
@@ -243,10 +276,16 @@ function useCountdown(iso: string | null) {
 function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
   const isLive = hero.status === "LIVE" || hero.status === "PAUSED";
   const isUpcoming = hero.status === "SCHEDULED";
-  const kickoff = hero.utcDate ? `${bdDate(hero.utcDate)} · ${bdTime(hero.utcDate)}` : hero.competition;
+  const kickoff = hero.utcDate
+    ? `${bdDate(hero.utcDate)} · ${bdTime(hero.utcDate)}`
+    : hero.competition;
   const chipLabel = isLive
-    ? (hero.status === "PAUSED" ? "HALF TIME" : `LIVE · ${hero.minute ?? 0}${hero.injury ? `+${hero.injury}` : ""}'`)
-    : hero.status === "FINISHED" ? "FULL TIME" : "MATCHDAY";
+    ? hero.status === "PAUSED"
+      ? "HALF TIME"
+      : `LIVE · ${hero.minute ?? 0}${hero.injury ? `+${hero.injury}` : ""}'`
+    : hero.status === "FINISHED"
+      ? "FULL TIME"
+      : "MATCHDAY";
   const homeCrest = flagUrl(hero.homeCode, 320);
   const awayCrest = flagUrl(hero.awayCode, 320);
   const countdown = useCountdown(isUpcoming ? hero.utcDate : null);
@@ -327,25 +366,35 @@ function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
           </div>
         </div>
 
-
         <div className="flex flex-wrap items-center gap-4 sm:gap-6">
           {hero.homeScore != null && hero.awayScore != null ? (
-            <p className="display text-4xl tabular-nums text-primary sm:text-5xl md:text-6xl" aria-live={isLive ? "polite" : undefined}>
+            <p
+              className="display text-4xl tabular-nums text-primary sm:text-5xl md:text-6xl"
+              aria-live={isLive ? "polite" : undefined}
+            >
               {hero.homeScore} : {hero.awayScore}
             </p>
           ) : countdown ? (
-            <div className="flex flex-wrap items-center gap-2" aria-label={`Kick-off in ${countdown.d} days ${countdown.h} hours ${countdown.m} minutes`}>
+            <div
+              className="flex flex-wrap items-center gap-2"
+              aria-label={`Kick-off in ${countdown.d} days ${countdown.h} hours ${countdown.m} minutes`}
+            >
               {[
                 { v: countdown.d, l: "Days" },
                 { v: countdown.h, l: "Hrs" },
                 { v: countdown.m, l: "Min" },
                 { v: countdown.s, l: "Sec" },
               ].map((seg) => (
-                <div key={seg.l} className="min-w-[3.25rem] rounded-xl border border-border bg-black/60 px-3 py-2 text-center backdrop-blur-md">
+                <div
+                  key={seg.l}
+                  className="min-w-[3.25rem] rounded-xl border border-border bg-black/60 px-3 py-2 text-center backdrop-blur-md"
+                >
                   <p className="display text-2xl tabular-nums leading-none text-foreground sm:text-3xl">
                     {String(seg.v).padStart(2, "0")}
                   </p>
-                  <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{seg.l}</p>
+                  <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                    {seg.l}
+                  </p>
                 </div>
               ))}
             </div>
@@ -361,7 +410,11 @@ function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
           )}
           <button
             type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onWatch(); }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onWatch();
+            }}
             aria-label={isLive ? "Watch live now" : "Open live TV hub"}
             className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-xs font-black uppercase tracking-[0.25em] text-primary-foreground shadow-lg shadow-primary/30 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:hover:translate-y-0"
           >
@@ -381,9 +434,13 @@ function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
       className="flex flex-col justify-between gap-4 rounded-3xl border border-border bg-card p-5 transition-colors hover:border-primary/40 md:col-span-4 md:row-span-2 md:p-6"
     >
       <div className="flex items-center justify-between">
-        <h2 id="scoreboard-heading" className="display text-2xl tracking-wider text-foreground/70 sm:text-3xl">Scoreboard</h2>
+        <h2
+          id="scoreboard-heading"
+          className="display text-2xl tracking-wider text-foreground/70 sm:text-3xl"
+        >
+          Scoreboard
+        </h2>
       </div>
-
 
       <div className="space-y-5">
         {matches.length === 0 && (
@@ -400,19 +457,30 @@ function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
               <ScoreboardSide code={m.homeCode} name={m.homeName} align="left" />
               <div className="flex flex-col items-center">
                 <span className="display text-2xl tabular-nums text-foreground sm:text-3xl">
-                  {m.homeScore ?? "–"} <span className="text-muted-foreground/60">:</span> {m.awayScore ?? "–"}
+                  {m.homeScore ?? "–"} <span className="text-muted-foreground/60">:</span>{" "}
+                  {m.awayScore ?? "–"}
                 </span>
-                <span className={`mt-1 text-[10px] font-bold uppercase tracking-[0.2em] ${m.status === "LIVE" || m.status === "PAUSED" ? "text-destructive" : "text-muted-foreground"}`}>
-                  {m.status === "LIVE" ? `${m.minute ?? 0}${m.injury ? `+${m.injury}` : ""}'`
-                    : m.status === "PAUSED" ? "HT"
-                    : m.status === "FINISHED" ? "FT"
-                    : m.utcDate ? bdTime(m.utcDate) : "TBD"}
+                <span
+                  className={`mt-1 text-[10px] font-bold uppercase tracking-[0.2em] ${m.status === "LIVE" || m.status === "PAUSED" ? "text-destructive" : "text-muted-foreground"}`}
+                >
+                  {m.status === "LIVE"
+                    ? `${m.minute ?? 0}${m.injury ? `+${m.injury}` : ""}'`
+                    : m.status === "PAUSED"
+                      ? "HT"
+                      : m.status === "FINISHED"
+                        ? "FT"
+                        : m.utcDate
+                          ? bdTime(m.utcDate)
+                          : "TBD"}
                 </span>
               </div>
               <ScoreboardSide code={m.awayCode} name={m.awayName} align="right" />
             </div>
             {i < matches.length - 1 && (
-              <div className="mt-5 h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden="true" />
+              <div
+                className="mt-5 h-px bg-gradient-to-r from-transparent via-border to-transparent"
+                aria-hidden="true"
+              />
             )}
           </Link>
         ))}
@@ -428,14 +496,30 @@ function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
   );
 }
 
-function ScoreboardSide({ code, name, align }: { code: string | null; name: string; align: "left" | "right" }) {
+function ScoreboardSide({
+  code,
+  name,
+  align,
+}: {
+  code: string | null;
+  name: string;
+  align: "left" | "right";
+}) {
   const crest = flagUrl(code, 80);
   return (
     <div className={`flex min-w-0 flex-col items-center gap-1 ${align === "left" ? "" : ""}`}>
       {crest ? (
-        <img src={crest} alt="" aria-hidden="true" className="h-10 w-14 rounded-lg object-cover ring-1 ring-border" />
+        <img
+          src={crest}
+          alt=""
+          aria-hidden="true"
+          className="h-10 w-14 rounded-lg object-cover ring-1 ring-border"
+        />
       ) : (
-        <div className="grid h-10 w-14 place-items-center rounded-lg bg-secondary text-xs font-bold text-foreground/70" aria-hidden="true">
+        <div
+          className="grid h-10 w-14 place-items-center rounded-lg bg-secondary text-xs font-bold text-foreground/70"
+          aria-hidden="true"
+        >
           {code ?? "—"}
         </div>
       )}
@@ -464,7 +548,10 @@ function FlashNewsTile({ article }: { article: Article | null }) {
             loading="lazy"
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:group-hover:scale-100"
           />
-          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/10" />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/10"
+          />
         </>
       )}
       <div className="relative flex items-start gap-3 p-5">
@@ -482,12 +569,14 @@ function FlashNewsTile({ article }: { article: Article | null }) {
             {article?.title ?? "Latest World Cup 2026 headlines dropping soon."}
           </p>
         </div>
-        <ArrowRight className="mt-1 hidden h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0 sm:block" aria-hidden="true" />
+        <ArrowRight
+          className="mt-1 hidden h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0 sm:block"
+          aria-hidden="true"
+        />
       </div>
     </a>
   );
 }
-
 
 function ResultsTile({ matches }: { matches: Wc26Match[] }) {
   return (
@@ -496,7 +585,9 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
       className="rounded-3xl border border-border bg-card p-5 transition-colors hover:border-primary/40 md:col-span-4 md:row-span-2 md:p-6"
     >
       <div className="flex items-center justify-between">
-        <h2 id="results-heading" className="display text-2xl tracking-wider sm:text-3xl">Recent Results</h2>
+        <h2 id="results-heading" className="display text-2xl tracking-wider sm:text-3xl">
+          Recent Results
+        </h2>
         <Link
           to="/standings"
           className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -506,7 +597,10 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
       </div>
 
       <ul className="mt-4 space-y-2">
-        <li className="grid grid-cols-[1fr_auto_1fr] items-center px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60" aria-hidden="true">
+        <li
+          className="grid grid-cols-[1fr_auto_1fr] items-center px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60"
+          aria-hidden="true"
+        >
           <span className="text-left">Home</span>
           <span className="px-3 text-center">Score</span>
           <span className="text-right">Away</span>
@@ -519,7 +613,14 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
               className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl border border-transparent bg-secondary/60 px-3 py-2.5 text-sm transition hover:border-primary/40 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <span className="flex items-center gap-2 truncate font-semibold">
-                {flagUrl(m.home_code, 40) && <img src={flagUrl(m.home_code, 40)!} alt="" aria-hidden="true" className="h-4 w-6 rounded-sm object-cover" />}
+                {flagUrl(m.home_code, 40) && (
+                  <img
+                    src={flagUrl(m.home_code, 40)!}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-4 w-6 rounded-sm object-cover"
+                  />
+                )}
                 <span className="truncate">{countryName(m.home_code) || m.home_name}</span>
               </span>
               <span className="display px-2 tabular-nums text-primary">
@@ -527,7 +628,14 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
               </span>
               <span className="flex items-center justify-end gap-2 truncate font-semibold">
                 <span className="truncate">{countryName(m.away_code) || m.away_name}</span>
-                {flagUrl(m.away_code, 40) && <img src={flagUrl(m.away_code, 40)!} alt="" aria-hidden="true" className="h-4 w-6 rounded-sm object-cover" />}
+                {flagUrl(m.away_code, 40) && (
+                  <img
+                    src={flagUrl(m.away_code, 40)!}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-4 w-6 rounded-sm object-cover"
+                  />
+                )}
               </span>
             </Link>
             {m.date_utc && (
@@ -537,19 +645,25 @@ function ResultsTile({ matches }: { matches: Wc26Match[] }) {
             )}
           </li>
         ))}
-        {matches.length === 0 && (
-          <li className="text-sm text-muted-foreground">No results yet.</li>
-        )}
+        {matches.length === 0 && <li className="text-sm text-muted-foreground">No results yet.</li>}
       </ul>
     </section>
   );
 }
 
-function GoldenBootTile({ scorer }: { scorer: { player: string; goals: number; team: string } | null }) {
+function GoldenBootTile({
+  scorer,
+}: {
+  scorer: { player: string; goals: number; team: string } | null;
+}) {
   return (
     <Link
       to="/standings"
-      aria-label={scorer ? `Golden Boot leader: ${scorer.player} with ${scorer.goals} goals` : "Golden Boot leader"}
+      aria-label={
+        scorer
+          ? `Golden Boot leader: ${scorer.player} with ${scorer.goals} goals`
+          : "Golden Boot leader"
+      }
       className="group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:hover:translate-y-0 md:col-span-4 md:row-span-2"
     >
       <img
@@ -563,16 +677,23 @@ function GoldenBootTile({ scorer }: { scorer: { player: string; goals: number; t
           Stat Leader
         </span>
         <h3 className="display mt-4 text-4xl leading-none sm:text-5xl">
-          Golden<br />Boot
+          Golden
+          <br />
+          Boot
         </h3>
       </div>
       <div className="relative z-10 mt-6 flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="truncate text-base font-black uppercase leading-tight sm:text-lg" title={scorer?.player}>
+          <p
+            className="truncate text-base font-black uppercase leading-tight sm:text-lg"
+            title={scorer?.player}
+          >
             {scorer?.player ?? "TBD"}
           </p>
           <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground/80">
-            {scorer ? `${scorer.goals} goal${scorer.goals === 1 ? "" : "s"} · ${scorer.team}` : "Race in progress"}
+            {scorer
+              ? `${scorer.goals} goal${scorer.goals === 1 ? "" : "s"} · ${scorer.team}`
+              : "Race in progress"}
           </p>
         </div>
         <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-black transition-transform group-hover:scale-110 motion-reduce:group-hover:scale-100">
@@ -596,15 +717,15 @@ function FanZoneTile() {
           <Trophy className="h-5 w-5" aria-hidden="true" />
         </div>
         <h3 className="display mt-4 text-3xl leading-none sm:text-4xl">
-          Live The<br /><span className="text-[var(--trophy-green)]">Tournament</span>
+          Live The
+          <br />
+          <span className="text-[var(--trophy-green)]">Tournament</span>
         </h3>
       </div>
       <p className="relative text-sm text-muted-foreground">
         Every match streamed in HD & 4K. Live scores, timelines and goals — updated by the second.
       </p>
-      <span
-        className="relative block w-full rounded-2xl border-2 border-[var(--trophy-green)] py-4 text-center text-[11px] font-black uppercase tracking-[0.25em] text-[var(--trophy-green)] transition group-hover:bg-[var(--trophy-green)] group-hover:text-white"
-      >
+      <span className="relative block w-full rounded-2xl border-2 border-[var(--trophy-green)] py-4 text-center text-[11px] font-black uppercase tracking-[0.25em] text-[var(--trophy-green)] transition group-hover:bg-[var(--trophy-green)] group-hover:text-white">
         Enter Fan Hub
       </span>
     </Link>
@@ -618,7 +739,10 @@ function SkeletonTile({ className, label }: { className: string; label: string }
       aria-label={label}
       className={`relative overflow-hidden rounded-3xl border border-border bg-card ${className}`}
     >
-      <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-secondary/40 via-transparent to-secondary/20" aria-hidden="true" />
+      <div
+        className="absolute inset-0 animate-pulse bg-gradient-to-br from-secondary/40 via-transparent to-secondary/20"
+        aria-hidden="true"
+      />
       <span className="sr-only">{label}</span>
     </div>
   );

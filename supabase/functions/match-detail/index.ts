@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
   const token = Deno.env.get("FOOTBALL_DATA_API_TOKEN");
   if (!token) {
     return new Response(JSON.stringify({ error: "token missing" }), {
-      status: 500, headers: { ...cors, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
@@ -32,7 +33,8 @@ Deno.serve(async (req) => {
   const id = url.searchParams.get("id");
   if (!id) {
     return new Response(JSON.stringify({ error: "id required" }), {
-      status: 400, headers: { ...cors, "Content-Type": "application/json" },
+      status: 400,
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
@@ -41,7 +43,8 @@ Deno.serve(async (req) => {
   });
   if (!res.ok) {
     return new Response(JSON.stringify({ error: `fd ${res.status}`, detail: await res.text() }), {
-      status: res.status, headers: { ...cors, "Content-Type": "application/json" },
+      status: res.status,
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
   const m: any = await res.json();
@@ -55,8 +58,18 @@ Deno.serve(async (req) => {
     utc_date: m.utcDate,
     venue: m.venue ?? null,
     referees: (m.referees ?? []).map((r: any) => r.name),
-    home: { name: m.homeTeam?.name, tla: m.homeTeam?.tla, crest: m.homeTeam?.crest, id: m.homeTeam?.id },
-    away: { name: m.awayTeam?.name, tla: m.awayTeam?.tla, crest: m.awayTeam?.crest, id: m.awayTeam?.id },
+    home: {
+      name: m.homeTeam?.name,
+      tla: m.homeTeam?.tla,
+      crest: m.homeTeam?.crest,
+      id: m.homeTeam?.id,
+    },
+    away: {
+      name: m.awayTeam?.name,
+      tla: m.awayTeam?.tla,
+      crest: m.awayTeam?.crest,
+      id: m.awayTeam?.id,
+    },
     score: {
       full: m.score?.fullTime ?? { home: null, away: null },
       half: m.score?.halfTime ?? { home: null, away: null },
@@ -99,15 +112,23 @@ Deno.serve(async (req) => {
         const f = fixtures.find((x) => {
           const h = norm(x.teams?.home?.name);
           const a = norm(x.teams?.away?.name);
-          return (h.includes(hn.slice(0, 5)) || hn.includes(h.slice(0, 5))) &&
-                 (a.includes(an.slice(0, 5)) || an.includes(a.slice(0, 5)));
+          return (
+            (h.includes(hn.slice(0, 5)) || hn.includes(h.slice(0, 5))) &&
+            (a.includes(an.slice(0, 5)) || an.includes(a.slice(0, 5)))
+          );
         });
         if (f) {
           const shortStatus = f.fixture?.status?.short;
           const statusMap: Record<string, string> = {
-            "1H": "IN_PLAY", "2H": "IN_PLAY", "ET": "IN_PLAY", "P": "IN_PLAY",
-            "HT": "PAUSED", "BT": "PAUSED",
-            "FT": "FINISHED", "AET": "FINISHED", "PEN": "FINISHED",
+            "1H": "IN_PLAY",
+            "2H": "IN_PLAY",
+            ET: "IN_PLAY",
+            P: "IN_PLAY",
+            HT: "PAUSED",
+            BT: "PAUSED",
+            FT: "FINISHED",
+            AET: "FINISHED",
+            PEN: "FINISHED",
           };
           out.status = statusMap[shortStatus] ?? out.status;
           out.minute = f.fixture?.status?.elapsed ?? out.minute;
@@ -120,7 +141,9 @@ Deno.serve(async (req) => {
           out.af_fixture_id = f.fixture?.id;
         }
       }
-    } catch (_) { /* optional fallback enrichment */ }
+    } catch (_) {
+      /* optional fallback enrichment */
+    }
   }
 
   // Google enrichment via Firecrawl — strict live minute/score from Google's sports card.
@@ -130,13 +153,16 @@ Deno.serve(async (req) => {
       const query = `${out.home.name} vs ${out.away.name} live score`;
       const fcRes = await fetch("https://api.firecrawl.dev/v2/search", {
         method: "POST",
-        headers: { "Authorization": `Bearer ${fcKey}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${fcKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({ query, limit: 3, sources: ["web"] }),
       });
       if (fcRes.ok) {
         const j: any = await fcRes.json();
         const results: any[] = j?.data?.web ?? j?.data ?? [];
-        const text = results.map((r: any) => `${r.title ?? ""} ${r.description ?? r.snippet ?? ""}`).join(" ").replace(/\s+/g, " ");
+        const text = results
+          .map((r: any) => `${r.title ?? ""} ${r.description ?? r.snippet ?? ""}`)
+          .join(" ")
+          .replace(/\s+/g, " ");
         if (text) {
           const htMatch = /\b(HT|Half[- ]time)\b/i.test(text);
           const ftMatch = /\b(FT|Full[- ]time|Full Time|Ended)\b/i.test(text);
@@ -166,7 +192,11 @@ Deno.serve(async (req) => {
 
   // Native Google Gemini 2.5 Flash Lite fallback
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
-  if (geminiKey && ["IN_PLAY", "LIVE"].includes(out.status) && (out.minute == null || out.minute === 0)) {
+  if (
+    geminiKey &&
+    ["IN_PLAY", "LIVE"].includes(out.status) &&
+    (out.minute == null || out.minute === 0)
+  ) {
     try {
       const prompt = `You are a live football score assistant. For the FIFA World Cup 2026 match "${out.home.name} vs ${out.away.name}" happening near ${out.utc_date}, return the current live state. Reply STRICTLY as compact JSON only, no prose: {"minute":number|null,"injury":number|null,"home":number|null,"away":number|null,"status":"IN_PLAY"|"PAUSED"|"FINISHED"|"SCHEDULED"}.`;
       const aiRes = await fetch(
@@ -182,7 +212,8 @@ Deno.serve(async (req) => {
       );
       if (aiRes.ok) {
         const j: any = await aiRes.json();
-        const raw: string = j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";
+        const raw: string =
+          j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";
         const jsonMatch = raw.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const p = JSON.parse(jsonMatch[0]);

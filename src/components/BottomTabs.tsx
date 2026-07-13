@@ -20,7 +20,7 @@ interface BottomTabsProps {
 /**
  * A bottom navigation bar component for mobile layouts.
  * Features a spring-animated active indicator and gesture-based interaction.
- * 
+ *
  * @param props.tabs - Array of tab configurations.
  * @param props.accentColor - The color used for the active indicator and highlights.
  */
@@ -28,8 +28,10 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
   const location = useLocation();
   const { pathname, search } = location;
   const fromState = (location.state as { from?: string } | null)?.from;
-  const effectivePath = pathname === "/auth" && typeof fromState === "string" ? fromState : pathname;
-  const effectiveFull = pathname === "/auth" && typeof fromState === "string" ? fromState : `${pathname}${search}`;
+  const effectivePath =
+    pathname === "/auth" && typeof fromState === "string" ? fromState : pathname;
+  const effectiveFull =
+    pathname === "/auth" && typeof fromState === "string" ? fromState : `${pathname}${search}`;
   const navigate = useNavigate();
 
   // Determine which tab is currently active based on the URL path (and query,
@@ -51,7 +53,9 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
         const [oP, oQ] = o.to.split("?");
         return oQ && oP === tPath && effectiveFull === o.to;
       });
-      match = !someSiblingQueryMatches && (effectivePath === tPath || effectivePath.startsWith(tPath + "/"));
+      match =
+        !someSiblingQueryMatches &&
+        (effectivePath === tPath || effectivePath.startsWith(tPath + "/"));
     }
     if (match && score > bestScore) {
       bestScore = score;
@@ -91,11 +95,16 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
     return Math.max(0, Math.min(tabs.length - 1, Math.floor(relativeX / cellW)));
   };
 
-  useEffect(() => { pressingRef.current = pressing; }, [pressing]);
-  useEffect(() => { previewIndexRef.current = previewIndex; }, [previewIndex]);
+  useEffect(() => {
+    pressingRef.current = pressing;
+  }, [pressing]);
+  useEffect(() => {
+    previewIndexRef.current = previewIndex;
+  }, [previewIndex]);
 
   const baseCenter = (i: number) => i * cellW + cellW / 2;
-  const rawCenter = pressing && dragX != null ? dragX : baseCenter(activeIndex >= 0 ? activeIndex : 0);
+  const rawCenter =
+    pressing && dragX != null ? dragX : baseCenter(activeIndex >= 0 ? activeIndex : 0);
   const totalW = cellW * tabs.length;
   const halfW = (pressing ? Math.min(cellW - 18, 64) : cellW - 12) / 2;
   const indicatorCenter = Math.max(halfW, Math.min(totalW - halfW, rawCenter));
@@ -236,14 +245,16 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
               onPointerMove={onPointerMove}
               onPointerUp={onPointerFinish}
               onPointerCancel={onPointerFinish}
-              style={{
-                WebkitTouchCallout: "none",
-                WebkitUserSelect: "none",
-                userSelect: "none",
-                WebkitTapHighlightColor: "transparent",
-                touchAction: "none",
-                color: featured && !active ? accentColor : undefined,
-              } as React.CSSProperties}
+              style={
+                {
+                  WebkitTouchCallout: "none",
+                  WebkitUserSelect: "none",
+                  userSelect: "none",
+                  WebkitTapHighlightColor: "transparent",
+                  touchAction: "none",
+                  color: featured && !active ? accentColor : undefined,
+                } as React.CSSProperties
+              }
               className={`relative z-10 flex select-none flex-col items-center justify-center gap-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${
                 featured ? "text-foreground" : "text-foreground/70"
               }`}
@@ -258,13 +269,24 @@ export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
               )}
               <motion.div
                 animate={{
-                  scale: featured ? (hovered && pressing ? 1.35 : 1.15) : (hovered && pressing ? 1.28 : hovered ? 1.06 : 1),
+                  scale: featured
+                    ? hovered && pressing
+                      ? 1.35
+                      : 1.15
+                    : hovered && pressing
+                      ? 1.28
+                      : hovered
+                        ? 1.06
+                        : 1,
                   y: hovered && pressing ? -2 : 0,
                 }}
                 transition={{ type: "spring", stiffness: 420, damping: 24 }}
                 className={hovered ? "text-foreground" : ""}
               >
-                <Icon size={featured ? 24 : 20} strokeWidth={hovered ? 2.4 : featured ? 2.2 : 1.8} />
+                <Icon
+                  size={featured ? 24 : 20}
+                  strokeWidth={hovered ? 2.4 : featured ? 2.2 : 1.8}
+                />
               </motion.div>
               <motion.span
                 animate={{

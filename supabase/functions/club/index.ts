@@ -29,9 +29,15 @@ Deno.serve(async (req) => {
   // Accept params from either URL or JSON body (supabase.functions.invoke posts JSON)
   const url = new URL(req.url);
   let body: Record<string, unknown> = {};
-  if (req.method === "POST") { try { body = await req.json(); } catch { /* empty */ } }
+  if (req.method === "POST") {
+    try {
+      body = await req.json();
+    } catch {
+      /* empty */
+    }
+  }
   const action = String(body.action ?? url.searchParams.get("action") ?? "search");
-  
+
   // In-memory caching to stay within API rate limits
   const cacheKey = JSON.stringify({ action, body, s: url.search });
   const hit = cache.get(cacheKey);
@@ -54,8 +60,12 @@ Deno.serve(async (req) => {
         .filter((x: any) => x.team && !x.team.national)
         .slice(0, 12)
         .map((x: any) => ({
-          id: x.team.id, name: x.team.name, code: x.team.code,
-          country: x.team.country, logo: x.team.logo, founded: x.team.founded,
+          id: x.team.id,
+          name: x.team.name,
+          code: x.team.code,
+          country: x.team.country,
+          logo: x.team.logo,
+          founded: x.team.founded,
           venue: x.venue?.name,
         }));
       cache.set(cacheKey, { at: Date.now(), body: { teams } });
@@ -75,7 +85,9 @@ Deno.serve(async (req) => {
       ]);
       const team = teamRes.response?.[0] ?? null;
       const mapFx = (f: any) => ({
-        id: f.fixture.id, date: f.fixture.date, status: f.fixture.status?.short,
+        id: f.fixture.id,
+        date: f.fixture.date,
+        status: f.fixture.status?.short,
         minute: f.fixture.status?.elapsed,
         league: { name: f.league?.name, logo: f.league?.logo, round: f.league?.round },
         home: { name: f.teams?.home?.name, logo: f.teams?.home?.logo, id: f.teams?.home?.id },
@@ -84,18 +96,102 @@ Deno.serve(async (req) => {
       });
       const squad = squadRes.response?.[0]?.players ?? [];
       const out = {
-        team: team ? {
-          id: team.team.id, name: team.team.name, logo: team.team.logo,
-          country: team.team.country, founded: team.team.founded,
-          venue: { name: team.venue?.name, city: team.venue?.city, capacity: team.venue?.capacity, image: team.venue?.image },
-        } : null,
+        team: team
+          ? {
+              id: team.team.id,
+              name: team.team.name,
+              logo: team.team.logo,
+              country: team.team.country,
+              founded: team.team.founded,
+              venue: {
+                name: team.venue?.name,
+                city: team.venue?.city,
+                capacity: team.venue?.capacity,
+                image: team.venue?.image,
+              },
+            }
+          : null,
         upcoming: (nextRes.response ?? []).map(mapFx),
         recent: (lastRes.response ?? []).map(mapFx),
         squad: squad.slice(0, 24).map((p: any) => ({
-          id: p.id, name: p.name, age: p.age, number: p.number,
-          position: p.position, photo: p.photo,
+          id: p.id,
+          name: p.name,
+          age: p.age,
+          number: p.number,
+          position: p.position,
+          photo: p.photo,
         })),
         season,
+      };
+      cache.set(cacheKey, { at: Date.now(), body: out });
+      return json(out);
+    }
+
+    if (action === "national") {
+      // National-team overview for the World Cup team pages: resolve the team
+      // by name, then return squad (with player headshots), recent fixtures,
+      // and the formation/coach from the most recent lineup ("tactics").
+      const name = String(body.name ?? url.searchParams.get("name") ?? "").trim();
+      if (name.length < 3) return json({ error: "name required" }, 400);
+      const search = await fetchJson(`/teams?search=${encodeURIComponent(name)}`);
+      const candidates = (search.response ?? []).filter((x: any) => x.team?.national);
+      const lc = name.toLowerCase();
+      const team =
+        candidates.find((x: any) => String(x.team.name).toLowerCase() === lc) ??
+        candidates[0] ??
+        null;
+      if (!team) {
+        const out = { available: false, team: null };
+        cache.set(cacheKey, { at: Date.now(), body: out });
+        return json(out);
+      }
+      const teamId = team.team.id;
+      const [squadRes, lastRes] = await Promise.all([
+        fetchJson(`/players/squads?team=${teamId}`),
+        fetchJson(`/fixtures?team=${teamId}&last=5`),
+      ]);
+      const squad = (squadRes.response?.[0]?.players ?? []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        age: p.age,
+        number: p.number,
+        position: p.position,
+        photo: p.photo,
+      }));
+      // Tactics: formation + coach from the latest fixture that has a lineup.
+      let formation: string | null = null;
+      let coach: string | null = null;
+      const recent = lastRes.response ?? [];
+      for (const f of recent) {
+        const lu = await fetchJson(`/fixtures/lineups?fixture=${f.fixture.id}`);
+        const mine = (lu.response ?? []).find((l: any) => l.team?.id === teamId);
+        if (mine?.formation) {
+          formation = mine.formation;
+          coach = mine.coach?.name ?? null;
+          break;
+        }
+      }
+      const out = {
+        available: true,
+        team: {
+          id: teamId,
+          name: team.team.name,
+          code: team.team.code,
+          country: team.team.country,
+          logo: team.team.logo,
+        },
+        squad,
+        formation,
+        coach,
+        recent: recent.map((f: any) => ({
+          id: f.fixture.id,
+          date: f.fixture.date,
+          status: f.fixture.status?.short,
+          home: { name: f.teams?.home?.name, logo: f.teams?.home?.logo },
+          away: { name: f.teams?.away?.name, logo: f.teams?.away?.logo },
+          goals: f.goals,
+          round: f.league?.round ?? null,
+        })),
       };
       cache.set(cacheKey, { at: Date.now(), body: out });
       return json(out);
@@ -110,6 +206,7 @@ Deno.serve(async (req) => {
 /** Helper for JSON responses with CORS headers */
 function json(b: unknown, status = 200) {
   return new Response(JSON.stringify(b), {
-    status, headers: { ...cors, "Content-Type": "application/json" },
+    status,
+    headers: { ...cors, "Content-Type": "application/json" },
   });
 }

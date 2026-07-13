@@ -11,7 +11,8 @@ export default function ConfigError() {
         </div>
         <h1 className="text-2xl font-bold">Pitch26 configuration missing</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Set these environment variables in cPanel, then run <code className="rounded bg-muted px-1">npm run build</code> and restart the app:
+          Set these environment variables in cPanel, then run{" "}
+          <code className="rounded bg-muted px-1">npm run build</code> and restart the app:
         </p>
         <ul className="mt-4 space-y-1 text-left text-sm font-mono">
           <li>VITE_SUPABASE_URL</li>

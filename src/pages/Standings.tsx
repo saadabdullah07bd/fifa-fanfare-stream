@@ -5,25 +5,37 @@ import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Users, Search, Medal, Target } from "lucide-react";
 import { flagUrl, fifaCodeFromName } from "@/lib/flags";
 
-
 type Row = {
   position: number;
   team: { name: string; tla?: string; crest?: string };
-  played: number; won: number; draw: number; lost: number;
-  points: number; gf: number; ga: number; gd: number; form?: string;
+  played: number;
+  won: number;
+  draw: number;
+  lost: number;
+  points: number;
+  gf: number;
+  ga: number;
+  gd: number;
+  form?: string;
 };
 type Group = { group: string | null; stage: string; type: string; table: Row[] };
 type Scorer = {
   player: { name: string; nationality?: string };
   team: { name: string; tla?: string; crest?: string };
-  goals: number; assists?: number; penalties?: number; played?: number;
+  goals: number;
+  assists?: number;
+  penalties?: number;
+  played?: number;
 };
 
 function titleCase(value: string) {
   return value.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
 }
 function cleanCompetitionLabel(value: string | null | undefined) {
-  return (value ?? "").replace(/^GROUP[_\s-]*/i, "").replace(/_/g, " ").trim();
+  return (value ?? "")
+    .replace(/^GROUP[_\s-]*/i, "")
+    .replace(/_/g, " ")
+    .trim();
 }
 function groupTitle(group: string | null | undefined, stage: string | null | undefined) {
   const label = cleanCompetitionLabel(group || stage);
@@ -37,9 +49,15 @@ function stageTitle(stage: string | null | undefined) {
 }
 
 const SOURCE_LABELS: Record<string, string> = {
-  WCQ: "World Cup Qualifying", CL: "UEFA Champions League", EL: "UEFA Europa League",
-  PL: "Premier League", PD: "LaLiga", SA: "Serie A", BL1: "Bundesliga",
-  FL1: "Ligue 1", CLI: "Copa Libertadores",
+  WCQ: "World Cup Qualifying",
+  CL: "UEFA Champions League",
+  EL: "UEFA Europa League",
+  PL: "Premier League",
+  PD: "LaLiga",
+  SA: "Serie A",
+  BL1: "Bundesliga",
+  FL1: "Ligue 1",
+  CLI: "Copa Libertadores",
 };
 
 /**
@@ -61,20 +79,38 @@ export default function Standings() {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (raw) {
-        const c = JSON.parse(raw) as { standings: Group[]; scorers: Scorer[]; scorers_source: string; updated_at: string };
+        const c = JSON.parse(raw) as {
+          standings: Group[];
+          scorers: Scorer[];
+          scorers_source: string;
+          updated_at: string;
+        };
         setGroups(c.standings ?? []);
         setScorers(c.scorers ?? []);
         setScorersSource(c.scorers_source ?? "");
         setUpdated(c.updated_at ?? "");
         setLoading(false);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     (async () => {
-      const { data, error } = await supabase.functions.invoke("standings", { body: { kind: "all" } });
+      const { data, error } = await supabase.functions.invoke("standings", {
+        body: { kind: "all" },
+      });
       if (cancelled) return;
-      if (error) { setErr(error.message); setLoading(false); return; }
-      const d = data as { standings?: Group[]; scorers?: Scorer[]; scorers_source?: string; updated_at?: string };
+      if (error) {
+        setErr(error.message);
+        setLoading(false);
+        return;
+      }
+      const d = data as {
+        standings?: Group[];
+        scorers?: Scorer[];
+        scorers_source?: string;
+        updated_at?: string;
+      };
       const payload = {
         standings: d.standings ?? [],
         scorers: d.scorers ?? [],
@@ -86,9 +122,15 @@ export default function Standings() {
       setScorersSource(payload.scorers_source);
       setUpdated(payload.updated_at);
       setLoading(false);
-      try { localStorage.setItem(CACHE_KEY, JSON.stringify(payload)); } catch { /* ignore */ }
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+      } catch {
+        /* ignore */
+      }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filteredScorers = useMemo(() => {
@@ -102,12 +144,20 @@ export default function Standings() {
   const updatedLabel = useMemo(() => {
     if (!updated) return "";
     try {
-      return new Date(updated).toLocaleString("en-US", {
-        timeZone: "Asia/Dhaka",
-        day: "numeric", month: "short", year: "numeric",
-        hour: "numeric", minute: "2-digit", hour12: true,
-      }) + " BDT";
-    } catch { return updated; }
+      return (
+        new Date(updated).toLocaleString("en-US", {
+          timeZone: "Asia/Dhaka",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }) + " BDT"
+      );
+    } catch {
+      return updated;
+    }
   }, [updated]);
 
   return (
@@ -135,7 +185,8 @@ export default function Standings() {
               <span>Points & Golden Boot · WC 2026</span>
             </div>
             <motion.h1
-              initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
               className="display mt-2 text-4xl leading-none sm:text-6xl md:text-7xl"
             >
               Standings &amp; Stats
@@ -156,10 +207,10 @@ export default function Standings() {
             aria-label="View standings or top scorers"
             className="inline-flex self-start rounded-full border border-border bg-background/60 p-1 sm:self-end"
           >
-            {([
+            {[
               { k: "standings" as const, label: "Groups", icon: Users },
               { k: "scorers" as const, label: "Top scorers", icon: Medal },
-            ]).map(({ k, label, icon: Icon }) => {
+            ].map(({ k, label, icon: Icon }) => {
               const on = tab === k;
               return (
                 <button
@@ -168,7 +219,9 @@ export default function Standings() {
                   aria-selected={on}
                   onClick={() => setTab(k)}
                   className={`inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                    on ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:text-foreground"
+                    on
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground/70 hover:text-foreground"
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -181,11 +234,7 @@ export default function Standings() {
       </header>
 
       {loading ? (
-        <div
-          className="mt-6 grid gap-5 md:grid-cols-2"
-          role="status"
-          aria-live="polite"
-        >
+        <div className="mt-6 grid gap-5 md:grid-cols-2" role="status" aria-live="polite">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-64 animate-pulse rounded-3xl bg-card/40" />
           ))}
@@ -207,7 +256,11 @@ export default function Standings() {
           ) : (
             <div className="grid gap-5 md:grid-cols-2">
               {groups.map((g, index) => (
-                <GroupCard key={`${g.group ?? "group"}-${g.stage}-${index}`} group={g} index={index} />
+                <GroupCard
+                  key={`${g.group ?? "group"}-${g.stage}-${index}`}
+                  group={g}
+                  index={index}
+                />
               ))}
             </div>
           )}
@@ -219,7 +272,8 @@ export default function Standings() {
                 <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" /> Advance
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" /> Positive GD
+                <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" /> Positive
+                GD
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-red-400" aria-hidden="true" /> Negative GD
@@ -266,14 +320,30 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
         <caption className="sr-only">{groupTitle(g.group, g.stage)} points table</caption>
         <thead className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           <tr className="border-b border-border/60">
-            <th scope="col" className="w-10 py-2.5 pl-3 text-left">#</th>
-            <th scope="col" className="py-2.5 text-left">Team</th>
-            <th scope="col" className="py-2.5 text-center" title="Played">P</th>
-            <th scope="col" className="py-2.5 text-center" title="Won">W</th>
-            <th scope="col" className="py-2.5 text-center" title="Drawn">D</th>
-            <th scope="col" className="py-2.5 text-center" title="Lost">L</th>
-            <th scope="col" className="py-2.5 text-center" title="Goal difference">GD</th>
-            <th scope="col" className="py-2.5 pr-3 text-center font-bold text-primary">Pts</th>
+            <th scope="col" className="w-10 py-2.5 pl-3 text-left">
+              #
+            </th>
+            <th scope="col" className="py-2.5 text-left">
+              Team
+            </th>
+            <th scope="col" className="py-2.5 text-center" title="Played">
+              P
+            </th>
+            <th scope="col" className="py-2.5 text-center" title="Won">
+              W
+            </th>
+            <th scope="col" className="py-2.5 text-center" title="Drawn">
+              D
+            </th>
+            <th scope="col" className="py-2.5 text-center" title="Lost">
+              L
+            </th>
+            <th scope="col" className="py-2.5 text-center" title="Goal difference">
+              GD
+            </th>
+            <th scope="col" className="py-2.5 pr-3 text-center font-bold text-primary">
+              Pts
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -287,9 +357,7 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
               <td className="py-2.5 pl-3">
                 <span
                   className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${
-                    r.position <= 2
-                      ? "bg-primary/15 text-primary"
-                      : "text-muted-foreground"
+                    r.position <= 2 ? "bg-primary/15 text-primary" : "text-muted-foreground"
                   }`}
                   aria-label={`Position ${r.position}`}
                 >
@@ -301,21 +369,31 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
                   {(() => {
                     const flag = r.team.crest ?? flagUrl(r.team.tla, 80);
                     return flag ? (
-                      <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                      <img
+                        src={flag}
+                        alt=""
+                        className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border"
+                        loading="lazy"
+                      />
                     ) : (
-                      <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
+                      <span
+                        className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40"
+                        aria-hidden="true"
+                      />
                     );
                   })()}
                   <span className="truncate font-medium">{r.team.name}</span>
-
                 </div>
               </td>
               <td className="py-2.5 text-center text-muted-foreground">{r.played}</td>
               <td className="py-2.5 text-center">{r.won}</td>
               <td className="py-2.5 text-center">{r.draw}</td>
               <td className="py-2.5 text-center">{r.lost}</td>
-              <td className={`py-2.5 text-center ${r.gd > 0 ? "text-emerald-400" : r.gd < 0 ? "text-red-400" : "text-muted-foreground"}`}>
-                {r.gd > 0 ? "+" : ""}{r.gd}
+              <td
+                className={`py-2.5 text-center ${r.gd > 0 ? "text-emerald-400" : r.gd < 0 ? "text-red-400" : "text-muted-foreground"}`}
+              >
+                {r.gd > 0 ? "+" : ""}
+                {r.gd}
               </td>
               <td className="py-2.5 pr-3 text-center">
                 <span className="inline-flex min-w-[2rem] justify-center rounded-md bg-primary/10 px-2 py-0.5 font-bold text-primary">
@@ -330,10 +408,15 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
       {/* Mobile stacked list */}
       <ul className="divide-y divide-border/40 sm:hidden">
         {g.table.map((r) => (
-          <li key={r.team.name} className={`flex items-center gap-3 px-4 py-3 tabular-nums ${r.position <= 2 ? "bg-primary/[0.03]" : ""}`}>
+          <li
+            key={r.team.name}
+            className={`flex items-center gap-3 px-4 py-3 tabular-nums ${r.position <= 2 ? "bg-primary/[0.03]" : ""}`}
+          >
             <span
               className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                r.position <= 2 ? "bg-primary/15 text-primary" : "bg-secondary/40 text-muted-foreground"
+                r.position <= 2
+                  ? "bg-primary/15 text-primary"
+                  : "bg-secondary/40 text-muted-foreground"
               }`}
               aria-label={`Position ${r.position}`}
             >
@@ -342,9 +425,17 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
             {(() => {
               const flag = r.team.crest ?? flagUrl(r.team.tla, 80);
               return flag ? (
-                <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                <img
+                  src={flag}
+                  alt=""
+                  className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border"
+                  loading="lazy"
+                />
               ) : (
-                <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
+                <span
+                  className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40"
+                  aria-hidden="true"
+                />
               );
             })()}
 
@@ -353,10 +444,14 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
               <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                 P {r.played} · W {r.won} · D {r.draw} · L {r.lost} ·{" "}
                 <span className={r.gd > 0 ? "text-emerald-400" : r.gd < 0 ? "text-red-400" : ""}>
-                  GD {r.gd > 0 ? "+" : ""}{r.gd}
+                  GD {r.gd > 0 ? "+" : ""}
+                  {r.gd}
                 </span>
               </p>
-              <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-secondary/40" aria-hidden="true">
+              <div
+                className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-secondary/40"
+                aria-hidden="true"
+              >
                 <div
                   className="h-full rounded-full bg-primary/70"
                   style={{ width: `${Math.max(4, (r.points / topPoints) * 100)}%` }}
@@ -376,7 +471,11 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
 /* ---------- Top scorers ---------- */
 
 function ScorersPanel({
-  scorers, totalCount, scorersSource, query, setQuery,
+  scorers,
+  totalCount,
+  scorersSource,
+  query,
+  setQuery,
 }: {
   scorers: Scorer[];
   totalCount: number;
@@ -386,7 +485,8 @@ function ScorersPanel({
 }) {
   const [first, second, third, ...rest] = scorers;
   const maxGoals = Math.max(1, ...scorers.map((s) => s.goals));
-  const showAltSourceNote = scorersSource && !["WC", "WorldCupWiki", "Google"].includes(scorersSource);
+  const showAltSourceNote =
+    scorersSource && !["WC", "WorldCupWiki", "Google"].includes(scorersSource);
 
   return (
     <section role="tabpanel" aria-label="Top scorers" className="mt-6 space-y-5">
@@ -403,8 +503,13 @@ function ScorersPanel({
       {/* Search */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <label htmlFor="scorer-search" className="sr-only">Search scorers</label>
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <label htmlFor="scorer-search" className="sr-only">
+            Search scorers
+          </label>
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
           <input
             id="scorer-search"
             type="search"
@@ -442,11 +547,25 @@ function ScorersPanel({
                 <caption className="sr-only">Top scorers leaderboard</caption>
                 <thead className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                   <tr className="border-b border-border/60">
-                    <th scope="col" className="w-10 py-3 pl-4 text-left">#</th>
-                    <th scope="col" className="py-3 text-left">Player</th>
-                    <th scope="col" className="hidden py-3 text-left sm:table-cell">Team</th>
-                    <th scope="col" className="hidden py-3 text-center md:table-cell" title="Matches played">Matches</th>
-                    <th scope="col" className="py-3 pr-4 text-center font-bold text-primary">Goals</th>
+                    <th scope="col" className="w-10 py-3 pl-4 text-left">
+                      #
+                    </th>
+                    <th scope="col" className="py-3 text-left">
+                      Player
+                    </th>
+                    <th scope="col" className="hidden py-3 text-left sm:table-cell">
+                      Team
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden py-3 text-center md:table-cell"
+                      title="Matches played"
+                    >
+                      Matches
+                    </th>
+                    <th scope="col" className="py-3 pr-4 text-center font-bold text-primary">
+                      Goals
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -468,15 +587,25 @@ function ScorersPanel({
                             const t = (s as Scorer).team;
                             const flag = t.crest ?? flagUrl(t.tla ?? fifaCodeFromName(t.name), 80);
                             return flag ? (
-                              <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border" loading="lazy" />
+                              <img
+                                src={flag}
+                                alt=""
+                                className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border"
+                                loading="lazy"
+                              />
                             ) : (
-                              <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" aria-hidden="true" />
+                              <span
+                                className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40"
+                                aria-hidden="true"
+                              />
                             );
                           })()}
                           <span className="truncate">{(s as Scorer).team.name}</span>
                         </div>
                       </td>
-                      <td className="hidden py-3 text-center text-muted-foreground md:table-cell">{(s as Scorer).played ?? "—"}</td>
+                      <td className="hidden py-3 text-center text-muted-foreground md:table-cell">
+                        {(s as Scorer).played ?? "—"}
+                      </td>
                       <td className="py-3 pr-4 text-center">
                         <span className="inline-flex min-w-[2.25rem] justify-center rounded-md bg-primary/10 px-2 py-0.5 text-base font-bold text-primary">
                           {(s as Scorer).goals}
@@ -494,7 +623,15 @@ function ScorersPanel({
   );
 }
 
-function PodiumCard({ scorer: s, place, maxGoals }: { scorer: Scorer; place: 1 | 2 | 3; maxGoals: number }) {
+function PodiumCard({
+  scorer: s,
+  place,
+  maxGoals,
+}: {
+  scorer: Scorer;
+  place: 1 | 2 | 3;
+  maxGoals: number;
+}) {
   const styles = {
     1: {
       ring: "border-primary/60 bg-gradient-to-br from-primary/10 via-card to-card",
@@ -526,7 +663,9 @@ function PodiumCard({ scorer: s, place, maxGoals }: { scorer: Scorer; place: 1 |
       className={`relative flex flex-col overflow-hidden rounded-3xl border p-5 shadow-md ${styles.ring} ${styles.order}`}
     >
       <div className="flex items-center justify-between">
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${styles.badge}`}>
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${styles.badge}`}
+        >
           {styles.icon}
           {styles.label}
         </span>
@@ -537,7 +676,12 @@ function PodiumCard({ scorer: s, place, maxGoals }: { scorer: Scorer; place: 1 |
         {(() => {
           const flag = s.team.crest ?? flagUrl(s.team.tla ?? fifaCodeFromName(s.team.name), 160);
           return flag ? (
-            <img src={flag} alt="" className="h-8 w-12 shrink-0 rounded-[3px] object-cover ring-1 ring-border" loading="lazy" />
+            <img
+              src={flag}
+              alt=""
+              className="h-8 w-12 shrink-0 rounded-[3px] object-cover ring-1 ring-border"
+              loading="lazy"
+            />
           ) : (
             <span className="h-8 w-12 shrink-0 rounded-[3px] bg-secondary/40" aria-hidden="true" />
           );
@@ -561,7 +705,10 @@ function PodiumCard({ scorer: s, place, maxGoals }: { scorer: Scorer; place: 1 |
         </div>
       </div>
 
-      <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-secondary/40" aria-hidden="true">
+      <div
+        className="mt-3 h-1 w-full overflow-hidden rounded-full bg-secondary/40"
+        aria-hidden="true"
+      >
         <div
           className="h-full rounded-full bg-primary"
           style={{ width: `${Math.max(6, (s.goals / maxGoals) * 100)}%` }}

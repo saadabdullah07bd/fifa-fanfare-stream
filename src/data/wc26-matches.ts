@@ -17,7 +17,15 @@ export type Wc26Card = {
 
 export type Wc26Match = {
   match_no: number;
-  stage: "GROUP" | "LAST_32" | "LAST_16" | "QUARTER_FINALS" | "SEMI_FINALS" | "THIRD_PLACE" | "FINAL" | string;
+  stage:
+    | "GROUP"
+    | "LAST_32"
+    | "LAST_16"
+    | "QUARTER_FINALS"
+    | "SEMI_FINALS"
+    | "THIRD_PLACE"
+    | "FINAL"
+    | string;
   stage_label: string;
   date_utc: string | null;
   home_name: string;
@@ -51,8 +59,7 @@ export function getWc26Match(id: string | number | undefined): Wc26Match | undef
   return WC26_MATCHES.find((m) => m.match_no === n);
 }
 
-const norm = (s: string | null | undefined) =>
-  (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const norm = (s: string | null | undefined) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 /** Find a wc26 match by team names (order-insensitive) and optional ISO date. */
 export function findWc26MatchByTeams(
@@ -65,7 +72,8 @@ export function findWc26MatchByTeams(
   if (!a || !b) return undefined;
   const day = utcDate ? utcDate.slice(0, 10) : null;
   const candidates = WC26_MATCHES.filter((m) => {
-    const h = norm(m.home_name), aw = norm(m.away_name);
+    const h = norm(m.home_name),
+      aw = norm(m.away_name);
     return (h === a && aw === b) || (h === b && aw === a);
   });
   if (candidates.length === 0) return undefined;

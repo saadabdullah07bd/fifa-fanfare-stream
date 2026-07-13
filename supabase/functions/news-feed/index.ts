@@ -23,8 +23,10 @@ const CACHE_MS = 3600_000; // 1 hour
 function stripHtml(s: string): string {
   return s
     .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
     .replace(/https?:\/\/\S+/g, "") // drop raw URLs
     .replace(/\[\+\d+\s*chars?\]/gi, "")
     .trim();
@@ -56,7 +58,10 @@ async function fromNewsApi(q: string): Promise<any[] | null> {
     .filter((a: any) => a.title && a.url && !/^\[Removed\]/.test(a.title))
     .map((a: any, i: number) => ({
       id: `n-${i}-${a.url}`,
-      title: stripHtml(a.title).replace(/\s*-\s*[^-]+$/, "").trim() || stripHtml(a.title),
+      title:
+        stripHtml(a.title)
+          .replace(/\s*-\s*[^-]+$/, "")
+          .trim() || stripHtml(a.title),
       url: a.url,
       source: a.source?.name ?? "News",
       summary: stripHtml(a.description ?? a.content ?? "").slice(0, 260),
@@ -75,7 +80,9 @@ async function fromGoogleRss(q: string): Promise<any[]> {
     const it = m[1];
     return {
       id: `g-${i}`,
-      title: stripHtml(pick(it, "title")).replace(/\s*-\s*[^-]+$/, "").trim(),
+      title: stripHtml(pick(it, "title"))
+        .replace(/\s*-\s*[^-]+$/, "")
+        .trim(),
       url: pick(it, "link"),
       source: pick(it, "source") || "Google News",
       summary: "", // Google RSS descriptions are just link lists
@@ -114,10 +121,17 @@ Deno.serve(async (req) => {
   const seenTitle = new Set<string>();
   articles = articles.filter((a: any) => {
     const u = (a.url || "").split("?")[0].toLowerCase();
-    const t = (a.title || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(" ").slice(0, 8).join(" ");
+    const t = (a.title || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()
+      .split(" ")
+      .slice(0, 8)
+      .join(" ");
     if (!u || !t) return false;
     if (seenUrl.has(u) || seenTitle.has(t)) return false;
-    seenUrl.add(u); seenTitle.add(t);
+    seenUrl.add(u);
+    seenTitle.add(t);
     return true;
   });
 

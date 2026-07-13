@@ -63,7 +63,7 @@
   --card-foreground: #ffffff;
   --popover: #0d0d0d;
   --popover-foreground: #ffffff;
-  --primary: #d4af37;                 /* trophy gold */
+  --primary: #d4af37; /* trophy gold */
   --primary-foreground: #000000;
   --secondary: #141414;
   --secondary-foreground: #ffffff;
@@ -73,7 +73,7 @@
   --accent-foreground: #000000;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.10);
+  --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.06);
   --ring: #d4af37;
 
@@ -81,7 +81,7 @@
   --gold: #d4af37;
   --gold-warm: #e8c568;
   --pitch: #000000;
-  --trophy-green: #1f6b46;            /* malachite from trophy base */
+  --trophy-green: #1f6b46; /* malachite from trophy base */
   --usa: #1e3a8a;
   --can: #d52b1e;
   --mex: #1f6b46;
@@ -104,21 +104,59 @@
   --accent-foreground: #000000;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.10);
+  --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.06);
   --ring: #d4af37;
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* Stop any single overflowing element (long team names, wide grids)
+       from pushing the whole page wide and breaking mobile layout. */
+    max-width: 100%;
+    overflow-x: clip;
   }
-  h1, h2, h3, .display {
+  /* Media never overflows its container on small screens. */
+  img,
+  video,
+  svg {
+    max-width: 100%;
+  }
+  /* Long unbroken strings (URLs, names) wrap instead of forcing scroll. */
+  h1,
+  h2,
+  h3,
+  p,
+  span,
+  a {
+    overflow-wrap: anywhere;
+  }
+
+  /* Respect the OS "reduce motion" setting for any CSS-driven animation
+     (framer-motion is handled separately in JS via useReducedMotionSafe). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  h1,
+  h2,
+  h3,
+  .display {
     font-family: var(--font-display);
     font-weight: 400;
     letter-spacing: 0.01em;
@@ -130,31 +168,45 @@
 body {
   background:
     radial-gradient(900px 700px at 50% -10%, rgba(212, 175, 55, 0.14), transparent 60%),
-    radial-gradient(700px 600px at 100% 100%, rgba(31, 107, 70, 0.10), transparent 55%),
+    radial-gradient(700px 600px at 100% 100%, rgba(31, 107, 70, 0.1), transparent 55%),
     var(--color-background);
   background-attachment: fixed;
 }
 
 /* ============ Live indicator ============ */
-.live-shimmer { position: relative; overflow: hidden; }
+.live-shimmer {
+  position: relative;
+  overflow: hidden;
+}
 .live-shimmer::after {
   content: "";
-  position: absolute; inset: 0;
+  position: absolute;
+  inset: 0;
   pointer-events: none;
   background: linear-gradient(90deg, transparent, rgba(245, 197, 24, 0.18), transparent);
   animation: shimmer 2.6s infinite;
 }
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 .live-dot {
   display: inline-block;
-  width: 0.55rem; height: 0.55rem;
+  width: 0.55rem;
+  height: 0.55rem;
   border-radius: 9999px;
   background: var(--live);
   box-shadow: 0 0 0 3px rgba(224, 39, 26, 0.28);
@@ -164,23 +216,34 @@ body {
 /* ============ Tri-nation ribbon ============ */
 .tri-ribbon {
   height: 4px;
-  background: linear-gradient(90deg,
-    var(--can) 0%, var(--can) 33.33%,
-    var(--mex) 33.33%, var(--mex) 66.66%,
-    var(--usa) 66.66%, var(--usa) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--can) 0%,
+    var(--can) 33.33%,
+    var(--mex) 33.33%,
+    var(--mex) 66.66%,
+    var(--usa) 66.66%,
+    var(--usa) 100%
+  );
 }
 .tri-ribbon-vert {
   width: 3px;
-  background: linear-gradient(180deg,
-    var(--can) 0%, var(--can) 33.33%,
-    var(--mex) 33.33%, var(--mex) 66.66%,
-    var(--usa) 66.66%, var(--usa) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--can) 0%,
+    var(--can) 33.33%,
+    var(--mex) 33.33%,
+    var(--mex) 66.66%,
+    var(--usa) 66.66%,
+    var(--usa) 100%
+  );
 }
 
 /* Hero gradient text — pulls in tri-nation accents */
 .tri-text {
   background: linear-gradient(90deg, var(--can), var(--gold) 45%, var(--mex) 70%, var(--usa));
-  -webkit-background-clip: text; background-clip: text;
+  -webkit-background-clip: text;
+  background-clip: text;
   color: transparent;
 }
 
@@ -203,23 +266,37 @@ body {
   outline: none;
 }
 .modern-range::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 14px; height: 14px; border-radius: 9999px;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
   background: #fff;
   border: 2px solid hsl(var(--primary));
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.4);
   cursor: pointer;
   transition: transform 0.15s ease;
 }
 .modern-range:hover::-webkit-slider-thumb,
-.modern-range:active::-webkit-slider-thumb { transform: scale(1.15); }
+.modern-range:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
 .modern-range::-moz-range-thumb {
-  width: 14px; height: 14px; border-radius: 9999px;
-  background: #fff; border: 2px solid hsl(var(--primary));
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.4);
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid hsl(var(--primary));
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }
-.modern-range::-moz-range-track { background: transparent; }
+.modern-range::-moz-range-track {
+  background: transparent;
+}
 
 /* ============ Navigation & surfaces ============ */
 .glass-nav {
@@ -230,9 +307,20 @@ body {
 }
 
 /* Hide native scrollbars while keeping scroll */
-html { scrollbar-width: none; -ms-overflow-style: none; }
-html::-webkit-scrollbar { width: 0; height: 0; display: none; }
-body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
 
 /* ============ Live player (unchanged behavior) ============ */
 .live-player,
@@ -255,7 +343,9 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
   border-radius: 0 !important;
   background: #000 !important;
 }
-.live-player:fullscreen::backdrop { background: #000; }
+.live-player:fullscreen::backdrop {
+  background: #000;
+}
 .live-player:fullscreen video,
 .live-player:-webkit-full-screen video {
   width: 100vw;
@@ -267,22 +357,26 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 /* ============ Anti-tamper overlay ============ */
 #tamper-block {
-  position: fixed; inset: 0; z-index: 2147483647;
-  background: #000; color: #fff;
-  display: none; align-items: center; justify-content: center;
-  padding: 2rem; text-align: center; font-family: var(--font-sans);
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  background: #000;
+  color: #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  font-family: var(--font-sans);
 }
-#tamper-block.on { display: flex; }
-
-#lovable-badge,
-#lovable-badge * {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
+#tamper-block.on {
+  display: flex;
 }
 
 /* ============ Sonner toast — refined institutional look ============ */
-[data-sonner-toaster] { --width: 380px; }
+[data-sonner-toaster] {
+  --width: 380px;
+}
 [data-sonner-toaster] [data-sonner-toast].glass-toast {
   background: rgba(19, 19, 19, 0.92) !important;
   border: 1px solid var(--border) !important;
@@ -307,7 +401,10 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 }
 
 /* Reasonable border radii — official FIFA identity is sharper than before */
-button, input, textarea, select {
+button,
+input,
+textarea,
+select {
   border-radius: 0.5rem;
 }
 
@@ -317,11 +414,20 @@ button, input, textarea, select {
  * more content off-screen — replaces hidden scrollbars visually. */
 .scroll-fade-x {
   mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 24px,
+    #000 calc(100% - 24px),
+    transparent
+  );
 }
 
 /* Guarantees tap targets clear the WCAG 44×44 baseline on mobile. */
-.tap-target { min-height: 44px; min-width: 44px; }
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}
 
 /* Respect iOS/Android safe-area at the bottom for pages that render right
  * above the floating BottomTabs. */
@@ -329,11 +435,20 @@ button, input, textarea, select {
   padding-bottom: calc(env(safe-area-inset-bottom) + 6.5rem);
 }
 @media (min-width: 1024px) {
-  .pb-safe-tabs { padding-bottom: 0; }
+  .pb-safe-tabs {
+    padding-bottom: 0;
+  }
 }
 
 /* Improve typography rendering on high-density mobile displays. */
 @media (max-width: 640px) {
-  html { font-size: 15.5px; }
-  h1, h2, h3, .display { letter-spacing: 0.02em; }
+  html {
+    font-size: 15.5px;
+  }
+  h1,
+  h2,
+  h3,
+  .display {
+    letter-spacing: 0.02em;
+  }
 }

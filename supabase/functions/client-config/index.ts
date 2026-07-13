@@ -1,4 +1,4 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 /**
  * Returns the Google OAuth Web Client ID for the SPA's One Tap flow.
@@ -10,19 +10,19 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
  * bootstrap in the client is defensive against that and silently skips.
  */
 Deno.serve((req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const body = {
     firebase: {},
-    firebaseVapidKey: '',
-    googleClientId: Deno.env.get('GOOGLE_OAUTH_WEB_CLIENT_ID') ?? '',
+    firebaseVapidKey: "",
+    googleClientId: Deno.env.get("GOOGLE_OAUTH_WEB_CLIENT_ID") ?? "",
   };
 
   return new Response(JSON.stringify(body), {
     headers: {
       ...corsHeaders,
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=300',
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=300",
     },
   });
 });

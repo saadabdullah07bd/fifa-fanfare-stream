@@ -15,7 +15,9 @@ export default function MobileSplash() {
     try {
       if (window.sessionStorage.getItem("pitch26-splash-seen") === "1") return;
       window.sessionStorage.setItem("pitch26-splash-seen", "1");
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setVisible(true);
   }, []);
 
@@ -33,8 +35,13 @@ export default function MobileSplash() {
     v.muted = true;
     const p = v.play();
     if (p && typeof p.then === "function") {
-      p.then(() => { try { v.muted = false; } catch { /* ignore */ } })
-       .catch(() => dismiss());
+      p.then(() => {
+        try {
+          v.muted = false;
+        } catch {
+          /* ignore */
+        }
+      }).catch(() => dismiss());
     }
     const failSafe = window.setTimeout(dismiss, 8000);
     return () => window.clearTimeout(failSafe);
@@ -56,7 +63,7 @@ export default function MobileSplash() {
         src="/splash.mp4"
         autoPlay
         playsInline
-        preload="auto"
+        preload="metadata"
         onEnded={dismiss}
         onError={dismiss}
         className="h-full w-full object-cover pointer-events-none select-none"

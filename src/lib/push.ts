@@ -41,10 +41,12 @@ export async function registerWebPush(userId: string): Promise<void> {
     });
     if (!token) return;
 
-    await supabase.from("push_tokens").upsert(
-      { user_id: userId, token, platform: "web", last_seen_at: new Date().toISOString() },
-      { onConflict: "token" },
-    );
+    await supabase
+      .from("push_tokens")
+      .upsert(
+        { user_id: userId, token, platform: "web", last_seen_at: new Date().toISOString() },
+        { onConflict: "token" },
+      );
 
     onMessage(messaging, (payload) => {
       const title = payload.notification?.title ?? payload.data?.title ?? "Pitch26";

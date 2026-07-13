@@ -19,9 +19,9 @@ type ServiceAccount = {
 
 function pemToArrayBuffer(pem: string): ArrayBuffer {
   const b64 = pem
-    .replace(/-----BEGIN [^-]+-----/g, '')
-    .replace(/-----END [^-]+-----/g, '')
-    .replace(/\s+/g, '');
+    .replace(/-----BEGIN [^-]+-----/g, "")
+    .replace(/-----END [^-]+-----/g, "")
+    .replace(/\s+/g, "");
   const bin = atob(b64);
   const buf = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
@@ -30,9 +30,9 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
 
 function b64url(bytes: Uint8Array | ArrayBuffer): string {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  let s = '';
+  let s = "";
   for (const x of b) s += String.fromCharCode(x);
-  return btoa(s).replace(/=+$/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  return btoa(s).replace(/=+$/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
 let accessTokenCache: { token: string; expires_at: number } | null = null;
@@ -40,11 +40,11 @@ let cachedSa: ServiceAccount | null = null;
 
 function getServiceAccount(): ServiceAccount {
   if (cachedSa) return cachedSa;
-  const raw = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
-  if (!raw) throw new Error('FIREBASE_SERVICE_ACCOUNT env is not set');
+  const raw = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+  if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT env is not set");
   const sa = JSON.parse(raw) as ServiceAccount;
   // Support pasted-with-\n private keys.
-  sa.private_key = sa.private_key.replace(/\\n/g, '\n');
+  sa.private_key = sa.private_key.replace(/\\n/g, "\n");
   cachedSa = sa;
   return sa;
 }
@@ -56,11 +56,11 @@ async function getAccessToken(): Promise<{ token: string; projectId: string }> {
     return { token: accessTokenCache.token, projectId: sa.project_id };
   }
 
-  const header = { alg: 'RS256', typ: 'JWT' };
+  const header = { alg: "RS256", typ: "JWT" };
   const claim = {
     iss: sa.client_email,
-    scope: 'https://www.googleapis.com/auth/firebase.messaging',
-    aud: sa.token_uri || 'https://oauth2.googleapis.com/token',
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: sa.token_uri || "https://oauth2.googleapis.com/token",
     iat: now,
     exp: now + 3600,
   };
@@ -68,25 +68,25 @@ async function getAccessToken(): Promise<{ token: string; projectId: string }> {
   const signingInput = `${b64url(enc.encode(JSON.stringify(header)))}.${b64url(enc.encode(JSON.stringify(claim)))}`;
 
   const key = await crypto.subtle.importKey(
-    'pkcs8',
+    "pkcs8",
     pemToArrayBuffer(sa.private_key),
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
     false,
-    ['sign'],
+    ["sign"],
   );
-  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, enc.encode(signingInput));
+  const sig = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, enc.encode(signingInput));
   const jwt = `${signingInput}.${b64url(sig)}`;
 
   const res = await fetch(claim.aud, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion: jwt,
     }),
   });
   if (!res.ok) throw new Error(`OAuth token exchange failed: ${res.status} ${await res.text()}`);
-  const json = await res.json() as { access_token: string; expires_in: number };
+  const json = (await res.json()) as { access_token: string; expires_in: number };
   accessTokenCache = { token: json.access_token, expires_at: now + json.expires_in };
   return { token: json.access_token, projectId: sa.project_id };
 }
@@ -109,31 +109,38 @@ export async function fcmSendToTokens(
   const send = async (tok: string): Promise<FcmSendResult> => {
     try {
       const res = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           message: {
             token: tok,
             notification,
             data,
-            webpush: { notification: { icon: '/app-icon.png', badge: '/app-icon.png' } },
-            android: { priority: 'HIGH', notification: { sound: 'default' } },
-            apns: { payload: { aps: { sound: 'default' } } },
+            webpush: { notification: { icon: "/app-icon.png", badge: "/app-icon.png" } },
+            android: { priority: "HIGH", notification: { sound: "default" } },
+            apns: { payload: { aps: { sound: "default" } } },
           },
         }),
       });
       if (res.ok) return { token: tok, ok: true };
       const errText = await res.text();
-      let errCode = '';
-      try { errCode = (JSON.parse(errText).error?.details ?? []).find((d: { errorCode?: string }) => d.errorCode)?.errorCode ?? ''; } catch { /* ignore */ }
+      let errCode = "";
+      try {
+        errCode =
+          (JSON.parse(errText).error?.details ?? []).find(
+            (d: { errorCode?: string }) => d.errorCode,
+          )?.errorCode ?? "";
+      } catch {
+        /* ignore */
+      }
       const deadToken =
         res.status === 404 ||
-        errCode === 'UNREGISTERED' ||
-        errCode === 'INVALID_ARGUMENT' ||
-        errText.includes('registration-token-not-registered');
+        errCode === "UNREGISTERED" ||
+        errCode === "INVALID_ARGUMENT" ||
+        errText.includes("registration-token-not-registered");
       return { token: tok, ok: false, error: `${res.status} ${errText}`, deadToken };
     } catch (e) {
       return { token: tok, ok: false, error: (e as Error).message };

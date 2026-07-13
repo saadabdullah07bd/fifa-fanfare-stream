@@ -21,17 +21,25 @@ const cache = new Map<string, { at: number; body: unknown }>();
 
 /** Normalizes team names for fuzzy matching */
 function norm(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, "")
+    .trim();
 }
 
 /** Tokenizes a string for scoring overlaps */
 function tokens(s: string) {
-  return new Set(norm(s).split(/\s+/).filter((t) => t.length > 2));
+  return new Set(
+    norm(s)
+      .split(/\s+/)
+      .filter((t) => t.length > 2),
+  );
 }
 
 /** Scores the similarity between two team names */
 function score(a: string, b: string) {
-  const ta = tokens(a), tb = tokens(b);
+  const ta = tokens(a),
+    tb = tokens(b);
   let hit = 0;
   for (const t of ta) if (tb.has(t)) hit++;
   return hit;
@@ -53,7 +61,8 @@ Deno.serve(async (req) => {
   const apiKey = Deno.env.get("API_FOOTBALL_KEY");
   if (!apiKey) {
     return new Response(JSON.stringify({ error: "API_FOOTBALL_KEY missing" }), {
-      status: 500, headers: { ...cors, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
@@ -63,7 +72,8 @@ Deno.serve(async (req) => {
   const dateParam = url.searchParams.get("date") ?? "";
   if (!home || !away) {
     return new Response(JSON.stringify({ error: "home and away required" }), {
-      status: 400, headers: { ...cors, "Content-Type": "application/json" },
+      status: 400,
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
@@ -118,9 +128,10 @@ Deno.serve(async (req) => {
     }
 
     const fixtureId = best.fixture.id;
-    const [statsJ, eventsJ] = await Promise.all([
+    const [statsJ, eventsJ, lineupsJ] = await Promise.all([
       afFetch("/fixtures/statistics", { fixture: String(fixtureId) }, apiKey),
       afFetch("/fixtures/events", { fixture: String(fixtureId) }, apiKey),
+      afFetch("/fixtures/lineups", { fixture: String(fixtureId) }, apiKey),
     ]);
 
     // Map AF stats into { name, home, away }
@@ -150,9 +161,31 @@ Deno.serve(async (req) => {
       assist: e.assist?.name ?? null,
     }));
 
+    // Lineups: formation, coach, starting XI and bench — with real player
+    // headshots served from API-Football's licensed media CDN.
+    const playerPhoto = (id: number | null | undefined) =>
+      id ? `https://media.api-sports.io/football/players/${id}.png` : null;
+    const mapPlayer = (p: any) => ({
+      id: p.player?.id ?? null,
+      name: p.player?.name ?? "",
+      number: p.player?.number ?? null,
+      pos: p.player?.pos ?? null,
+      grid: p.player?.grid ?? null,
+      photo: playerPhoto(p.player?.id),
+    });
+    const lineups = (lineupsJ?.response ?? []).map((l: any) => ({
+      team_id: l.team?.id ?? null,
+      team: l.team?.name ?? "",
+      formation: l.formation ?? null,
+      coach: l.coach?.name ?? null,
+      coach_photo: l.coach?.photo ?? null,
+      startXI: (l.startXI ?? []).map(mapPlayer),
+      substitutes: (l.substitutes ?? []).map(mapPlayer),
+    }));
+
     const status = best.fixture.status;
     const body = {
-      available: stats.length > 0,
+      available: stats.length > 0 || lineups.length > 0,
       source: "api-football",
       fixture_id: fixtureId,
       status: status?.long ?? null,
@@ -166,6 +199,7 @@ Deno.serve(async (req) => {
       league: best.league?.name ?? null,
       stats,
       events,
+      lineups,
     };
     cache.set(cacheKey, { at: Date.now(), body });
     return new Response(JSON.stringify(body), {

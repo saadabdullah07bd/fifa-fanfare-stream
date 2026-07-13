@@ -66,10 +66,7 @@ function detectDownloadHelpers() {
   ];
   const scan = () => {
     for (const id of markers) {
-      if (
-        document.getElementById(id) ||
-        document.querySelector(`[class*="${id}"]`)
-      ) {
+      if (document.getElementById(id) || document.querySelector(`[class*="${id}"]`)) {
         showBlock("a download-manager extension was detected");
         return;
       }

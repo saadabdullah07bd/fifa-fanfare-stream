@@ -34,7 +34,8 @@ Deno.serve(async (req) => {
   const token = Deno.env.get("FOOTBALL_DATA_API_TOKEN");
   if (!token) {
     return new Response(JSON.stringify({ error: "FOOTBALL_DATA_API_TOKEN missing" }), {
-      status: 500, headers: { ...cors, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
@@ -58,11 +59,12 @@ Deno.serve(async (req) => {
   if (!res.ok) {
     const detail = await res.text();
     return new Response(JSON.stringify({ error: `football-data ${res.status}`, detail }), {
-      status: res.status, headers: { ...cors, "Content-Type": "application/json" },
+      status: res.status,
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 
-  const raw = await res.json() as { matches: Array<Record<string, unknown>> };
+  const raw = (await res.json()) as { matches: Array<Record<string, unknown>> };
   let matches = (raw.matches ?? []).map((m: any) => ({
     id: m.id,
     competition: m.competition?.name,
@@ -97,17 +99,21 @@ Deno.serve(async (req) => {
         const r = await fetch(u);
         if (!r.ok) continue;
         const j: any = await r.json();
-        for (const e of (j?.events ?? [])) {
+        for (const e of j?.events ?? []) {
           if (!e?.idEvent || seen.has(e.idEvent)) continue;
           seen.add(e.idEvent);
           merged.push(e);
         }
       }
-      const parseNum = (v: any) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+      const parseNum = (v: any) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
       /** Map TSDB status string to our internal status format */
       const statusFromTsdb = (s: string | null, progress: string | null): string => {
         const st = (s ?? "").toUpperCase();
-        if (st === "FT" || st === "AET" || st === "PEN" || st === "MATCH FINISHED") return "FINISHED";
+        if (st === "FT" || st === "AET" || st === "PEN" || st === "MATCH FINISHED")
+          return "FINISHED";
         if (st === "HT") return "PAUSED";
         if (progress && /\d/.test(progress)) return "IN_PLAY";
         if (st === "NS" || st === "" || st === "NOT STARTED") return "SCHEDULED";
@@ -117,7 +123,9 @@ Deno.serve(async (req) => {
         .map((e: any) => {
           const iso = e.strTimestamp
             ? new Date(e.strTimestamp + "Z").toISOString()
-            : (e.dateEvent ? new Date(`${e.dateEvent}T${e.strTime ?? "00:00:00"}Z`).toISOString() : null);
+            : e.dateEvent
+              ? new Date(`${e.dateEvent}T${e.strTime ?? "00:00:00"}Z`).toISOString()
+              : null;
           return {
             id: Number(e.idEvent),
             competition: "FIFA World Cup",
@@ -127,8 +135,16 @@ Deno.serve(async (req) => {
             minute: e.strProgress && /\d/.test(e.strProgress) ? parseInt(e.strProgress, 10) : null,
             injury_time: null,
             utc_date: iso,
-            home: { name: e.strHomeTeam, tla: (e.strHomeTeam ?? "").slice(0, 3).toUpperCase(), crest: e.strHomeTeamBadge },
-            away: { name: e.strAwayTeam, tla: (e.strAwayTeam ?? "").slice(0, 3).toUpperCase(), crest: e.strAwayTeamBadge },
+            home: {
+              name: e.strHomeTeam,
+              tla: (e.strHomeTeam ?? "").slice(0, 3).toUpperCase(),
+              crest: e.strHomeTeamBadge,
+            },
+            away: {
+              name: e.strAwayTeam,
+              tla: (e.strAwayTeam ?? "").slice(0, 3).toUpperCase(),
+              crest: e.strAwayTeamBadge,
+            },
             score: {
               full: { home: parseNum(e.intHomeScore), away: parseNum(e.intAwayScore) },
               half: { home: null, away: null },
@@ -150,59 +166,66 @@ Deno.serve(async (req) => {
       .map((m: any, i: number) => ({ m, i }))
       .filter(({ m }) => ["IN_PLAY", "LIVE", "PAUSED", "SCHEDULED", "TIMED"].includes(m.status));
 
-    await Promise.all(liveIdx.map(async ({ m, i }) => {
-      try {
-        const query = `${m.home.name} vs ${m.away.name} live score`;
-        const fcRes = await fetch("https://api.firecrawl.dev/v2/search", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${fcKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ query, limit: 3, sources: ["web"] }),
-        });
-        if (!fcRes.ok) return;
-        const fcJson: any = await fcRes.json();
-        const results: any[] = fcJson?.data?.web ?? fcJson?.data ?? [];
-        const text = results.map((r: any) => `${r.title ?? ""} ${r.description ?? r.snippet ?? ""}`).join(" ").replace(/\s+/g, " ");
-        if (!text) return;
+    await Promise.all(
+      liveIdx.map(async ({ m, i }) => {
+        try {
+          const query = `${m.home.name} vs ${m.away.name} live score`;
+          const fcRes = await fetch("https://api.firecrawl.dev/v2/search", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${fcKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ query, limit: 3, sources: ["web"] }),
+          });
+          if (!fcRes.ok) return;
+          const fcJson: any = await fcRes.json();
+          const results: any[] = fcJson?.data?.web ?? fcJson?.data ?? [];
+          const text = results
+            .map((r: any) => `${r.title ?? ""} ${r.description ?? r.snippet ?? ""}`)
+            .join(" ")
+            .replace(/\s+/g, " ");
+          if (!text) return;
 
-        let minute: number | null = null;
-        let injury: number | null = null;
-        let status = m.status;
-        const htMatch = /\b(HT|Half[- ]time)\b/i.test(text);
-        const ftMatch = /\b(FT|Full[- ]time|Full Time|Ended)\b/i.test(text);
-        const minMatch = text.match(/(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]/);
-        if (ftMatch) { status = "FINISHED"; }
-        else if (htMatch) { status = "PAUSED"; }
-        else if (minMatch) {
-          const mn = parseInt(minMatch[1], 10);
-          if (mn > 0 && mn <= 130) {
-            minute = mn;
-            if (minMatch[2]) injury = parseInt(minMatch[2], 10);
-            status = "IN_PLAY";
+          let minute: number | null = null;
+          let injury: number | null = null;
+          let status = m.status;
+          const htMatch = /\b(HT|Half[- ]time)\b/i.test(text);
+          const ftMatch = /\b(FT|Full[- ]time|Full Time|Ended)\b/i.test(text);
+          const minMatch = text.match(/(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]/);
+          if (ftMatch) {
+            status = "FINISHED";
+          } else if (htMatch) {
+            status = "PAUSED";
+          } else if (minMatch) {
+            const mn = parseInt(minMatch[1], 10);
+            if (mn > 0 && mn <= 130) {
+              minute = mn;
+              if (minMatch[2]) injury = parseInt(minMatch[2], 10);
+              status = "IN_PLAY";
+            }
           }
+          const scoreMatch = text.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
+          let sHome = m.score.full.home;
+          let sAway = m.score.full.away;
+          if (scoreMatch) {
+            sHome = parseInt(scoreMatch[1], 10);
+            sAway = parseInt(scoreMatch[2], 10);
+          }
+          matches[i] = {
+            ...m,
+            status,
+            minute: minute ?? m.minute,
+            injury_time: injury ?? m.injury_time,
+            score: { ...m.score, full: { home: sHome, away: sAway } },
+            minute_source: minute ? "google-firecrawl" : m.minute_source,
+            sources: [...(m.sources ?? []), "google-firecrawl"],
+          };
+        } catch (e) {
+          console.error("firecrawl scrape failed", (e as Error).message);
         }
-        const scoreMatch = text.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
-        let sHome = m.score.full.home;
-        let sAway = m.score.full.away;
-        if (scoreMatch) {
-          sHome = parseInt(scoreMatch[1], 10);
-          sAway = parseInt(scoreMatch[2], 10);
-        }
-        matches[i] = {
-          ...m,
-          status,
-          minute: minute ?? m.minute,
-          injury_time: injury ?? m.injury_time,
-          score: { ...m.score, full: { home: sHome, away: sAway } },
-          minute_source: minute ? "google-firecrawl" : m.minute_source,
-          sources: [...(m.sources ?? []), "google-firecrawl"],
-        };
-      } catch (e) {
-        console.error("firecrawl scrape failed", (e as Error).message);
-      }
-    }));
+      }),
+    );
   }
 
   // Native Google Gemini 2.5 Flash Lite fallback.
@@ -210,46 +233,51 @@ Deno.serve(async (req) => {
   if (geminiKey) {
     const need = matches
       .map((m: any, i: number) => ({ m, i }))
-      .filter(({ m }) => ["IN_PLAY", "LIVE"].includes(m.status) && (m.minute == null || m.minute === 0));
-    await Promise.all(need.map(async ({ m, i }) => {
-      try {
-        const prompt = `Live football score check. FIFA World Cup 2026 match "${m.home.name} vs ${m.away.name}", kickoff ${m.utc_date}. Return current live state as compact JSON only: {"minute":number|null,"injury":number|null,"home":number|null,"away":number|null,"status":"IN_PLAY"|"PAUSED"|"FINISHED"|"SCHEDULED"}. No prose.`;
-        const r = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: prompt }] }],
-              generationConfig: { responseMimeType: "application/json", temperature: 0 },
-            }),
-          },
-        );
-        if (!r.ok) return;
-        const j: any = await r.json();
-        const raw: string = j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";
-        const jsonMatch = raw.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) return;
-        const p = JSON.parse(jsonMatch[0]);
-        matches[i] = {
-          ...m,
-          status: typeof p.status === "string" ? p.status : m.status,
-          minute: typeof p.minute === "number" ? p.minute : m.minute,
-          injury_time: typeof p.injury === "number" ? p.injury : m.injury_time,
-          score: {
-            ...m.score,
-            full: {
-              home: typeof p.home === "number" ? p.home : m.score.full.home,
-              away: typeof p.away === "number" ? p.away : m.score.full.away,
+      .filter(
+        ({ m }) => ["IN_PLAY", "LIVE"].includes(m.status) && (m.minute == null || m.minute === 0),
+      );
+    await Promise.all(
+      need.map(async ({ m, i }) => {
+        try {
+          const prompt = `Live football score check. FIFA World Cup 2026 match "${m.home.name} vs ${m.away.name}", kickoff ${m.utc_date}. Return current live state as compact JSON only: {"minute":number|null,"injury":number|null,"home":number|null,"away":number|null,"status":"IN_PLAY"|"PAUSED"|"FINISHED"|"SCHEDULED"}. No prose.`;
+          const r = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json", temperature: 0 },
+              }),
             },
-          },
-          minute_source: "gemini-2.5-flash-lite",
-          sources: [...(m.sources ?? []), "gemini-2.5-flash-lite"],
-        };
-      } catch (e) {
-        console.error("gemini live-matches failed", (e as Error).message);
-      }
-    }));
+          );
+          if (!r.ok) return;
+          const j: any = await r.json();
+          const raw: string =
+            j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";
+          const jsonMatch = raw.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) return;
+          const p = JSON.parse(jsonMatch[0]);
+          matches[i] = {
+            ...m,
+            status: typeof p.status === "string" ? p.status : m.status,
+            minute: typeof p.minute === "number" ? p.minute : m.minute,
+            injury_time: typeof p.injury === "number" ? p.injury : m.injury_time,
+            score: {
+              ...m.score,
+              full: {
+                home: typeof p.home === "number" ? p.home : m.score.full.home,
+                away: typeof p.away === "number" ? p.away : m.score.full.away,
+              },
+            },
+            minute_source: "gemini-2.5-flash-lite",
+            sources: [...(m.sources ?? []), "gemini-2.5-flash-lite"],
+          };
+        } catch (e) {
+          console.error("gemini live-matches failed", (e as Error).message);
+        }
+      }),
+    );
   }
 
   // Final fallback: if still no minute, compute from kickoff time.
@@ -267,8 +295,11 @@ Deno.serve(async (req) => {
   });
 
   // Sort: live first, then scheduled today, then finished
-  const rank = (s: string) => (["IN_PLAY", "PAUSED", "LIVE"].includes(s) ? 0 : s === "SCHEDULED" || s === "TIMED" ? 1 : 2);
-  matches.sort((a: any, b: any) => rank(a.status) - rank(b.status) || a.utc_date.localeCompare(b.utc_date));
+  const rank = (s: string) =>
+    ["IN_PLAY", "PAUSED", "LIVE"].includes(s) ? 0 : s === "SCHEDULED" || s === "TIMED" ? 1 : 2;
+  matches.sort(
+    (a: any, b: any) => rank(a.status) - rank(b.status) || a.utc_date.localeCompare(b.utc_date),
+  );
 
   const body = { matches, updated_at: new Date().toISOString() };
   cache = { at: Date.now(), body };

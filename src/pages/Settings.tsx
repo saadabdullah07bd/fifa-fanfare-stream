@@ -27,7 +27,9 @@ export default function Settings() {
   const { data: cfg, refetch } = useQuery({
     queryKey: ["xtream-cfg"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("xtream", { body: { action: "get_config" } });
+      const { data, error } = await supabase.functions.invoke("xtream", {
+        body: { action: "get_config" },
+      });
       if (error) return null;
       return data as { host: string; username: string; default_stream_id: string | null } | null;
     },
@@ -69,7 +71,11 @@ export default function Settings() {
       if (error) throw new Error(error.message);
       return data;
     },
-    onSuccess: async () => { toast.success("Server saved"); setPassword(""); await refetch(); },
+    onSuccess: async () => {
+      toast.success("Server saved");
+      setPassword("");
+      await refetch();
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -79,14 +85,20 @@ export default function Settings() {
   const addManual = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("xtream", {
-        body: { action: "add_manual_channel", name: manualName, url: manualUrl, category: manualCategory },
+        body: {
+          action: "add_manual_channel",
+          name: manualName,
+          url: manualUrl,
+          category: manualCategory,
+        },
       });
       if (error) throw new Error(error.message);
       return data;
     },
     onSuccess: async () => {
       toast.success("Manual channel added");
-      setManualName(""); setManualUrl("");
+      setManualName("");
+      setManualUrl("");
       await qc.invalidateQueries({ queryKey: ["channels-admin"] });
       await qc.invalidateQueries({ queryKey: ["channels"] });
     },
@@ -95,11 +107,14 @@ export default function Settings() {
 
   const refresh = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("xtream", { body: { action: "refresh_channels" } });
+      const { data, error } = await supabase.functions.invoke("xtream", {
+        body: { action: "refresh_channels" },
+      });
       if (error) throw new Error(error.message);
       return data as { categories: number; channels: number };
     },
-    onSuccess: (r) => toast.success(`Loaded ${r.channels} channels across ${r.categories} categories`),
+    onSuccess: (r) =>
+      toast.success(`Loaded ${r.channels} channels across ${r.categories} categories`),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -128,8 +143,10 @@ export default function Settings() {
       {admin && <p className="mt-2 text-muted-foreground">Shared Xtream server controls.</p>}
 
       {!admin && (
-        <button onClick={signOut}
-          className="mt-6 rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground">
+        <button
+          onClick={signOut}
+          className="mt-6 rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground"
+        >
           Sign out
         </button>
       )}
@@ -141,8 +158,11 @@ export default function Settings() {
               <p className="text-xs uppercase tracking-wider text-primary">Xtream connected</p>
               <p className="mt-1 font-semibold">{cfg.host}</p>
               <p className="text-sm text-muted-foreground">User: {cfg.username}</p>
-              <button onClick={() => refresh.mutate()} disabled={refresh.isPending}
-                className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50">
+              <button
+                onClick={() => refresh.mutate()}
+                disabled={refresh.isPending}
+                className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
+              >
                 {refresh.isPending ? "Fetching…" : "Refresh channels"}
               </button>
             </div>
@@ -170,14 +190,19 @@ export default function Settings() {
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => saveDefault.mutate(defaultStreamId)}
-                  disabled={saveDefault.isPending || defaultStreamId === (cfg?.default_stream_id ?? "")}
+                  disabled={
+                    saveDefault.isPending || defaultStreamId === (cfg?.default_stream_id ?? "")
+                  }
                   className="rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
                 >
                   {saveDefault.isPending ? "Saving…" : "Save default"}
                 </button>
                 {cfg?.default_stream_id && (
                   <button
-                    onClick={() => { setDefaultStreamId(""); saveDefault.mutate(""); }}
+                    onClick={() => {
+                      setDefaultStreamId("");
+                      saveDefault.mutate("");
+                    }}
                     disabled={saveDefault.isPending}
                     className="rounded-md border border-border px-4 py-2 text-sm font-bold uppercase tracking-wider text-muted-foreground hover:text-destructive disabled:opacity-50"
                   >
@@ -188,45 +213,100 @@ export default function Settings() {
             </div>
           )}
 
-          <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="mt-8 space-y-3">
-            <h2 className="display text-2xl">{cfg ? "Update Xtream server" : "Add Xtream server"}</h2>
-            <input required placeholder="http://your-server.example:8080" value={host} onChange={(e) => setHost(e.target.value)}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm" />
-            <input required placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm" />
-            <input required type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm" />
-            <button disabled={save.isPending}
-              className="rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              save.mutate();
+            }}
+            className="mt-8 space-y-3"
+          >
+            <h2 className="display text-2xl">
+              {cfg ? "Update Xtream server" : "Add Xtream server"}
+            </h2>
+            <input
+              required
+              placeholder="http://your-server.example:8080"
+              value={host}
+              onChange={(e) => setHost(e.target.value)}
+              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+            />
+            <input
+              required
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+            />
+            <input
+              required
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+            />
+            <button
+              disabled={save.isPending}
+              className="rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
+            >
               {save.isPending ? "Saving…" : "Save server"}
             </button>
           </form>
 
-          <form onSubmit={(e) => { e.preventDefault(); addManual.mutate(); }} className="mt-8 space-y-3 rounded-lg border border-border bg-card/40 p-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              addManual.mutate();
+            }}
+            className="mt-8 space-y-3 rounded-lg border border-border bg-card/40 p-4"
+          >
             <h2 className="display text-2xl">Add manual channel</h2>
-            <p className="text-sm text-muted-foreground">Paste a direct HLS (.m3u8) or MPEG-TS (.ts) link — bypasses the Xtream server.</p>
-            <input required placeholder="Channel name (e.g. TSN 1)" value={manualName} onChange={(e) => setManualName(e.target.value)} maxLength={128}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm" />
-            <input required placeholder="https://example.com/stream.m3u8" value={manualUrl} onChange={(e) => setManualUrl(e.target.value)} maxLength={1024}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm" />
-            <select value={manualCategory} onChange={(e) => setManualCategory(e.target.value)}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm">
+            <p className="text-sm text-muted-foreground">
+              Paste a direct HLS (.m3u8) or MPEG-TS (.ts) link — bypasses the Xtream server.
+            </p>
+            <input
+              required
+              placeholder="Channel name (e.g. TSN 1)"
+              value={manualName}
+              onChange={(e) => setManualName(e.target.value)}
+              maxLength={128}
+              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+            />
+            <input
+              required
+              placeholder="https://example.com/stream.m3u8"
+              value={manualUrl}
+              onChange={(e) => setManualUrl(e.target.value)}
+              maxLength={1024}
+              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+            />
+            <select
+              value={manualCategory}
+              onChange={(e) => setManualCategory(e.target.value)}
+              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+            >
               <option value="wc2026">World Cup 2026</option>
               <option value="cricket">Cricket</option>
               <option value="other">Other</option>
             </select>
-            <button disabled={addManual.isPending}
-              className="rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50">
+            <button
+              disabled={addManual.isPending}
+              className="rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
+            >
               {addManual.isPending ? "Adding…" : "Add channel"}
             </button>
           </form>
         </>
       )}
 
-      {admin && <button onClick={signOut}
-        className="mt-12 text-xs uppercase tracking-wider text-muted-foreground hover:text-destructive">
-        Sign out
-      </button>}
+      {admin && (
+        <button
+          onClick={signOut}
+          className="mt-12 text-xs uppercase tracking-wider text-muted-foreground hover:text-destructive"
+        >
+          Sign out
+        </button>
+      )}
     </div>
   );
 }

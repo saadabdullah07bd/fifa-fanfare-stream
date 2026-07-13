@@ -6,7 +6,9 @@ function withSiteOrigin(path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
   const origin =
     import.meta.env.VITE_SITE_URL ??
-    (typeof window !== "undefined" ? window.location.origin : "https://pitch26.muhammadsaadabdullah.com");
+    (typeof window !== "undefined"
+      ? window.location.origin
+      : "https://pitch26.muhammadsaadabdullah.com");
 
   return `${origin.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }
@@ -14,7 +16,7 @@ function withSiteOrigin(path: string): string {
 /**
  * SEO component that injects meta tags into the document head using react-helmet-async.
  * Handles canonical URLs, OpenGraph tags, Twitter cards, and JSON-LD schemas.
- * 
+ *
  * @param title - The page title.
  * @param description - The meta description.
  * @param path - The URL path for canonical and OG tags.
@@ -52,7 +54,9 @@ export function Seo({
       {description && <meta name="twitter:description" content={description} />}
       {image && <meta name="twitter:image" content={image} />}
       {schemas.map((s, i) => (
-        <script key={i} type="application/ld+json">{JSON.stringify(s)}</script>
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(s)}
+        </script>
       ))}
     </Helmet>
   );

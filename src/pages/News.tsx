@@ -108,7 +108,8 @@ export default function News() {
               The Daily Pitch
             </h1>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              Headlines, team updates and match reports — curated from the world's best football desks.
+              Headlines, team updates and match reports — curated from the world's best football
+              desks.
             </p>
           </div>
 
@@ -205,7 +206,10 @@ export default function News() {
       {/* Bento layout */}
       {!isLoading && !isError && filtered.length > 0 && (
         <>
-          <section aria-label="Featured headlines" className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-12">
+          <section
+            aria-label="Featured headlines"
+            className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-12"
+          >
             {hero && <HeroCard article={hero} />}
             {secondary.length > 0 && (
               <div className="grid gap-5 md:col-span-4">
@@ -282,7 +286,10 @@ function HeroCard({ article }: { article: Article }) {
         )}
         <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
           Read story
-          <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+          <ArrowUpRight
+            className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            aria-hidden="true"
+          />
         </span>
       </div>
     </a>
@@ -359,7 +366,10 @@ function ArticleCard({ article }: { article: Article }) {
         )}
         <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
           Read
-          <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+          <ArrowUpRight
+            className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            aria-hidden="true"
+          />
         </span>
       </div>
     </a>

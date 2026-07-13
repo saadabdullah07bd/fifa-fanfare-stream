@@ -9,15 +9,31 @@ import Hls from "hls.js";
 import mpegts from "mpegts.js";
 import { toast } from "sonner";
 import {
-  Tv, Play, Pause, Radio,
-  Volume2, VolumeX, Maximize, Minimize, Loader2, PictureInPicture2,
-  LogOut, RotateCw, Expand, Shrink,
+  Tv,
+  Play,
+  Pause,
+  Radio,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Minimize,
+  Loader2,
+  PictureInPicture2,
+  LogOut,
+  RotateCw,
+  Expand,
+  Shrink,
 } from "lucide-react";
 
-type Channel = { id: string; category: string; stream_id: string; name: string; logo_url: string | null };
+type Channel = {
+  id: string;
+  category: string;
+  stream_id: string;
+  name: string;
+  logo_url: string | null;
+};
 
 const is4k = (name: string) => /\b(4k|uhd)\b/i.test(name);
-
 
 /**
  * Live TV streaming page for World Cup and sports channels.
@@ -25,14 +41,24 @@ const is4k = (name: string) => /\b(4k|uhd)\b/i.test(name);
 
 export default function LiveTV() {
   const navigate = useNavigate();
-  const { data: channels = [], isLoading, isError, error } = useQuery({
+  const {
+    data: channels = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     // Fetch available TV channels from Supabase.
     queryKey: ["channels"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("channels").select("*").order("category").order("name");
+      const { data, error } = await supabase
+        .from("channels")
+        .select("*")
+        .order("category")
+        .order("name");
       if (error) throw new Error(error.message);
-      return ((data as Channel[] | null) ?? [])
-        .sort((a, b) => (is4k(a.name) ? 1 : 0) - (is4k(b.name) ? 1 : 0) || a.name.localeCompare(b.name));
+      return ((data as Channel[] | null) ?? []).sort(
+        (a, b) => (is4k(a.name) ? 1 : 0) - (is4k(b.name) ? 1 : 0) || a.name.localeCompare(b.name),
+      );
     },
   });
 
@@ -79,7 +105,11 @@ export default function LiveTV() {
       });
       if (cancelled) return;
       if (error) throw new Error(error.message);
-      const { url, type, fallbackUrl } = data as { url: string; type?: "mpegts" | "hls"; fallbackUrl?: string };
+      const { url, type, fallbackUrl } = data as {
+        url: string;
+        type?: "mpegts" | "hls";
+        fallbackUrl?: string;
+      };
       // Default: sound on at 50% (not muted).
       // Default: sound on at 50% (not muted).
       v.muted = false;
@@ -109,15 +139,21 @@ export default function LiveTV() {
       v.addEventListener("progress", tryStart);
       v.addEventListener("canplaythrough", tryStart);
       // Safety net: start after 4s regardless so the user is never stuck.
-      const safety = window.setTimeout(() => { started = true; startPlay(); }, 4000);
-      const playVideo = () => { window.clearTimeout(safety); tryStart(); };
+      const safety = window.setTimeout(() => {
+        started = true;
+        startPlay();
+      }, 4000);
+      const playVideo = () => {
+        window.clearTimeout(safety);
+        tryStart();
+      };
       if (type === "mpegts" && mpegts.getFeatureList().mseLivePlayback) {
         mts = mpegts.createPlayer(
           { type: "mpegts", isLive: true, url },
           {
             // Buffered playback — trade ~3s of latency for smooth frames.
             enableStashBuffer: true,
-            stashInitialSize: 384,          // KB pre-roll before decoding
+            stashInitialSize: 384, // KB pre-roll before decoding
             liveBufferLatencyChasing: false, // don't skip ahead when buffer grows
             liveSync: false,
             lazyLoad: false,
@@ -129,11 +165,18 @@ export default function LiveTV() {
         mts.on(mpegts.Events.ERROR, (_event: unknown, detail: unknown) => {
           console.error("Live stream error", detail);
           if (fallbackUrl && Hls.isSupported() && !hls) {
-            try { mts?.pause(); mts?.unload(); mts?.detachMediaElement(); mts?.destroy(); } catch { /* ignore */ }
+            try {
+              mts?.pause();
+              mts?.unload();
+              mts?.detachMediaElement();
+              mts?.destroy();
+            } catch {
+              /* ignore */
+            }
             hls = new Hls({
               enableWorker: true,
               lowLatencyMode: false,
-              liveSyncDurationCount: 4,   // ~4 segments (≈8-12s) buffered ahead
+              liveSyncDurationCount: 4, // ~4 segments (≈8-12s) buffered ahead
               liveMaxLatencyDurationCount: 10,
               maxBufferLength: 30,
               backBufferLength: 30,
@@ -171,7 +214,14 @@ export default function LiveTV() {
       cancelled = true;
       if (rafId) cancelAnimationFrame(rafId);
       hls?.destroy();
-      try { mts?.pause(); mts?.unload(); mts?.detachMediaElement(); mts?.destroy(); } catch { /* ignore */ }
+      try {
+        mts?.pause();
+        mts?.unload();
+        mts?.detachMediaElement();
+        mts?.destroy();
+      } catch {
+        /* ignore */
+      }
     };
   }, [active, reloadNonce]);
 
@@ -187,8 +237,9 @@ export default function LiveTV() {
       const picked = channels.find((c) => c.stream_id === defaultStreamId);
       if (picked) return picked;
     }
-    const tsn1 = channels.find((c) => /\btsn\s*1\b/i.test(c.name) && !is4k(c.name))
-      ?? channels.find((c) => /\btsn\s*1\b/i.test(c.name));
+    const tsn1 =
+      channels.find((c) => /\btsn\s*1\b/i.test(c.name) && !is4k(c.name)) ??
+      channels.find((c) => /\btsn\s*1\b/i.test(c.name));
     return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
   }, [channels, defaultStreamId]);
 
@@ -204,13 +255,18 @@ export default function LiveTV() {
 
   const totalVisible = channels.length;
 
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
       className="mx-auto max-w-7xl space-y-6 px-4 py-6 pb-16 sm:space-y-8 sm:py-8"
     >
-      <Seo title="Watch World Cup 2026 Live Free in HD & 4K — Semifinals & Final | Pitch26" description="Live stream FIFA World Cup 2026 matches free in HD and 4K UHD — semifinals, final and every group-stage game. No signup, plays instantly on any device." path="/live-tv" />
+      <Seo
+        title="Watch World Cup 2026 Live Free in HD & 4K — Semifinals & Final | Pitch26"
+        description="Live stream FIFA World Cup 2026 matches free in HD and 4K UHD — semifinals, final and every group-stage game. No signup, plays instantly on any device."
+        path="/live-tv"
+      />
 
       {/* Editorial header */}
       <header className="relative overflow-hidden rounded-3xl border border-border bg-card/60 p-5 sm:p-7">
@@ -231,7 +287,9 @@ export default function LiveTV() {
               </span>
               <span>On air · World Cup 2026</span>
             </div>
-            <h1 className="display mt-2 text-4xl leading-none sm:text-6xl md:text-7xl">Watch Live</h1>
+            <h1 className="display mt-2 text-4xl leading-none sm:text-6xl md:text-7xl">
+              Watch Live
+            </h1>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
               Every match in HD &amp; 4K UHD. Pick a channel to start streaming instantly.
             </p>
@@ -239,18 +297,29 @@ export default function LiveTV() {
         </div>
       </header>
 
-
       <AnimatePresence mode="wait">
         {active ? (
-          <motion.div key="player"
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+          <motion.div
+            key="player"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
           >
-            <ModernPlayer videoRef={videoRef} channel={active} onClose={() => setActive(null)} onReload={() => setReloadNonce((n) => n + 1)} />
+            <ModernPlayer
+              videoRef={videoRef}
+              channel={active}
+              onClose={() => setActive(null)}
+              onReload={() => setReloadNonce((n) => n + 1)}
+            />
           </motion.div>
         ) : isLoading ? (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="grid aspect-video place-items-center rounded-3xl border border-primary/30 bg-black"
-            role="status" aria-live="polite"
+            role="status"
+            aria-live="polite"
           >
             <Loader2 className="h-12 w-12 animate-spin text-primary" aria-hidden="true" />
             <span className="sr-only">Loading channels…</span>
@@ -274,9 +343,12 @@ export default function LiveTV() {
               <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 ring-1 ring-primary/40">
                 <Tv className="h-7 w-7 text-primary" aria-hidden="true" />
               </span>
-              <h2 className="display mt-4 text-2xl sm:text-3xl">Pick a channel to start watching</h2>
+              <h2 className="display mt-4 text-2xl sm:text-3xl">
+                Pick a channel to start watching
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {channels.length} channel{channels.length === 1 ? "" : "s"} available · autoplay is off
+                {channels.length} channel{channels.length === 1 ? "" : "s"} available · autoplay is
+                off
               </p>
               {heroChannel && (
                 <button
@@ -293,9 +365,12 @@ export default function LiveTV() {
         )}
       </AnimatePresence>
 
-
       {isLoading ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" role="status" aria-live="polite">
+        <div
+          className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+          role="status"
+          aria-live="polite"
+        >
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl bg-card/40" />
           ))}
@@ -314,9 +389,13 @@ export default function LiveTV() {
           No channels match your search.
         </div>
       ) : (
-        <ChannelRow title="FIFA World Cup 2026" items={channels} onPlay={play} activeId={active?.id ?? null} />
+        <ChannelRow
+          title="FIFA World Cup 2026"
+          items={channels}
+          onPlay={play}
+          activeId={active?.id ?? null}
+        />
       )}
-
 
       <div className="mt-8 flex justify-center border-t border-border/50 pt-8">
         <button
@@ -331,8 +410,16 @@ export default function LiveTV() {
 }
 
 function ChannelRow({
-  title, items, onPlay, activeId,
-}: { title: string; items: Channel[]; onPlay: (c: Channel) => void; activeId: string | null }) {
+  title,
+  items,
+  onPlay,
+  activeId,
+}: {
+  title: string;
+  items: Channel[];
+  onPlay: (c: Channel) => void;
+  activeId: string | null;
+}) {
   return (
     <section className="space-y-4" aria-label={title}>
       <div className="flex items-baseline justify-between">
@@ -347,14 +434,27 @@ function ChannelRow({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {items.map((c) => (
-          <ChannelCard key={title + c.id} channel={c} onPlay={onPlay} isActive={activeId === c.id} />
+          <ChannelCard
+            key={title + c.id}
+            channel={c}
+            onPlay={onPlay}
+            isActive={activeId === c.id}
+          />
         ))}
       </div>
     </section>
   );
 }
 
-function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPlay: (c: Channel) => void; isActive: boolean }) {
+function ChannelCard({
+  channel: c,
+  onPlay,
+  isActive,
+}: {
+  channel: Channel;
+  onPlay: (c: Channel) => void;
+  isActive: boolean;
+}) {
   const catLabel = "FIFA World Cup 2026";
   return (
     <motion.button
@@ -370,7 +470,10 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
     >
       <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-gradient-to-br from-secondary/40 via-secondary/20 to-primary/10">
         <ChannelLogo url={c.logo_url} name={c.name} />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent"
+        />
         {is4k(c.name) && (
           <span className="absolute bottom-2 right-2 whitespace-nowrap rounded bg-gradient-to-r from-amber-400 to-orange-500 px-1.5 py-0.5 text-[9px] font-black leading-none tracking-wider text-black shadow">
             4K UHD
@@ -382,7 +485,10 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
           </span>
         )}
 
-        <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+        >
           <Play className="h-8 w-8 fill-primary text-primary" />
         </span>
       </div>
@@ -398,16 +504,21 @@ function ChannelCard({ channel: c, onPlay, isActive }: { channel: Channel; onPla
 
 function ChannelLogo({ url, name }: { url: string | null; name: string }) {
   const [ok, setOk] = useState(!!url);
-/**
- * Custom video player component with controls and fullscreen support.
- */
+  /**
+   * Custom video player component with controls and fullscreen support.
+   */
 
   // HLS/MPEGTS stream initialization and playback logic.
-  useEffect(() => { setOk(!!url); }, [url]);
+  useEffect(() => {
+    setOk(!!url);
+  }, [url]);
   const initials = name
     .replace(/\(.*?\)|\[.*?\]/g, "")
-    .split(/\s+/).filter(Boolean).slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "").join("");
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
   if (!ok || !url) {
     return (
       <div className="grid h-full w-full place-items-center">
@@ -417,14 +528,20 @@ function ChannelLogo({ url, name }: { url: string | null; name: string }) {
   }
   return (
     <img
-      src={url} alt={name} loading="lazy" onError={() => setOk(false)}
+      src={url}
+      alt={name}
+      loading="lazy"
+      onError={() => setOk(false)}
       className="max-h-[85%] max-w-[85%] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
     />
   );
 }
 
 function ModernPlayer({
-  videoRef, channel, onClose, onReload,
+  videoRef,
+  channel,
+  onClose,
+  onReload,
 }: {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   channel: Channel;
@@ -449,7 +566,10 @@ function ModernPlayer({
     const onPause = () => setPlaying(false);
     const onWaiting = () => setBuffering(true);
     const onPlaying = () => setBuffering(false);
-    const onVolume = () => { setMuted(v.muted); setVolume(v.volume); };
+    const onVolume = () => {
+      setMuted(v.muted);
+      setVolume(v.volume);
+    };
     v.addEventListener("play", onPlay);
     v.addEventListener("pause", onPause);
     v.addEventListener("waiting", onWaiting);
@@ -477,34 +597,61 @@ function ModernPlayer({
     hideTimer.current = window.setTimeout(() => setShowUI(false), 2600);
   };
   // HLS/MPEGTS stream initialization and playback logic.
-  useEffect(() => { kick(); return () => { if (hideTimer.current) window.clearTimeout(hideTimer.current); }; }, [channel.id]);
+  useEffect(() => {
+    kick();
+    return () => {
+      if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    };
+  }, [channel.id]);
 
   const toggle = () => {
-    const v = videoRef.current; if (!v) return;
-    if (v.paused) v.play(); else v.pause();
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) v.play();
+    else v.pause();
   };
-  const toggleMute = () => { const v = videoRef.current; if (v) v.muted = !v.muted; };
-  const setVol = (val: number) => { const v = videoRef.current; if (v) { v.volume = val; v.muted = val === 0; } };
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (v) v.muted = !v.muted;
+  };
+  const setVol = (val: number) => {
+    const v = videoRef.current;
+    if (v) {
+      v.volume = val;
+      v.muted = val === 0;
+    }
+  };
   const toggleFs = async () => {
     if (!wrapRef.current) return;
     if (document.fullscreenElement) {
-      try { (screen.orientation as any)?.unlock?.(); } catch { /* ignore */ }
+      try {
+        (screen.orientation as any)?.unlock?.();
+      } catch {
+        /* ignore */
+      }
       await document.exitFullscreen();
     } else {
       await wrapRef.current.requestFullscreen();
       // Force landscape on mobile devices for better viewing.
       const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       if (isMobile) {
-        try { await (screen.orientation as any)?.lock?.("landscape"); } catch { /* not supported */ }
+        try {
+          await (screen.orientation as any)?.lock?.("landscape");
+        } catch {
+          /* not supported */
+        }
       }
     }
   };
   const togglePip = async () => {
-    const v = videoRef.current as any; if (!v) return;
+    const v = videoRef.current as any;
+    if (!v) return;
     try {
       if ((document as any).pictureInPictureElement) await (document as any).exitPictureInPicture();
       else await v.requestPictureInPicture();
-    } catch { /* not supported */ }
+    } catch {
+      /* not supported */
+    }
   };
 
   // Keyboard shortcuts (Space/K play, M mute, F fullscreen, arrows volume/seek, Esc close)
@@ -513,23 +660,66 @@ function ModernPlayer({
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-      const v = videoRef.current; if (!v) return;
+      const v = videoRef.current;
+      if (!v) return;
       switch (e.key.toLowerCase()) {
         case " ":
-        case "k": e.preventDefault(); toggle(); kick(); break;
-        case "m": e.preventDefault(); v.muted = !v.muted; kick(); break;
-        case "f": e.preventDefault(); toggleFs(); kick(); break;
-        case "p": e.preventDefault(); togglePip(); kick(); break;
-        case "arrowup": e.preventDefault(); setVol(Math.min(1, v.volume + 0.1)); kick(); break;
-        case "arrowdown": e.preventDefault(); setVol(Math.max(0, v.volume - 0.1)); kick(); break;
-        case "arrowright": e.preventDefault(); try { v.currentTime += 10; } catch { /* live */ } kick(); break;
-        case "arrowleft": e.preventDefault(); try { v.currentTime -= 10; } catch { /* live */ } kick(); break;
-        case "escape": if (!document.fullscreenElement) onClose(); break;
+        case "k":
+          e.preventDefault();
+          toggle();
+          kick();
+          break;
+        case "m":
+          e.preventDefault();
+          v.muted = !v.muted;
+          kick();
+          break;
+        case "f":
+          e.preventDefault();
+          toggleFs();
+          kick();
+          break;
+        case "p":
+          e.preventDefault();
+          togglePip();
+          kick();
+          break;
+        case "arrowup":
+          e.preventDefault();
+          setVol(Math.min(1, v.volume + 0.1));
+          kick();
+          break;
+        case "arrowdown":
+          e.preventDefault();
+          setVol(Math.max(0, v.volume - 0.1));
+          kick();
+          break;
+        case "arrowright":
+          e.preventDefault();
+          try {
+            v.currentTime += 10;
+          } catch {
+            /* live */
+          }
+          kick();
+          break;
+        case "arrowleft":
+          e.preventDefault();
+          try {
+            v.currentTime -= 10;
+          } catch {
+            /* live */
+          }
+          kick();
+          break;
+        case "escape":
+          if (!document.fullscreenElement) onClose();
+          break;
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel.id]);
 
   const isMobile = useIsMobile();
@@ -539,12 +729,14 @@ function ModernPlayer({
   const [volPill, setVolPill] = useState<number | null>(null);
   const volPillTimer = useRef<number | null>(null);
   const onVolTouchStart = (e: React.TouchEvent) => {
-    const v = videoRef.current; if (!v) return;
+    const v = videoRef.current;
+    if (!v) return;
     dragRef.current = { startY: e.touches[0].clientY, startVol: v.muted ? 0 : v.volume };
     kick();
   };
   const onVolTouchMove = (e: React.TouchEvent) => {
-    const v = videoRef.current; const d = dragRef.current;
+    const v = videoRef.current;
+    const d = dragRef.current;
     if (!v || !d || !wrapRef.current) return;
     const h = wrapRef.current.clientHeight || 1;
     const dy = d.startY - e.touches[0].clientY; // up = positive
@@ -556,7 +748,9 @@ function ModernPlayer({
     volPillTimer.current = window.setTimeout(() => setVolPill(null), 700);
     e.preventDefault();
   };
-  const onVolTouchEnd = () => { dragRef.current = null; };
+  const onVolTouchEnd = () => {
+    dragRef.current = null;
+  };
 
   return (
     <div
@@ -573,7 +767,9 @@ function ModernPlayer({
         controlsList="nodownload noremoteplayback noplaybackrate"
         disablePictureInPicture={false}
         onContextMenu={(e) => e.preventDefault()}
-        onClick={() => { kick(); }}
+        onClick={() => {
+          kick();
+        }}
         style={{ cursor: showUI ? "pointer" : "none" }}
         className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
       />
@@ -591,9 +787,11 @@ function ModernPlayer({
           role="presentation"
         >
           <div className="pointer-events-none flex flex-col items-center gap-2 rounded-full bg-black/40 px-1.5 py-3 backdrop-blur-sm ring-1 ring-white/15">
-            {muted || volume === 0
-              ? <VolumeX className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />
-              : <Volume2 className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />}
+            {muted || volume === 0 ? (
+              <VolumeX className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />
+            ) : (
+              <Volume2 className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />
+            )}
             <div className="relative h-24 w-1 overflow-hidden rounded-full bg-white/20">
               <div
                 className="absolute inset-x-0 bottom-0 rounded-full bg-primary"
@@ -604,11 +802,12 @@ function ModernPlayer({
         </div>
       )}
 
-
       <AnimatePresence>
         {volPill !== null && (
           <motion.div
-            initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
             className="pointer-events-none absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/70 px-3 py-2 text-xs font-bold text-white backdrop-blur"
           >
             {Math.round(volPill * 100)}%
@@ -616,10 +815,13 @@ function ModernPlayer({
         )}
       </AnimatePresence>
 
-
       <AnimatePresence>
         {buffering && (
-          <motion.div key="buf" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <motion.div
+            key="buf"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="pointer-events-none absolute inset-0 grid place-items-center bg-black/30 backdrop-blur-[2px]"
           >
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -629,8 +831,11 @@ function ModernPlayer({
 
       <AnimatePresence>
         {showUI && (
-          <motion.div key="top"
-            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+          <motion.div
+            key="top"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
             className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/85 via-black/40 to-transparent p-3 sm:p-4"
           >
             <div className="pointer-events-auto flex min-w-0 items-center gap-2.5">
@@ -638,7 +843,10 @@ function ModernPlayer({
                 <span className="live-dot" aria-hidden="true" /> Live
               </span>
               <div className="min-w-0">
-                <p className="display truncate text-base leading-tight text-white sm:text-lg" title={channel.name}>
+                <p
+                  className="display truncate text-base leading-tight text-white sm:text-lg"
+                  title={channel.name}
+                >
                   {channel.name}
                 </p>
                 <p className="truncate text-[10px] uppercase tracking-[0.2em] text-white/60">
@@ -670,8 +878,11 @@ function ModernPlayer({
 
       <AnimatePresence>
         {!playing && !buffering && (
-          <motion.button key="center"
-            initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }}
+          <motion.button
+            key="center"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
             onClick={toggle}
             className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_0_0_8px_hsl(var(--primary)/0.15),0_20px_60px_-10px_hsl(var(--primary)/0.6)] transition hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
             aria-label="Play"
@@ -683,16 +894,35 @@ function ModernPlayer({
 
       <AnimatePresence>
         {showUI && (
-          <motion.div key="bot"
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+          <motion.div
+            key="bot"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
             className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 sm:p-4"
           >
             <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 p-1 backdrop-blur-md sm:gap-2 sm:p-1.5">
-              <PlayerBtn onClick={toggle} label={playing ? "Pause (K)" : "Play (K)"} title={playing ? "Pause (K)" : "Play (K)"}>
-                {playing ? <Pause className="h-4 w-4 fill-current" aria-hidden="true" /> : <Play className="h-4 w-4 fill-current" aria-hidden="true" />}
+              <PlayerBtn
+                onClick={toggle}
+                label={playing ? "Pause (K)" : "Play (K)"}
+                title={playing ? "Pause (K)" : "Play (K)"}
+              >
+                {playing ? (
+                  <Pause className="h-4 w-4 fill-current" aria-hidden="true" />
+                ) : (
+                  <Play className="h-4 w-4 fill-current" aria-hidden="true" />
+                )}
               </PlayerBtn>
-              <PlayerBtn onClick={toggleMute} label={muted ? "Unmute (M)" : "Mute (M)"} title={muted ? "Unmute (M)" : "Mute (M)"}>
-                {muted || volume === 0 ? <VolumeX className="h-4 w-4" aria-hidden="true" /> : <Volume2 className="h-4 w-4" aria-hidden="true" />}
+              <PlayerBtn
+                onClick={toggleMute}
+                label={muted ? "Unmute (M)" : "Mute (M)"}
+                title={muted ? "Unmute (M)" : "Mute (M)"}
+              >
+                {muted || volume === 0 ? (
+                  <VolumeX className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Volume2 className="h-4 w-4" aria-hidden="true" />
+                )}
               </PlayerBtn>
               {(() => {
                 const v = muted ? 0 : volume;
@@ -700,7 +930,10 @@ function ModernPlayer({
                 return (
                   <div className="volume-slider group/vol hidden items-center pl-1 pr-2 sm:flex">
                     <input
-                      type="range" min={0} max={1} step={0.01}
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
                       value={v}
                       onChange={(e) => setVol(parseFloat(e.target.value))}
                       style={{ ["--vol" as any]: `${pct}%` }}
@@ -721,22 +954,50 @@ function ModernPlayer({
               </span>
 
               <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-                <PlayerBtn onClick={() => { toast.message("Reloading stream…"); onReload(); kick(); }} label="Reload stream" title="Reload stream">
+                <PlayerBtn
+                  onClick={() => {
+                    toast.message("Reloading stream…");
+                    onReload();
+                    kick();
+                  }}
+                  label="Reload stream"
+                  title="Reload stream"
+                >
                   <RotateCw className="h-4 w-4" aria-hidden="true" />
                 </PlayerBtn>
                 <PlayerBtn
-                  onClick={() => { setFill((f) => !f); kick(); }}
+                  onClick={() => {
+                    setFill((f) => !f);
+                    kick();
+                  }}
                   label={fill ? "Fit to screen" : "Fill screen"}
                   title={fill ? "Fit to screen" : "Fill screen"}
                   active={fill}
                 >
-                  {fill ? <Shrink className="h-4 w-4" aria-hidden="true" /> : <Expand className="h-4 w-4" aria-hidden="true" />}
+                  {fill ? (
+                    <Shrink className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Expand className="h-4 w-4" aria-hidden="true" />
+                  )}
                 </PlayerBtn>
-                <PlayerBtn onClick={togglePip} label="Picture in picture (P)" title="Picture in picture (P)" className="hidden sm:grid">
+                <PlayerBtn
+                  onClick={togglePip}
+                  label="Picture in picture (P)"
+                  title="Picture in picture (P)"
+                  className="hidden sm:grid"
+                >
                   <PictureInPicture2 className="h-4 w-4" aria-hidden="true" />
                 </PlayerBtn>
-                <PlayerBtn onClick={toggleFs} label={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"} title={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}>
-                  {fullscreen ? <Minimize className="h-4 w-4" aria-hidden="true" /> : <Maximize className="h-4 w-4" aria-hidden="true" />}
+                <PlayerBtn
+                  onClick={toggleFs}
+                  label={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
+                  title={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
+                >
+                  {fullscreen ? (
+                    <Minimize className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Maximize className="h-4 w-4" aria-hidden="true" />
+                  )}
                 </PlayerBtn>
               </div>
             </div>
@@ -776,4 +1037,3 @@ function PlayerBtn({
     </button>
   );
 }
-

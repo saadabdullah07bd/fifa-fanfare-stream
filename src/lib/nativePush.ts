@@ -23,10 +23,12 @@ export async function registerNativePush(userId: string): Promise<void> {
     const platform = (capCore.Capacitor.getPlatform() as any) === "ios" ? "ios" : "android";
 
     await PushNotifications.addListener("registration", async (t) => {
-      await supabase.from("push_tokens").upsert(
-        { user_id: userId, token: t.value, platform, last_seen_at: new Date().toISOString() },
-        { onConflict: "token" },
-      );
+      await supabase
+        .from("push_tokens")
+        .upsert(
+          { user_id: userId, token: t.value, platform, last_seen_at: new Date().toISOString() },
+          { onConflict: "token" },
+        );
     });
     await PushNotifications.addListener("registrationError", (e) => {
       console.warn("Push registrationError:", e);

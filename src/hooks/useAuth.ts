@@ -4,7 +4,7 @@ import type { User } from "@supabase/supabase-js";
 
 /**
  * Hook to access the current authenticated user and auth state readiness.
- * 
+ *
  * @returns An object containing the current user, a ready flag, and an authed boolean.
  */
 export function useAuth() {
@@ -23,14 +23,17 @@ export function useAuth() {
 
 /**
  * Hook to check if the current user has the 'admin' role.
- * 
+ *
  * @returns An object containing the admin status and auth readiness flag.
  */
 export function useIsAdmin() {
   const { user, ready } = useAuth();
   const [admin, setAdmin] = useState(false);
   useEffect(() => {
-    if (!user) { setAdmin(false); return; }
+    if (!user) {
+      setAdmin(false);
+      return;
+    }
     supabase
       .from("user_roles")
       .select("id")

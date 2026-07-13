@@ -30,7 +30,6 @@ if (Capacitor.isNativePlatform()) {
     .catch(() => {});
 }
 
-
 /**
  * Configure React Query client with persistence and caching policies.
  */
