@@ -275,7 +275,7 @@ export default function LiveTV() {
           className="pointer-events-none absolute inset-0 opacity-40"
           style={{
             background:
-              "radial-gradient(60% 80% at 100% 0%, hsl(var(--primary) / 0.18), transparent 60%), radial-gradient(50% 70% at 0% 100%, hsl(var(--trophy-green,142 55% 27%) / 0.25), transparent 60%)",
+              "radial-gradient(60% 80% at 100% 0%, rgba(var(--primary-rgb), 0.18), transparent 60%), radial-gradient(50% 70% at 0% 100%, rgba(var(--trophy-green-rgb), 0.25), transparent 60%)",
           }}
         />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -336,7 +336,7 @@ export default function LiveTV() {
               className="pointer-events-none absolute inset-0 opacity-60"
               style={{
                 background:
-                  "radial-gradient(50% 60% at 50% 40%, hsl(var(--primary) / 0.18), transparent 70%)",
+                  "radial-gradient(50% 60% at 50% 40%, rgba(var(--primary-rgb), 0.18), transparent 70%)",
               }}
             />
             <div className="relative flex flex-col items-center px-6">
@@ -758,7 +758,7 @@ function ModernPlayer({
       onMouseMove={kick}
       onTouchStart={kick}
       style={{ cursor: showUI ? "" : "none" }}
-      className="live-player group relative overflow-hidden rounded-2xl border border-primary/30 bg-black shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.35)] outline-none focus:outline-none focus-visible:outline-none [&:fullscreen]:h-screen [&:fullscreen]:w-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none"
+      className="live-player group relative overflow-hidden rounded-2xl border border-primary/30 bg-black shadow-[0_30px_80px_-20px_rgba(var(--primary-rgb),0.35)] outline-none focus:outline-none focus-visible:outline-none [&:fullscreen]:h-screen [&:fullscreen]:w-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none"
       tabIndex={-1}
     >
       <video
@@ -774,14 +774,16 @@ function ModernPlayer({
         className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
       />
 
-      {/* Right-side vertical volume rocker (mobile only). Slim visible strip so
-          users know the gesture surface is there; sits clear of top/bottom UI. */}
+      {/* Right-side vertical volume rocker (mobile only). Hit zone spans the
+          player's full height/right third — a fixed top/bottom inset used to
+          leave almost no usable area on the short aspect-video box mobile
+          starts in (before fullscreen), which made the gesture feel missing. */}
       {isMobile && (
         <div
           onTouchStart={onVolTouchStart}
           onTouchMove={onVolTouchMove}
           onTouchEnd={onVolTouchEnd}
-          className="absolute right-1 top-24 bottom-32 z-10 flex w-10 flex-col items-center justify-center"
+          className="absolute inset-y-0 right-0 z-10 flex w-1/3 max-w-[140px] flex-col items-center justify-center"
           style={{ touchAction: "none" }}
           aria-label="Volume — drag up or down"
           role="presentation"
@@ -792,7 +794,7 @@ function ModernPlayer({
             ) : (
               <Volume2 className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />
             )}
-            <div className="relative h-24 w-1 overflow-hidden rounded-full bg-white/20">
+            <div className="relative h-20 w-1 overflow-hidden rounded-full bg-white/20">
               <div
                 className="absolute inset-x-0 bottom-0 rounded-full bg-primary"
                 style={{ height: `${Math.round((muted ? 0 : volume) * 100)}%` }}
@@ -884,7 +886,7 @@ function ModernPlayer({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.85 }}
             onClick={toggle}
-            className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_0_0_8px_hsl(var(--primary)/0.15),0_20px_60px_-10px_hsl(var(--primary)/0.6)] transition hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
+            className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_0_0_8px_rgba(var(--primary-rgb),0.15),0_20px_60px_-10px_rgba(var(--primary-rgb),0.6)] transition hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
             aria-label="Play"
           >
             <Play className="h-9 w-9 fill-current" aria-hidden="true" />

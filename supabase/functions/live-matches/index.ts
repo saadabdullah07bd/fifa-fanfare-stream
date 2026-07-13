@@ -8,8 +8,14 @@
  * External APIs:
  *   - Football-Data.org: Primary match source.
  *   - TheSportsDB: Fallback for World Cup 2026 fixtures.
- *   - Firecrawl/Google: Real-time score and minute scraping.
- *   - Gemini 2.5 Flash Lite: AI-driven live status enrichment.
+ *
+ * Note: this used to also "enrich" scores/minutes via a Firecrawl web-search
+ * text scrape and a Gemini prompt asking an LLM to invent a live score as
+ * JSON. Both were removed — an LLM has no ground truth for a live score, and
+ * regex-mining arbitrary search-result text for a "N-N" pattern will happily
+ * match an unrelated article, prediction, or betting line. That combination
+ * was the source of scores that didn't match reality (e.g. showing a result
+ * for a match that hadn't kicked off yet). Only real provider data is used now.
  */
 
 const cors = {
@@ -157,127 +163,6 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.error("tsdb WC fallback failed", (e as Error).message);
     }
-  }
-
-  // Google scrape enrichment via Firecrawl — reliable minute + score.
-  const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
-  if (fcKey) {
-    const liveIdx = matches
-      .map((m: any, i: number) => ({ m, i }))
-      .filter(({ m }) => ["IN_PLAY", "LIVE", "PAUSED", "SCHEDULED", "TIMED"].includes(m.status));
-
-    await Promise.all(
-      liveIdx.map(async ({ m, i }) => {
-        try {
-          const query = `${m.home.name} vs ${m.away.name} live score`;
-          const fcRes = await fetch("https://api.firecrawl.dev/v2/search", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${fcKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ query, limit: 3, sources: ["web"] }),
-          });
-          if (!fcRes.ok) return;
-          const fcJson: any = await fcRes.json();
-          const results: any[] = fcJson?.data?.web ?? fcJson?.data ?? [];
-          const text = results
-            .map((r: any) => `${r.title ?? ""} ${r.description ?? r.snippet ?? ""}`)
-            .join(" ")
-            .replace(/\s+/g, " ");
-          if (!text) return;
-
-          let minute: number | null = null;
-          let injury: number | null = null;
-          let status = m.status;
-          const htMatch = /\b(HT|Half[- ]time)\b/i.test(text);
-          const ftMatch = /\b(FT|Full[- ]time|Full Time|Ended)\b/i.test(text);
-          const minMatch = text.match(/(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]/);
-          if (ftMatch) {
-            status = "FINISHED";
-          } else if (htMatch) {
-            status = "PAUSED";
-          } else if (minMatch) {
-            const mn = parseInt(minMatch[1], 10);
-            if (mn > 0 && mn <= 130) {
-              minute = mn;
-              if (minMatch[2]) injury = parseInt(minMatch[2], 10);
-              status = "IN_PLAY";
-            }
-          }
-          const scoreMatch = text.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
-          let sHome = m.score.full.home;
-          let sAway = m.score.full.away;
-          if (scoreMatch) {
-            sHome = parseInt(scoreMatch[1], 10);
-            sAway = parseInt(scoreMatch[2], 10);
-          }
-          matches[i] = {
-            ...m,
-            status,
-            minute: minute ?? m.minute,
-            injury_time: injury ?? m.injury_time,
-            score: { ...m.score, full: { home: sHome, away: sAway } },
-            minute_source: minute ? "google-firecrawl" : m.minute_source,
-            sources: [...(m.sources ?? []), "google-firecrawl"],
-          };
-        } catch (e) {
-          console.error("firecrawl scrape failed", (e as Error).message);
-        }
-      }),
-    );
-  }
-
-  // Native Google Gemini 2.5 Flash Lite fallback.
-  const geminiKey = Deno.env.get("GEMINI_API_KEY");
-  if (geminiKey) {
-    const need = matches
-      .map((m: any, i: number) => ({ m, i }))
-      .filter(
-        ({ m }) => ["IN_PLAY", "LIVE"].includes(m.status) && (m.minute == null || m.minute === 0),
-      );
-    await Promise.all(
-      need.map(async ({ m, i }) => {
-        try {
-          const prompt = `Live football score check. FIFA World Cup 2026 match "${m.home.name} vs ${m.away.name}", kickoff ${m.utc_date}. Return current live state as compact JSON only: {"minute":number|null,"injury":number|null,"home":number|null,"away":number|null,"status":"IN_PLAY"|"PAUSED"|"FINISHED"|"SCHEDULED"}. No prose.`;
-          const r = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiKey}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [{ role: "user", parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json", temperature: 0 },
-              }),
-            },
-          );
-          if (!r.ok) return;
-          const j: any = await r.json();
-          const raw: string =
-            j?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";
-          const jsonMatch = raw.match(/\{[\s\S]*\}/);
-          if (!jsonMatch) return;
-          const p = JSON.parse(jsonMatch[0]);
-          matches[i] = {
-            ...m,
-            status: typeof p.status === "string" ? p.status : m.status,
-            minute: typeof p.minute === "number" ? p.minute : m.minute,
-            injury_time: typeof p.injury === "number" ? p.injury : m.injury_time,
-            score: {
-              ...m.score,
-              full: {
-                home: typeof p.home === "number" ? p.home : m.score.full.home,
-                away: typeof p.away === "number" ? p.away : m.score.full.away,
-              },
-            },
-            minute_source: "gemini-2.5-flash-lite",
-            sources: [...(m.sources ?? []), "gemini-2.5-flash-lite"],
-          };
-        } catch (e) {
-          console.error("gemini live-matches failed", (e as Error).message);
-        }
-      }),
-    );
   }
 
   // Final fallback: if still no minute, compute from kickoff time.

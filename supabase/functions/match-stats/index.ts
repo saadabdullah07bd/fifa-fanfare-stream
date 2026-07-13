@@ -19,6 +19,25 @@ const cors = {
 const AF = "https://v3.football.api-sports.io";
 const cache = new Map<string, { at: number; body: unknown }>();
 
+// API-Football's fixed league id for the FIFA World Cup, scoped to the 2026
+// season. Querying the whole competition once (and caching it) lets us match
+// every match against its real fixture, instead of fuzzy-scanning "all
+// football fixtures on this date" worldwide — which is both unreliable
+// (thousands of unrelated matches share common name tokens) and needlessly
+// expensive against API-Football's rate limits.
+const WC_LEAGUE_ID = "1";
+const WC_SEASON = "2026";
+let seasonCache: { at: number; fixtures: any[] } | null = null;
+const SEASON_TTL = 6 * 3600_000;
+
+async function getSeasonFixtures(apiKey: string): Promise<any[]> {
+  if (seasonCache && Date.now() - seasonCache.at < SEASON_TTL) return seasonCache.fixtures;
+  const j = await afFetch("/fixtures", { league: WC_LEAGUE_ID, season: WC_SEASON }, apiKey);
+  const fixtures = j?.response ?? [];
+  if (fixtures.length > 0) seasonCache = { at: Date.now(), fixtures };
+  return fixtures;
+}
+
 /** Normalizes team names for fuzzy matching */
 function norm(s: string) {
   return s
@@ -87,22 +106,11 @@ Deno.serve(async (req) => {
 
   try {
     const targetTs = dateParam ? new Date(dateParam).getTime() : Date.now();
-    const dates = new Set<string>();
-    for (const offset of [-1, 0, 1]) {
-      const d = new Date(targetTs + offset * 86400_000);
-      dates.add(d.toISOString().slice(0, 10));
-    }
 
-    // Pull fixtures for each date window
-    let candidates: any[] = [];
-    for (const d of dates) {
-      const j = await afFetch("/fixtures", { date: d }, apiKey);
-      if (j?.response) candidates = candidates.concat(j.response);
-    }
-
-    // Also try live for currently in-play matches
-    const live = await afFetch("/fixtures", { live: "all" }, apiKey);
-    if (live?.response) candidates = candidates.concat(live.response);
+    // Primary source: the real World Cup 2026 fixture list (cached), matched
+    // by team name only — every candidate is already a genuine WC26 match, so
+    // there's no risk of a false positive from an unrelated global fixture.
+    let candidates: any[] = await getSeasonFixtures(apiKey);
 
     // Score matches by team-name overlap
     let best: any = null;
@@ -111,11 +119,39 @@ Deno.serve(async (req) => {
       const h = f.teams?.home?.name ?? "";
       const a = f.teams?.away?.name ?? "";
       const s = score(home, h) + score(away, a);
-      const timeDiff = Math.abs(new Date(f.fixture?.date ?? 0).getTime() - targetTs);
-      const withinDay = timeDiff < 36 * 3600_000;
-      if (s > bestScore && withinDay) {
+      if (s > bestScore) {
         bestScore = s;
         best = f;
+      }
+    }
+
+    // Fallback: scan fixtures for the date window (+ live) worldwide, in case
+    // the season lookup failed or the league id/season are ever wrong. Still
+    // gated by a time window to avoid stray false positives.
+    if (!best || bestScore < 2) {
+      const dates = new Set<string>();
+      for (const offset of [-1, 0, 1]) {
+        const d = new Date(targetTs + offset * 86400_000);
+        dates.add(d.toISOString().slice(0, 10));
+      }
+      let fallbackCandidates: any[] = [];
+      for (const d of dates) {
+        const j = await afFetch("/fixtures", { date: d }, apiKey);
+        if (j?.response) fallbackCandidates = fallbackCandidates.concat(j.response);
+      }
+      const live = await afFetch("/fixtures", { live: "all" }, apiKey);
+      if (live?.response) fallbackCandidates = fallbackCandidates.concat(live.response);
+
+      for (const f of fallbackCandidates) {
+        const h = f.teams?.home?.name ?? "";
+        const a = f.teams?.away?.name ?? "";
+        const s = score(home, h) + score(away, a);
+        const timeDiff = Math.abs(new Date(f.fixture?.date ?? 0).getTime() - targetTs);
+        const withinDay = timeDiff < 36 * 3600_000;
+        if (s > bestScore && withinDay) {
+          bestScore = s;
+          best = f;
+        }
       }
     }
 

@@ -49,7 +49,6 @@ async function fetchDynamic() {
   }
 }
 
-
 /**
  * Generates the XML content for the sitemap.
  * @param entries - The list of sitemap entries.

@@ -175,7 +175,7 @@ export default function Standings() {
           className="pointer-events-none absolute inset-0 opacity-40"
           style={{
             background:
-              "radial-gradient(60% 80% at 100% 0%, hsl(var(--primary) / 0.18), transparent 60%), radial-gradient(50% 70% at 0% 100%, hsl(var(--trophy-green,142 55% 27%) / 0.25), transparent 60%)",
+              "radial-gradient(60% 80% at 100% 0%, rgba(var(--primary-rgb), 0.18), transparent 60%), radial-gradient(50% 70% at 0% 100%, rgba(var(--trophy-green-rgb), 0.25), transparent 60%)",
           }}
         />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

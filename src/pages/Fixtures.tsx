@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, MapPin, Trophy, CircleDot } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Trophy, CircleDot, ArrowUp } from "lucide-react";
 import { Seo } from "@/lib/seo";
 import { flagUrl, countryName, bdShortDate, bdTime } from "@/lib/flags";
 import { WC26_MATCHES, type Wc26Match } from "@/data/wc26-matches";
@@ -85,17 +85,21 @@ export default function Fixtures() {
         path="/fixtures"
       />
 
-      {/* ─────────── Header + view toggle ─────────── */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="display text-4xl leading-none tracking-tight sm:text-6xl md:text-7xl">
-            Match <span className="text-primary">Fixtures</span>
-          </h1>
-          <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground sm:text-[11px]">
-            World Cup 2026 · Road to the Final
-          </p>
-        </div>
+      {/* ─────────── Header ─────────── */}
+      <div>
+        <h1 className="display text-4xl leading-none tracking-tight sm:text-6xl md:text-7xl">
+          Match <span className="text-primary">Fixtures</span>
+        </h1>
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground sm:text-[11px]">
+          World Cup 2026 · Road to the Final
+        </p>
+      </div>
 
+      {/* ─────────── Sticky nav: view toggle + stage chips (All view only) ───────────
+          Kept in one sticky bar (instead of two independently-sticky pieces) so
+          the Fixture/Knockout switcher never scrolls out of view — including
+          during the auto-scroll-to-today jump in AllMatchesView below. */}
+      <div className="sticky top-16 z-30 -mx-3 mt-6 space-y-2 bg-background/85 px-3 pb-3 pt-3 backdrop-blur-md sm:-mx-4 sm:px-4">
         <div
           role="tablist"
           aria-label="Fixtures view"
@@ -118,15 +122,12 @@ export default function Fixtures() {
             </button>
           ))}
         </div>
-      </div>
 
-      {/* ─────────── Sticky stage-filter chips (All view only) ─────────── */}
-      {view === "all" && (
-        <div className="sticky top-16 z-30 -mx-3 mt-8 px-3 sm:-mx-4 sm:px-4">
+        {view === "all" && (
           <div
             role="tablist"
             aria-label="Filter fixtures by stage"
-            className="scroll-fade-x flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-3xl border border-border bg-card/85 p-2 backdrop-blur-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="scroll-fade-x flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-3xl border border-border bg-card/85 p-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {STAGE_CHIPS.map((chip) => {
               const active = stage === chip.id;
@@ -148,15 +149,49 @@ export default function Fixtures() {
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {view === "all" ? (
         <AllMatchesView matches={sorted} stage={stage} />
       ) : (
         <KnockoutView matches={sorted} />
       )}
+
+      <BackToTop />
     </div>
+  );
+}
+
+/** Floating back-to-top button — appears once the user has scrolled past the
+ * sticky nav, so long fixture/bracket lists are always one tap from the top. */
+function BackToTop() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 480);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 12, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.9 }}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="Back to top"
+          className="tap-target fixed bottom-24 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-primary/40 bg-card/95 text-primary shadow-lg backdrop-blur-md transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:bottom-8"
+          style={{ marginBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <ArrowUp className="h-5 w-5" aria-hidden="true" />
+        </motion.button>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -350,29 +385,37 @@ function TeamRow({
   winner: boolean;
 }) {
   const navigate = useNavigate();
+  const goToTeam = (e: React.MouseEvent) => {
+    // The whole fixture card is a link to the match; clicking the team name
+    // or crest should open the team page instead, without nested <a> tags.
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/team/${encodeURIComponent(name)}`);
+  };
   return (
     <div className="flex min-w-0 items-center gap-2.5">
       {crest ? (
-        <img
-          src={crest}
-          alt=""
-          width={32}
-          height={24}
-          loading="lazy"
-          className={`h-5 w-7 shrink-0 rounded-[3px] object-cover ring-1 sm:h-6 sm:w-9 ${winner ? "ring-primary" : "ring-border"}`}
-        />
+        <button
+          type="button"
+          onClick={goToTeam}
+          className="shrink-0 rounded-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          title={`${name} — squad, tactics & history`}
+        >
+          <img
+            src={crest}
+            alt=""
+            width={32}
+            height={24}
+            loading="lazy"
+            className={`h-5 w-7 rounded-[3px] object-cover ring-1 sm:h-6 sm:w-9 ${winner ? "ring-primary" : "ring-border"}`}
+          />
+        </button>
       ) : (
         <span className="h-5 w-7 shrink-0 rounded-[3px] bg-secondary sm:h-6 sm:w-9" />
       )}
       <button
         type="button"
-        onClick={(e) => {
-          // The whole fixture card is a link to the match; clicking the team
-          // name should open the team page instead, without nested <a> tags.
-          e.preventDefault();
-          e.stopPropagation();
-          navigate(`/team/${encodeURIComponent(name)}`);
-        }}
+        onClick={goToTeam}
         className={`display min-w-0 flex-1 truncate rounded-sm text-left text-base leading-tight tracking-tight transition hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xl ${
           winner ? "text-primary" : played ? "text-foreground/60" : "text-foreground"
         }`}
@@ -728,26 +771,62 @@ function BracketRow({
 }) {
   const url = flagUrl(code, 40);
   const name = displayName(code, fallback);
+  const navigate = useNavigate();
+  const goToTeam = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/team/${encodeURIComponent(name)}`);
+  };
+  // Placeholder slots ("Winner SF1", etc.) have no resolved code — not a real
+  // team page to link to, so only decided teams are clickable here.
+  const clickable = !!code;
   return (
     <div
       className={`flex items-center gap-2 min-w-0 transition-opacity ${loser ? "opacity-55" : ""}`}
     >
       {url ? (
-        <img
-          src={url}
-          alt=""
-          className={`h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ${winner ? "ring-primary" : "ring-border"}`}
-          loading="lazy"
-        />
+        clickable ? (
+          <button
+            type="button"
+            onClick={goToTeam}
+            className="shrink-0 rounded-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            title={`${name} — squad, tactics & history`}
+          >
+            <img
+              src={url}
+              alt=""
+              className={`h-4 w-6 rounded-[2px] object-cover ring-1 ${winner ? "ring-primary" : "ring-border"}`}
+              loading="lazy"
+            />
+          </button>
+        ) : (
+          <img
+            src={url}
+            alt=""
+            className={`h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ${winner ? "ring-primary" : "ring-border"}`}
+            loading="lazy"
+          />
+        )
       ) : (
         <span className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40" />
       )}
-      <span
-        className={`display flex-1 min-w-0 truncate text-sm md:text-base ${winner ? "text-primary" : ""}`}
-        title={name}
-      >
-        {name}
-      </span>
+      {clickable ? (
+        <button
+          type="button"
+          onClick={goToTeam}
+          title={`${name} — squad, tactics & history`}
+          className={`display min-w-0 flex-1 truncate rounded-sm text-left text-sm transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:text-base ${winner ? "text-primary" : ""}`}
+        >
+          {name}
+        </button>
+      ) : (
+        <span
+          className={`display flex-1 min-w-0 truncate text-sm md:text-base ${winner ? "text-primary" : ""}`}
+          title={name}
+        >
+          {name}
+        </span>
+      )}
       <span
         className={`display shrink-0 tabular-nums ${winner ? "text-primary" : "text-muted-foreground"}`}
       >

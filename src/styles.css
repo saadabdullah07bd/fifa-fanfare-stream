@@ -85,6 +85,13 @@
   --usa: #1e3a8a;
   --can: #d52b1e;
   --mex: #1f6b46;
+
+  /* RGB triples for the same colors, for use inside rgba(var(--x-rgb), alpha).
+     --primary/--trophy-green are hex strings, which cannot be composed with
+     hsl()/rgb() wrappers — that produces invalid CSS the browser silently
+     drops (this was the cause of the near-invisible volume slider fill). */
+  --primary-rgb: 212, 175, 55;
+  --trophy-green-rgb: 31, 107, 70;
 }
 
 .dark {
@@ -258,10 +265,10 @@ body {
 .modern-range {
   background: linear-gradient(
     to right,
-    hsl(var(--primary)) 0%,
-    hsl(var(--primary)) var(--vol, 50%),
-    rgba(255, 255, 255, 0.18) var(--vol, 50%),
-    rgba(255, 255, 255, 0.18) 100%
+    rgb(var(--primary-rgb)) 0%,
+    rgb(var(--primary-rgb)) var(--vol, 50%),
+    rgba(255, 255, 255, 0.28) var(--vol, 50%),
+    rgba(255, 255, 255, 0.28) 100%
   );
   outline: none;
 }
@@ -272,7 +279,7 @@ body {
   height: 14px;
   border-radius: 9999px;
   background: #fff;
-  border: 2px solid hsl(var(--primary));
+  border: 2px solid rgb(var(--primary-rgb));
   box-shadow:
     0 0 0 4px rgba(255, 255, 255, 0.06),
     0 2px 8px rgba(0, 0, 0, 0.4);
@@ -288,7 +295,7 @@ body {
   height: 14px;
   border-radius: 9999px;
   background: #fff;
-  border: 2px solid hsl(var(--primary));
+  border: 2px solid rgb(var(--primary-rgb));
   box-shadow:
     0 0 0 4px rgba(255, 255, 255, 0.06),
     0 2px 8px rgba(0, 0, 0, 0.4);

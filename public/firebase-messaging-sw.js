@@ -11,7 +11,11 @@ const CONFIG_URL = new URL("/functions/v1/client-config", self.location.origin);
 
 async function boot() {
   try {
-    const res = await fetch(CONFIG_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    const res = await fetch(CONFIG_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
     const cfg = await res.json();
     if (!cfg?.firebase?.projectId) return;
     firebase.initializeApp(cfg.firebase);
@@ -32,8 +36,12 @@ async function boot() {
   }
 }
 
-self.addEventListener("install", (e) => { e.waitUntil(self.skipWaiting()); });
-self.addEventListener("activate", (e) => { e.waitUntil(Promise.all([self.clients.claim(), boot()])); });
+self.addEventListener("install", (e) => {
+  e.waitUntil(self.skipWaiting());
+});
+self.addEventListener("activate", (e) => {
+  e.waitUntil(Promise.all([self.clients.claim(), boot()]));
+});
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
@@ -42,4 +50,6 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 // Also boot on push in case the SW was terminated between activate and delivery.
-self.addEventListener("push", (event) => { event.waitUntil(boot()); });
+self.addEventListener("push", (event) => {
+  event.waitUntil(boot());
+});

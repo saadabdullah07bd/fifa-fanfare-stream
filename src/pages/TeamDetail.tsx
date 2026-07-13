@@ -27,12 +27,18 @@ type SquadPlayer = {
   photo: string | null;
 };
 
+type Coach = {
+  id: number | null;
+  name: string | null;
+  photo: string | null;
+};
+
 type NationalOverview = {
   available: boolean;
   team: { id: number; name: string; code: string | null; logo: string | null } | null;
   squad: SquadPlayer[];
   formation: string | null;
-  coach: string | null;
+  coach: Coach | null;
 };
 
 const POSITION_ORDER = ["Goalkeeper", "Defender", "Midfielder", "Attacker"] as const;
@@ -75,6 +81,42 @@ function PlayerCard({ p }: { p: SquadPlayer }) {
         </p>
       </div>
     </motion.div>
+  );
+}
+
+/** Manager/head-coach card with headshot and graceful initials fallback. */
+function ManagerCard({ coach }: { coach: Coach }) {
+  const name = coach.name ?? "Unknown";
+  const initials = name
+    .split(" ")
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
+      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-secondary ring-1 ring-border">
+        {coach.photo ? (
+          <img
+            src={coach.photo}
+            alt={name}
+            loading="lazy"
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : null}
+        <span className="absolute inset-0 -z-10 grid place-items-center text-sm font-bold text-muted-foreground">
+          {initials}
+        </span>
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Head coach</p>
+        <p className="mt-1 truncate text-lg font-semibold">{name}</p>
+      </div>
+    </div>
   );
 }
 
@@ -227,12 +269,23 @@ export default function TeamDetail() {
               {natLoading ? "…" : (nat?.formation ?? "—")}
             </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Head coach
-            </p>
-            <p className="mt-1 text-lg font-semibold">{natLoading ? "…" : (nat?.coach ?? "—")}</p>
-          </div>
+          {natLoading ? (
+            <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                Head coach
+              </p>
+              <p className="mt-1 text-lg font-semibold">…</p>
+            </div>
+          ) : nat?.coach?.name ? (
+            <ManagerCard coach={nat.coach} />
+          ) : (
+            <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                Head coach
+              </p>
+              <p className="mt-1 text-lg font-semibold">—</p>
+            </div>
+          )}
         </div>
         {!natLoading && !nat?.available && (
           <p className="mt-2 text-sm text-muted-foreground">

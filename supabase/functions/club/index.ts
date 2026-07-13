@@ -160,14 +160,20 @@ Deno.serve(async (req) => {
       }));
       // Tactics: formation + coach from the latest fixture that has a lineup.
       let formation: string | null = null;
-      let coach: string | null = null;
+      let coach: { id: number | null; name: string | null; photo: string | null } | null = null;
       const recent = lastRes.response ?? [];
       for (const f of recent) {
         const lu = await fetchJson(`/fixtures/lineups?fixture=${f.fixture.id}`);
         const mine = (lu.response ?? []).find((l: any) => l.team?.id === teamId);
         if (mine?.formation) {
           formation = mine.formation;
-          coach = mine.coach?.name ?? null;
+          coach = mine.coach
+            ? {
+                id: mine.coach.id ?? null,
+                name: mine.coach.name ?? null,
+                photo: mine.coach.photo ?? null,
+              }
+            : null;
           break;
         }
       }

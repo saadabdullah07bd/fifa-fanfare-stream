@@ -6,7 +6,7 @@ import { ArrowRight, PlayCircle, Zap, Trophy, MapPin, Radio, Clock } from "lucid
 import { Seo } from "@/lib/seo";
 import { useLiveMatches, type LiveMatch } from "@/components/LiveTicker";
 import { WC26_MATCHES, findWc26MatchByTeams, type Wc26Match } from "@/data/wc26-matches";
-import { bdTime, bdDate, bdShortDate, flagUrl, countryName } from "@/lib/flags";
+import { bdTime, bdDate, bdShortDate, flagUrl, countryName, bestFifaCode } from "@/lib/flags";
 import wc26Emblem from "@/assets/wc26-trophy.png.asset.json";
 
 type Article = {
@@ -225,8 +225,8 @@ function fromLive(m: LiveMatch): HeroMatch {
     href: wc ? `/match/${wc.match_no}` : "/fixtures",
     homeName: m.home.name,
     awayName: m.away.name,
-    homeCode: m.home.tla,
-    awayCode: m.away.tla,
+    homeCode: bestFifaCode(m.home.tla, m.home.name),
+    awayCode: bestFifaCode(m.away.tla, m.away.name),
     homeScore: m.score.full.home,
     awayScore: m.score.full.away,
     utcDate: m.utc_date,

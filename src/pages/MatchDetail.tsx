@@ -177,7 +177,7 @@ export default function MatchDetail() {
           className="pointer-events-none absolute inset-0 opacity-40"
           style={{
             background:
-              "radial-gradient(60% 80% at 100% 0%, hsl(var(--primary) / 0.18), transparent 60%), radial-gradient(50% 70% at 0% 100%, hsl(var(--trophy-green,142 55% 27%) / 0.22), transparent 60%)",
+              "radial-gradient(60% 80% at 100% 0%, rgba(var(--primary-rgb), 0.18), transparent 60%), radial-gradient(50% 70% at 0% 100%, rgba(var(--trophy-green-rgb), 0.22), transparent 60%)",
           }}
         />
 
@@ -478,7 +478,7 @@ function TeamBlock({
           <img
             src={crest}
             alt=""
-            className={`h-12 w-16 rounded object-cover ring-1 sm:h-14 sm:w-20 md:h-16 md:w-24 ${winner ? "ring-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]" : "ring-border"}`}
+            className={`h-12 w-16 rounded object-cover ring-1 sm:h-14 sm:w-20 md:h-16 md:w-24 ${winner ? "ring-primary shadow-[0_0_0_4px_rgba(var(--primary-rgb),0.15)]" : "ring-border"}`}
           />
         ) : (
           <div

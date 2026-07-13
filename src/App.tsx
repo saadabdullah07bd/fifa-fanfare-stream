@@ -167,7 +167,7 @@ function SiteFooter() {
 
 const MOBILE_TABS = [
   { to: "/", label: "Home", icon: HomeIcon },
-  { to: "/fixtures?view=knockout", label: "Knockout", icon: CalendarDays },
+  { to: "/fixtures", label: "Fixtures", icon: CalendarDays },
   { to: "/live-tv", label: "Live", icon: Tv, featured: true },
   { to: "/standings", label: "Table", icon: Trophy },
   { to: "/news", label: "News", icon: Newspaper },
@@ -215,6 +215,7 @@ function AnimatedRoutes() {
               </RequireAuth>
             }
           />
+          <Route path="/predictions" element={<Navigate to="/" replace />} />
           <Route path="/match/:id" element={<MatchDetail />} />
           <Route path="/team/:name" element={<TeamDetail />} />
           <Route

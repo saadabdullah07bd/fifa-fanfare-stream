@@ -459,6 +459,18 @@ export function fifaCodeFromName(name?: string | null): string | null {
   return NAME_TO_FIFA[key] ?? null;
 }
 
+/**
+ * Resolves the best-known FIFA code for a team, preferring an explicit code
+ * (e.g. a `tla` from a live-scores API) when it's a recognized FIFA code, and
+ * falling back to name-based resolution otherwise. Some providers use codes
+ * that don't line up with FIFA's 3-letter conventions (e.g. IOC/ISO codes),
+ * which otherwise silently drops the crest/flag for that team.
+ */
+export function bestFifaCode(code?: string | null, name?: string | null): string | null {
+  if (code && FIFA_NAMES[code.toUpperCase()]) return code.toUpperCase();
+  return fifaCodeFromName(name) ?? (code ? code.toUpperCase() : null);
+}
+
 const DHAKA = "Asia/Dhaka";
 /**
  * Formats an ISO date string to a human-readable time in Bangladesh Time (Asia/Dhaka).

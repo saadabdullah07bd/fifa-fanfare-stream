@@ -1,7 +1,5 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { registerWebPush } from "@/lib/push";
-import { registerNativePush } from "@/lib/nativePush";
 
 /**
  * Global side-effect component: whenever a user is signed in, register the
@@ -22,8 +20,12 @@ export default function PushBootstrap() {
           window as unknown as { Capacitor: { isNativePlatform: () => boolean } }
         ).Capacitor.isNativePlatform();
       if (isNative) {
+        const { registerNativePush } = await import("@/lib/nativePush");
         await registerNativePush(userId);
       } else {
+        // firebase/messaging is a heavy SDK — split out of the eager main
+        // bundle and only fetched once a session actually exists to register.
+        const { registerWebPush } = await import("@/lib/push");
         await registerWebPush(userId);
       }
     }
