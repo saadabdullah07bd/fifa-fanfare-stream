@@ -32,19 +32,21 @@ export default function MobileSplash() {
     if (!visible) return;
     const v = videoRef.current;
     if (!v) return;
+    // Must stay muted for the whole clip: unmuting a video mid-playback trips
+    // the mobile autoplay policy and pauses it — which froze the splash on its
+    // first frame. Splash intros are silent by design, so keep it muted.
     v.muted = true;
-    const p = v.play();
-    if (p && typeof p.then === "function") {
-      p.then(() => {
-        try {
-          v.muted = false;
-        } catch {
-          /* ignore */
-        }
-      }).catch(() => dismiss());
-    }
+    const tryPlay = () => {
+      const p = v.play();
+      if (p && typeof p.then === "function") p.catch(() => dismiss());
+    };
+    if (v.readyState >= 2) tryPlay();
+    else v.addEventListener("loadeddata", tryPlay, { once: true });
     const failSafe = window.setTimeout(dismiss, 8000);
-    return () => window.clearTimeout(failSafe);
+    return () => {
+      window.clearTimeout(failSafe);
+      v.removeEventListener("loadeddata", tryPlay);
+    };
   }, [visible, dismiss]);
 
   if (!visible) return null;
@@ -62,8 +64,9 @@ export default function MobileSplash() {
         ref={videoRef}
         src="/splash.mp4"
         autoPlay
+        muted
         playsInline
-        preload="metadata"
+        preload="auto"
         onEnded={dismiss}
         onError={dismiss}
         className="h-full w-full object-cover pointer-events-none select-none"

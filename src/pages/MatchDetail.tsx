@@ -359,13 +359,9 @@ export default function MatchDetail() {
         </section>
       )}
 
-      {/* Live stats + lineups with player headshots (API-Football) */}
-      <MatchStatsPanel
-        home={m.home_name}
-        away={m.away_name}
-        date={m.date_utc}
-        enabled={decided || (!!m.date_utc && new Date(m.date_utc).getTime() < Date.now())}
-      />
+      {/* Match stats (from real scoreline/events) + lineups composed from each
+          nation's real squad with player headshots. Available for every match. */}
+      <MatchStatsPanel match={m} />
 
       {/* Cards summary (also under timeline for scanability) */}
       {allCards.length > 0 && (

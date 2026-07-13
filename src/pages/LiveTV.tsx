@@ -111,7 +111,6 @@ export default function LiveTV() {
         fallbackUrl?: string;
       };
       // Default: sound on at 50% (not muted).
-      // Default: sound on at 50% (not muted).
       v.muted = false;
       v.volume = 0.5;
       v.removeAttribute("src");
@@ -147,7 +146,14 @@ export default function LiveTV() {
         window.clearTimeout(safety);
         tryStart();
       };
-      if (type === "mpegts" && mpegts.getFeatureList().mseLivePlayback) {
+      // For an mpegts stream, prefer the HLS fallback (.m3u8) whenever the
+      // browser can't do MSE live playback (notably iOS Safari) or when hls.js
+      // is available — a raw .ts URL won't play natively there. This is what
+      // let the stream fail silently on some devices.
+      const canMpegts = type === "mpegts" && mpegts.getFeatureList().mseLivePlayback;
+      const useHlsForMpegts = type === "mpegts" && !canMpegts && !!fallbackUrl;
+
+      if (canMpegts) {
         mts = mpegts.createPlayer(
           { type: "mpegts", isLive: true, url },
           {
@@ -191,6 +197,9 @@ export default function LiveTV() {
         mts.attachMediaElement(v);
         mts.load();
       } else if (Hls.isSupported() && !url.endsWith(".mp4")) {
+        // Use the HLS playlist: the .m3u8 fallback for an mpegts stream, else
+        // the url itself (already an HLS source).
+        const hlsSrc = useHlsForMpegts ? fallbackUrl! : url;
         hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
@@ -203,10 +212,12 @@ export default function LiveTV() {
           console.error("HLS stream error", hlsData);
           if (hlsData.fatal) toast.error("This channel is not sending playable video right now.");
         });
-        hls.loadSource(url);
+        hls.loadSource(hlsSrc);
         hls.attachMedia(v);
       } else {
-        v.src = url;
+        // Native playback (Safari can play HLS m3u8 directly). Prefer the HLS
+        // fallback over a raw .ts url the browser can't decode.
+        v.src = useHlsForMpegts ? fallbackUrl! : url;
       }
       void playVideo();
     })().catch((e) => toast.error((e as Error).message));

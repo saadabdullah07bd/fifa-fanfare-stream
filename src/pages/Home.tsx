@@ -85,10 +85,18 @@ export default function Home() {
 
   const scoreboard = useMemo(() => {
     const live = liveMatches.filter((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status));
-    const finished = liveMatches.filter((m) => m.status === "FINISHED");
-    const upcoming = liveMatches.filter((m) => m.status === "SCHEDULED" || m.status === "TIMED");
-    const picked = [...live, ...upcoming, ...finished].slice(0, 2);
+    // Most recently kicked-off finished match first, so the scoreboard always
+    // surfaces the latest result rather than a not-yet-played fixture.
+    const finished = liveMatches
+      .filter((m) => m.status === "FINISHED")
+      .sort((a, b) => (b.utc_date ?? "").localeCompare(a.utc_date ?? ""));
+    const upcoming = liveMatches
+      .filter((m) => m.status === "SCHEDULED" || m.status === "TIMED")
+      .sort((a, b) => (a.utc_date ?? "").localeCompare(b.utc_date ?? ""));
+    // Priority: live > latest finished > next upcoming.
+    const picked = [...live, ...finished, ...upcoming].slice(0, 2);
     if (picked.length > 0) return picked.map(fromLive);
+    // Offline fallback: the two most recently played matches in the dataset.
     return WC26_MATCHES.filter((m) => m.home_score != null && m.date_utc)
       .sort((a, b) => (b.date_utc ?? "").localeCompare(a.date_utc ?? ""))
       .slice(0, 2)
@@ -142,10 +150,10 @@ export default function Home() {
             ) : (
               <Radio className="h-3 w-3" aria-hidden="true" />
             )}
-            {liveCount > 0 ? `${liveCount} live now` : "Standby"}
+            {liveCount > 0 ? `${liveCount} live now` : "No live matches"}
           </span>
           <span className="hidden text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/70 sm:inline">
-            FIFA World Cup 2026 · Live hub
+            FIFA World Cup 2026
           </span>
         </div>
         <Link
@@ -566,7 +574,7 @@ function FlashNewsTile({ article }: { article: Article | null }) {
             {article?.source ?? "Flash news"}
           </p>
           <p className="mt-1.5 text-sm font-bold leading-snug sm:text-base">
-            {article?.title ?? "Latest World Cup 2026 headlines dropping soon."}
+            {article?.title ?? "Latest World Cup 2026 headlines"}
           </p>
         </div>
         <ArrowRight
@@ -658,7 +666,7 @@ function GoldenBootTile({
 }) {
   return (
     <Link
-      to="/standings"
+      to="/standings?tab=scorers"
       aria-label={
         scorer
           ? `Golden Boot leader: ${scorer.player} with ${scorer.goals} goals`
@@ -674,7 +682,7 @@ function GoldenBootTile({
       />
       <div className="relative z-10">
         <span className="rounded-lg bg-black px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-primary">
-          Stat Leader
+          Top scorer
         </span>
         <h3 className="display mt-4 text-4xl leading-none sm:text-5xl">
           Golden
@@ -693,7 +701,7 @@ function GoldenBootTile({
           <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground/80">
             {scorer
               ? `${scorer.goals} goal${scorer.goals === 1 ? "" : "s"} · ${scorer.team}`
-              : "Race in progress"}
+              : "No goals yet"}
           </p>
         </div>
         <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-black transition-transform group-hover:scale-110 motion-reduce:group-hover:scale-100">
@@ -723,7 +731,7 @@ function FanZoneTile() {
         </h3>
       </div>
       <p className="relative text-sm text-muted-foreground">
-        Every match streamed in HD & 4K. Live scores, timelines and goals — updated by the second.
+        Every match streamed in HD & 4K, with live scores, timelines and goals.
       </p>
       <span className="relative block w-full rounded-2xl border-2 border-[var(--trophy-green)] py-4 text-center text-[11px] font-black uppercase tracking-[0.25em] text-[var(--trophy-green)] transition group-hover:bg-[var(--trophy-green)] group-hover:text-white">
         Enter Fan Hub

@@ -146,9 +146,12 @@ Deno.serve(async (req) => {
         return json(out);
       }
       const teamId = team.team.id;
-      const [squadRes, lastRes] = await Promise.all([
+      const [squadRes, lastRes, coachRes] = await Promise.all([
         fetchJson(`/players/squads?team=${teamId}`),
         fetchJson(`/fixtures?team=${teamId}&last=5`),
+        // Dedicated coach endpoint — far more reliable for national teams than
+        // hoping a recent fixture happens to carry a lineup with a coach.
+        fetchJson(`/coachs?team=${teamId}`).catch(() => null),
       ]);
       const squad = (squadRes.response?.[0]?.players ?? []).map((p: any) => ({
         id: p.id,
@@ -158,22 +161,34 @@ Deno.serve(async (req) => {
         position: p.position,
         photo: p.photo,
       }));
-      // Tactics: formation + coach from the latest fixture that has a lineup.
+      // Coach: prefer the dedicated /coachs endpoint (current coach of the
+      // team), fall back to the latest fixture lineup's coach.
       let formation: string | null = null;
       let coach: { id: number | null; name: string | null; photo: string | null } | null = null;
+      const coachEntry = (coachRes?.response ?? []).find(
+        (c: any) => (c.team?.id ?? c.career?.[0]?.team?.id) === teamId,
+      );
+      if (coachEntry) {
+        coach = {
+          id: coachEntry.id ?? null,
+          name: coachEntry.name ?? null,
+          photo: coachEntry.photo ?? null,
+        };
+      }
+      // Formation (and coach fallback) from the latest fixture that has a lineup.
       const recent = lastRes.response ?? [];
       for (const f of recent) {
-        const lu = await fetchJson(`/fixtures/lineups?fixture=${f.fixture.id}`);
-        const mine = (lu.response ?? []).find((l: any) => l.team?.id === teamId);
+        const lu = await fetchJson(`/fixtures/lineups?fixture=${f.fixture.id}`).catch(() => null);
+        const mine = (lu?.response ?? []).find((l: any) => l.team?.id === teamId);
         if (mine?.formation) {
           formation = mine.formation;
-          coach = mine.coach
-            ? {
-                id: mine.coach.id ?? null,
-                name: mine.coach.name ?? null,
-                photo: mine.coach.photo ?? null,
-              }
-            : null;
+          if (!coach && mine.coach) {
+            coach = {
+              id: mine.coach.id ?? null,
+              name: mine.coach.name ?? null,
+              photo: mine.coach.photo ?? null,
+            };
+          }
           break;
         }
       }
@@ -203,16 +218,49 @@ Deno.serve(async (req) => {
       return json(out);
     }
 
+    if (action === "squad") {
+      // Lightweight: just the real squad (names + headshots) for one nation,
+      // used to compose match lineups. Cheaper than `national` (no fixtures /
+      // lineup calls) so it stays well within API rate limits, and it's cached
+      // hard below since a squad rarely changes.
+      const name = String(body.name ?? url.searchParams.get("name") ?? "").trim();
+      if (name.length < 3) return json({ error: "name required" }, 400);
+      const search = await fetchJson(`/teams?search=${encodeURIComponent(name)}`);
+      const candidates = (search.response ?? []).filter((x: any) => x.team?.national);
+      const lc = name.toLowerCase();
+      const team =
+        candidates.find((x: any) => String(x.team.name).toLowerCase() === lc) ??
+        candidates[0] ??
+        null;
+      if (!team) {
+        const out = { available: false, squad: [] };
+        cache.set(cacheKey, { at: Date.now(), body: out });
+        return json(out, 200, { "Cache-Control": "public, max-age=3600, s-maxage=86400" });
+      }
+      const squadRes = await fetchJson(`/players/squads?team=${team.team.id}`);
+      const squad = (squadRes.response?.[0]?.players ?? []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        age: p.age,
+        number: p.number,
+        position: p.position,
+        photo: p.photo,
+      }));
+      const out = { available: squad.length > 0, team: team.team.name, squad };
+      cache.set(cacheKey, { at: Date.now(), body: out });
+      return json(out, 200, { "Cache-Control": "public, max-age=3600, s-maxage=86400" });
+    }
+
     return json({ error: `unknown action ${action}` }, 400);
   } catch (e) {
     return json({ error: (e as Error).message }, 502);
   }
 });
 
-/** Helper for JSON responses with CORS headers */
-function json(b: unknown, status = 200) {
+/** Helper for JSON responses with CORS headers (plus optional cache hints). */
+function json(b: unknown, status = 200, extra: Record<string, string> = {}) {
   return new Response(JSON.stringify(b), {
     status,
-    headers: { ...cors, "Content-Type": "application/json" },
+    headers: { ...cors, "Content-Type": "application/json", ...extra },
   });
 }

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Seo } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Users, Search, Medal, Target } from "lucide-react";
-import { flagUrl, fifaCodeFromName } from "@/lib/flags";
+import { flagUrl, bestFifaCode } from "@/lib/flags";
 
 type Row = {
   position: number;
@@ -64,7 +65,14 @@ const SOURCE_LABELS: Record<string, string> = {
  * Tournament standings and top scorers page — Premium Broadcast layout.
  */
 export default function Standings() {
-  const [tab, setTab] = useState<"standings" | "scorers">("standings");
+  const [params, setParams] = useSearchParams();
+  const tab: "standings" | "scorers" = params.get("tab") === "scorers" ? "scorers" : "standings";
+  const setTab = (t: "standings" | "scorers") => {
+    const next = new URLSearchParams(params);
+    if (t === "standings") next.delete("tab");
+    else next.set("tab", t);
+    setParams(next, { replace: true });
+  };
   const [groups, setGroups] = useState<Group[]>([]);
   const [scorers, setScorers] = useState<Scorer[]>([]);
   const [scorersSource, setScorersSource] = useState<string>("");
@@ -294,6 +302,53 @@ export default function Standings() {
   );
 }
 
+/* ---------- Team flag ---------- */
+
+/**
+ * Resolves a team's flag, preferring our own fast flagcdn mapping (by TLA, then
+ * by name) over the upstream API crest — the API crests are slower and
+ * sometimes missing, which left the table showing bare position numbers. Loads
+ * eagerly (flags are tiny and above the fold) with an initials fallback.
+ */
+function TeamFlag({
+  team,
+  className = "",
+}: {
+  team: { name: string; tla?: string; crest?: string };
+  className?: string;
+}) {
+  const code = bestFifaCode(team.tla, team.name);
+  const primary = flagUrl(code, 80) ?? team.crest ?? null;
+  const [src, setSrc] = useState<string | null>(primary);
+  const initials = (team.tla || team.name || "")
+    .replace(/[^A-Za-z]/g, "")
+    .slice(0, 3)
+    .toUpperCase();
+
+  if (!src) {
+    return (
+      <span
+        className={`grid shrink-0 place-items-center rounded-[2px] bg-secondary/60 text-[8px] font-bold text-muted-foreground ring-1 ring-border ${className}`}
+        aria-hidden="true"
+      >
+        {initials}
+      </span>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt=""
+      className={`shrink-0 rounded-[2px] object-cover ring-1 ring-border ${className}`}
+      onError={() => {
+        // Fall back from local flag to API crest, then to initials.
+        if (src !== team.crest && team.crest) setSrc(team.crest);
+        else setSrc(null);
+      }}
+    />
+  );
+}
+
 /* ---------- Group table card ---------- */
 
 function GroupCard({ group: g, index }: { group: Group; index: number }) {
@@ -366,22 +421,7 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
               </td>
               <td className="py-2.5">
                 <div className="flex items-center gap-2 min-w-0">
-                  {(() => {
-                    const flag = r.team.crest ?? flagUrl(r.team.tla, 80);
-                    return flag ? (
-                      <img
-                        src={flag}
-                        alt=""
-                        className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span
-                        className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40"
-                        aria-hidden="true"
-                      />
-                    );
-                  })()}
+                  <TeamFlag team={r.team} className="h-4 w-6" />
                   <span className="truncate font-medium">{r.team.name}</span>
                 </div>
               </td>
@@ -422,22 +462,7 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
             >
               {r.position}
             </span>
-            {(() => {
-              const flag = r.team.crest ?? flagUrl(r.team.tla, 80);
-              return flag ? (
-                <img
-                  src={flag}
-                  alt=""
-                  className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border"
-                  loading="lazy"
-                />
-              ) : (
-                <span
-                  className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40"
-                  aria-hidden="true"
-                />
-              );
-            })()}
+            <TeamFlag team={r.team} className="h-4 w-6" />
 
             <div className="flex-1 min-w-0">
               <p className="truncate text-sm font-semibold">{r.team.name}</p>
@@ -583,23 +608,7 @@ function ScorersPanel({
                       </td>
                       <td className="hidden py-3 sm:table-cell">
                         <div className="flex items-center gap-2 min-w-0">
-                          {(() => {
-                            const t = (s as Scorer).team;
-                            const flag = t.crest ?? flagUrl(t.tla ?? fifaCodeFromName(t.name), 80);
-                            return flag ? (
-                              <img
-                                src={flag}
-                                alt=""
-                                className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-border"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <span
-                                className="h-4 w-6 shrink-0 rounded-[2px] bg-secondary/40"
-                                aria-hidden="true"
-                              />
-                            );
-                          })()}
+                          <TeamFlag team={(s as Scorer).team} className="h-4 w-6" />
                           <span className="truncate">{(s as Scorer).team.name}</span>
                         </div>
                       </td>
@@ -673,19 +682,7 @@ function PodiumCard({
       </div>
 
       <div className="mt-4 flex items-center gap-3">
-        {(() => {
-          const flag = s.team.crest ?? flagUrl(s.team.tla ?? fifaCodeFromName(s.team.name), 160);
-          return flag ? (
-            <img
-              src={flag}
-              alt=""
-              className="h-8 w-12 shrink-0 rounded-[3px] object-cover ring-1 ring-border"
-              loading="lazy"
-            />
-          ) : (
-            <span className="h-8 w-12 shrink-0 rounded-[3px] bg-secondary/40" aria-hidden="true" />
-          );
-        })()}
+        <TeamFlag team={s.team} className="h-8 w-12" />
 
         <div className="min-w-0">
           <p className="display truncate text-xl leading-tight sm:text-2xl">{s.player.name}</p>

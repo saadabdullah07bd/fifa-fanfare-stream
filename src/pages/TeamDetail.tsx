@@ -255,44 +255,37 @@ export default function TeamDetail() {
         </section>
       )}
 
-      {/* Tactics */}
-      <section className="mt-8" aria-labelledby="tactics">
-        <h2 id="tactics" className="flex items-center gap-2 display text-2xl text-primary">
-          <Shirt size={20} aria-hidden="true" /> Tactics
-        </h2>
-        <div className="mt-3 flex flex-wrap gap-3">
-          <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Formation
-            </p>
-            <p className="display mt-1 text-3xl text-foreground">
-              {natLoading ? "…" : (nat?.formation ?? "—")}
-            </p>
+      {/* Tactics — only shown when we actually have coach or formation data
+          (or are still loading), so the section never renders empty. */}
+      {(natLoading || nat?.formation || nat?.coach?.name) && (
+        <section className="mt-8" aria-labelledby="tactics">
+          <h2 id="tactics" className="flex items-center gap-2 display text-2xl text-primary">
+            <Shirt size={20} aria-hidden="true" /> Manager &amp; tactics
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-3">
+            {(natLoading || nat?.formation) && (
+              <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Formation
+                </p>
+                <p className="display mt-1 text-3xl text-foreground">
+                  {natLoading ? "…" : nat?.formation}
+                </p>
+              </div>
+            )}
+            {natLoading ? (
+              <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Head coach
+                </p>
+                <p className="mt-1 text-lg font-semibold">…</p>
+              </div>
+            ) : nat?.coach?.name ? (
+              <ManagerCard coach={nat.coach} />
+            ) : null}
           </div>
-          {natLoading ? (
-            <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Head coach
-              </p>
-              <p className="mt-1 text-lg font-semibold">…</p>
-            </div>
-          ) : nat?.coach?.name ? (
-            <ManagerCard coach={nat.coach} />
-          ) : (
-            <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Head coach
-              </p>
-              <p className="mt-1 text-lg font-semibold">—</p>
-            </div>
-          )}
-        </div>
-        {!natLoading && !nat?.available && (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Live squad data is temporarily unavailable.
-          </p>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* Squad */}
       <section className="mt-8" aria-labelledby="squad">
