@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Seo } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,65 +64,98 @@ function normName(s: string): string {
 type SquadPlayer = { name: string; photo: string | null };
 
 /**
- * Resolves real headshots for the top scorers by fetching each unique team's
- * squad (real names + photos) from the `club` edge function — the SAME
- * `["squad", name]` cache the match lineups and team pages use, so a squad is
- * fetched once per team and shared everywhere. The whole query cache is
- * persisted to localStorage (see main.tsx PersistQueryClientProvider), so once
- * a team's squad loads its headshots stay saved in-app for a day and reload
- * instantly on return visits — even offline. The scorers feed carries no
- * photos, so matching is best-effort: unmatched players fall back to initials.
+ * Match keys for a player name. The scorers feed uses full names ("Kylian
+ * Mbappe") while API-Football squads abbreviate ("K. Mbappé"), so the reliable
+ * join is first-initial + surname ("k mbappe"), which also disambiguates two
+ * players who share a surname (E. Martínez vs L. Martínez). Surname alone is a
+ * looser fallback.
+ */
+function nameKeys(name: string): { initialSurname: string; surname: string } {
+  const parts = normName(name).split(" ").filter(Boolean);
+  if (parts.length === 0) return { initialSurname: "", surname: "" };
+  const surname = parts[parts.length - 1];
+  const initial = parts[0][0];
+  return {
+    initialSurname: parts.length > 1 ? `${initial} ${surname}` : surname,
+    surname,
+  };
+}
+
+/**
+ * Resolves real headshots for the top scorers by fetching each nation's squad
+ * (real names + photos) from the `club` edge function and matching scorer names
+ * to squad players.
+ *
+ * Squads are fetched in small concurrency-limited batches rather than all at
+ * once: API-Football's free tier rate-limits bursts, and firing ~10 squad
+ * requests in parallel silently throttled most of them to empty — which is why
+ * headshots loaded inconsistently. Batching keeps every request under the cap.
+ * The whole result is one query persisted to localStorage (see main.tsx
+ * PersistQueryClientProvider), so headshots stay saved in-app for a day and
+ * reload instantly on return visits. Photos are keyed by `team|nameKey` so a
+ * surname never resolves to the wrong nation's player; unmatched scorers fall
+ * back to initials.
  */
 function useScorerPhotos(scorers: Scorer[]): Map<string, string> {
   const teams = useMemo(() => {
     const set = new Set<string>();
     for (const s of scorers) if (s.team?.name) set.add(s.team.name);
-    return [...set];
+    return [...set].sort();
   }, [scorers]);
 
-  const results = useQueries({
-    queries: teams.map((name) => ({
-      // Shared with MatchStatsPanel's useSquad — one persisted entry per team.
-      queryKey: ["squad", name],
-      staleTime: 24 * 3600_000,
-      gcTime: 24 * 3600_000,
-      queryFn: async () => {
-        const { data, error } = await supabase.functions.invoke("club", {
-          body: { action: "squad", name },
-        });
-        if (error) throw error;
-        return (data as { squad: SquadPlayer[] })?.squad ?? [];
-      },
-    })),
+  const { data } = useQuery({
+    queryKey: ["scorer-photos", teams.join(",")],
+    enabled: teams.length > 0,
+    staleTime: 24 * 3600_000,
+    gcTime: 24 * 3600_000,
+    queryFn: async () => {
+      const byPlayer: Record<string, string> = {};
+      const BATCH = 3;
+      for (let i = 0; i < teams.length; i += BATCH) {
+        const batch = teams.slice(i, i + BATCH);
+        const squads = await Promise.all(
+          batch.map(async (name) => {
+            try {
+              const { data } = await supabase.functions.invoke("club", {
+                body: { action: "squad", name },
+              });
+              return { name, squad: (data as { squad?: SquadPlayer[] })?.squad ?? [] };
+            } catch {
+              return { name, squad: [] as SquadPlayer[] };
+            }
+          }),
+        );
+        for (const { name, squad } of squads) {
+          const tk = normName(name);
+          for (const p of squad) {
+            if (!p.photo) continue;
+            const { initialSurname, surname } = nameKeys(p.name);
+            if (initialSurname) byPlayer[`${tk}|${initialSurname}`] = p.photo;
+            // Surname-only is a fallback; don't let it overwrite a fuller key.
+            if (surname && !(`${tk}|${surname}` in byPlayer)) {
+              byPlayer[`${tk}|${surname}`] = p.photo;
+            }
+          }
+        }
+        // Space batches out so we stay under the API's per-minute limit.
+        if (i + BATCH < teams.length) await new Promise((r) => setTimeout(r, 1200));
+      }
+      return byPlayer;
+    },
   });
 
-  return useMemo(() => {
-    const byPlayer = new Map<string, string>();
-    for (const r of results) {
-      const squad = r.data;
-      if (!squad) continue;
-      for (const p of squad) {
-        if (!p.photo) continue;
-        const key = normName(p.name);
-        if (key) byPlayer.set(key, p.photo);
-      }
-    }
-    return byPlayer;
-  }, [results]);
+  return useMemo(() => new Map(Object.entries(data ?? {})), [data]);
 }
 
-/** Resolve a scorer's headshot from the fetched photo map (exact, then surname). */
-function photoForScorer(name: string, photos: Map<string, string>): string | null {
-  const full = normName(name);
-  if (photos.has(full)) return photos.get(full)!;
-  // Fall back to a surname match (feeds often list "R. Lewandowski" vs full name).
-  const parts = full.split(" ");
-  const surname = parts[parts.length - 1];
-  if (surname && surname.length >= 3) {
-    for (const [key, url] of photos) {
-      const kp = key.split(" ");
-      if (kp[kp.length - 1] === surname) return url;
-    }
+/** Resolve a scorer's headshot from the fetched photo map (initial+surname, then surname). */
+function photoForScorer(name: string, team: string, photos: Map<string, string>): string | null {
+  const tk = normName(team);
+  const { initialSurname, surname } = nameKeys(name);
+  if (initialSurname && photos.has(`${tk}|${initialSurname}`)) {
+    return photos.get(`${tk}|${initialSurname}`)!;
+  }
+  if (surname && photos.has(`${tk}|${surname}`)) {
+    return photos.get(`${tk}|${surname}`)!;
   }
   return null;
 }
@@ -693,7 +726,7 @@ function ScorersPanel({
                 scorer={first}
                 place={1}
                 maxGoals={maxGoals}
-                photo={photoForScorer(first.player.name, photos)}
+                photo={photoForScorer(first.player.name, first.team.name, photos)}
               />
             </div>
           )}
@@ -737,7 +770,11 @@ function ScorersPanel({
                         <div className="flex items-center gap-2.5 min-w-0">
                           <PlayerAvatar
                             name={(s as Scorer).player.name}
-                            photo={photoForScorer((s as Scorer).player.name, photos)}
+                            photo={photoForScorer(
+                              (s as Scorer).player.name,
+                              (s as Scorer).team.name,
+                              photos,
+                            )}
                             className="h-8 w-8"
                           />
                           <div className="min-w-0">

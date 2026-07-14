@@ -1,18 +1,40 @@
-import { useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { BarChart3, Users } from "lucide-react";
 import { staggerParent, staggerChild, useReducedMotionSafe } from "@/lib/motion";
 import PitchGraphic from "@/components/PitchGraphic";
 import FormationPitch from "@/components/FormationPitch";
-import { supabase } from "@/integrations/supabase/client";
 import type { Wc26Match } from "@/data/wc26-matches";
-import {
-  composeTeamLineup,
-  realPlayersForSide,
-  statsForMatch,
-  type SquadPlayer,
-  type TeamLineup,
-} from "@/lib/lineup";
+
+/** One player in a real API-Football lineup. */
+type RealPlayer = {
+  id: number | null;
+  name: string;
+  number: number | null;
+  pos: string | null;
+  grid: string | null;
+  photo: string | null;
+};
+
+/** A real team lineup from the match-stats function. */
+type RealLineup = {
+  team_id: number | null;
+  team: string;
+  formation: string | null;
+  coach: string | null;
+  coach_photo: string | null;
+  startXI: RealPlayer[];
+  substitutes: RealPlayer[];
+};
+
+type MatchStatsResponse = {
+  available: boolean;
+  status_short: string | null;
+  home_name?: string;
+  away_name?: string;
+  stats: { name: string; home: number | string | null; away: number | string | null }[];
+  lineups: RealLineup[];
+};
 
 /** Stats worth showing, in broadcast order. */
 const STAT_WHITELIST = [
@@ -72,8 +94,8 @@ function StatBar({
   );
 }
 
-/** Compact per-team meta card: team name + formation. */
-function LineupMeta({ l, align }: { l: TeamLineup; align: "left" | "right" }) {
+/** Compact per-team meta card: team name + formation + coach. */
+function LineupMeta({ l, align }: { l: RealLineup; align: "left" | "right" }) {
   return (
     <div
       className={`min-w-0 rounded-2xl border border-border/60 bg-card/60 p-4 ${align === "right" ? "text-right" : ""}`}
@@ -86,6 +108,11 @@ function LineupMeta({ l, align }: { l: TeamLineup; align: "left" | "right" }) {
           <span className="display shrink-0 text-lg text-primary">{l.formation}</span>
         )}
       </div>
+      {l.coach && (
+        <p className="mt-1 truncate text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          Coach · {l.coach}
+        </p>
+      )}
     </div>
   );
 }
@@ -95,7 +122,7 @@ function LineupMeta({ l, align }: { l: TeamLineup; align: "left" | "right" }) {
  * facing each other — the home side (gold jerseys) attacking up from the
  * bottom, the away side (white jerseys) attacking down from the top.
  */
-function CombinedPitch({ home, away }: { home: TeamLineup; away: TeamLineup }) {
+function CombinedPitch({ home, away }: { home: RealLineup; away: RealLineup }) {
   return (
     <div className="relative mx-auto aspect-[2/3] w-full max-w-md overflow-hidden rounded-2xl border border-border/60 shadow-inner">
       <PitchGraphic />
@@ -111,68 +138,57 @@ function CombinedPitch({ home, away }: { home: TeamLineup; away: TeamLineup }) {
   );
 }
 
-/** Fetch one nation's real squad (names + headshots) via the club function. */
-function useSquad(name: string, enabled = true) {
-  return {
-    queryKey: ["squad", name],
-    enabled,
-    staleTime: 24 * 3600_000,
+const STATS_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/match-stats`;
+
+/** Fetch REAL stats + lineups for a match from API-Football (via match-stats). */
+function useMatchStats(match: Wc26Match) {
+  const home = match.home_name;
+  const away = match.away_name;
+  const date = match.date_utc ?? "";
+  return useQuery({
+    queryKey: ["match-stats", home, away, date],
+    enabled: !!home && !!away,
+    staleTime: 60_000,
     gcTime: 24 * 3600_000,
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("club", {
-        body: { action: "squad", name },
+      const url = `${STATS_FN}?home=${encodeURIComponent(home)}&away=${encodeURIComponent(
+        away,
+      )}&date=${encodeURIComponent(date)}`;
+      const res = await fetch(url, {
+        headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
       });
-      if (error) throw error;
-      return (data as { squad: SquadPlayer[] })?.squad ?? [];
+      if (!res.ok) throw new Error(`match-stats failed (${res.status})`);
+      return (await res.json()) as MatchStatsResponse;
     },
-  };
+  });
 }
 
 /**
- * Match stats + lineups for EVERY played match. Stats are derived from the real
- * scoreline/events (offline, deterministic). Lineups are composed from each
- * nation's REAL squad — genuine player names and headshots, shown directly on
- * the pitch — arranged into a formation with this match's actual scorers slotted
- * in. Squads load from the club edge function and are cached for a day.
+ * Match stats + lineups sourced from REAL match data via API-Football (the
+ * `match-stats` edge function resolves each fixture and returns official
+ * lineups, formation, coach and comparative stats). Nothing here is composed or
+ * estimated: if the API has no lineup/stats for this match yet — because it is
+ * a synthetic pairing with no real fixture, or a real fixture whose lineups
+ * aren't published until ~1h before kickoff — the corresponding section is
+ * simply hidden rather than showing a made-up XI.
  */
 export default function MatchStatsPanel({ match }: { match: Wc26Match }) {
   const reduced = useReducedMotionSafe();
-  const decided = match.home_score != null && match.away_score != null;
+  const { data } = useMatchStats(match);
 
-  const [homeQ, awayQ] = useQueries({
-    queries: [useSquad(match.home_name, decided), useSquad(match.away_name, decided)],
-  });
-
-  const stats = decided ? statsForMatch(match) : [];
-  const shown = stats
+  const shown = (data?.stats ?? [])
     .filter((s) => STAT_WHITELIST.includes(s.name))
     .sort((a, b) => STAT_WHITELIST.indexOf(a.name) - STAT_WHITELIST.indexOf(b.name));
 
-  // Lineups (a composed XI) are only meaningful for a match that has actually
-  // been played. For upcoming fixtures we show nothing here rather than imply a
-  // predicted lineup is real.
-  const homeSquad = homeQ.data ?? [];
-  const awaySquad = awayQ.data ?? [];
-  const homeLineup =
-    decided && homeSquad.length >= 11
-      ? composeTeamLineup(
-          match.home_name,
-          homeSquad,
-          realPlayersForSide(match, "home"),
-          `${match.match_no}:home`,
-        )
-      : null;
-  const awayLineup =
-    decided && awaySquad.length >= 11
-      ? composeTeamLineup(
-          match.away_name,
-          awaySquad,
-          realPlayersForSide(match, "away"),
-          `${match.match_no}:away`,
-        )
-      : null;
-
-  const lineupsLoading = decided && (homeQ.isLoading || awayQ.isLoading);
+  const lineups = data?.lineups ?? [];
+  // Map the two lineups to home/away by team name (both come from the same
+  // fixture, so names match exactly); fall back to API-Football's order.
+  let homeLineup = lineups.find((l) => l.team === data?.home_name) ?? null;
+  let awayLineup = lineups.find((l) => l.team === data?.away_name) ?? null;
+  if (!homeLineup && !awayLineup && lineups.length === 2) {
+    [homeLineup, awayLineup] = lineups;
+  }
+  const hasXI = (l: RealLineup | null) => !!l && l.startXI.length > 0;
 
   return (
     <>
@@ -194,26 +210,22 @@ export default function MatchStatsPanel({ match }: { match: Wc26Match }) {
         </section>
       )}
 
-      {(homeLineup || awayLineup || lineupsLoading) && (
+      {(hasXI(homeLineup) || hasXI(awayLineup)) && (
         <section className="mt-8" aria-labelledby="lineups-h">
           <h2 id="lineups-h" className="flex items-center gap-2 display text-2xl text-primary">
             <Users size={20} aria-hidden="true" /> Lineups
           </h2>
-          {lineupsLoading ? (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Loading lineups &amp; player photos…
-            </p>
-          ) : homeLineup && awayLineup ? (
+          {hasXI(homeLineup) && hasXI(awayLineup) ? (
             <>
               <div className="mt-4">
-                <CombinedPitch home={homeLineup} away={awayLineup} />
+                <CombinedPitch home={homeLineup!} away={awayLineup!} />
               </div>
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <LineupMeta l={homeLineup} align="left" />
-                <LineupMeta l={awayLineup} align="right" />
+                <LineupMeta l={homeLineup!} align="left" />
+                <LineupMeta l={awayLineup!} align="right" />
               </div>
             </>
-          ) : homeLineup || awayLineup ? (
+          ) : (
             <div className="mt-4">
               <div className="relative mx-auto aspect-[2/3] w-full max-w-md overflow-hidden rounded-2xl border border-border/60">
                 <PitchGraphic />
@@ -225,7 +237,7 @@ export default function MatchStatsPanel({ match }: { match: Wc26Match }) {
                 <LineupMeta l={(homeLineup ?? awayLineup)!} align="left" />
               </div>
             </div>
-          ) : null}
+          )}
         </section>
       )}
     </>
