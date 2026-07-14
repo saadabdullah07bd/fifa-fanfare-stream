@@ -112,9 +112,10 @@ function CombinedPitch({ home, away }: { home: TeamLineup; away: TeamLineup }) {
 }
 
 /** Fetch one nation's real squad (names + headshots) via the club function. */
-function useSquad(name: string) {
+function useSquad(name: string, enabled = true) {
   return {
     queryKey: ["squad", name],
+    enabled,
     staleTime: 24 * 3600_000,
     gcTime: 24 * 3600_000,
     queryFn: async () => {
@@ -139,7 +140,7 @@ export default function MatchStatsPanel({ match }: { match: Wc26Match }) {
   const decided = match.home_score != null && match.away_score != null;
 
   const [homeQ, awayQ] = useQueries({
-    queries: [useSquad(match.home_name), useSquad(match.away_name)],
+    queries: [useSquad(match.home_name, decided), useSquad(match.away_name, decided)],
   });
 
   const stats = decided ? statsForMatch(match) : [];
@@ -147,10 +148,13 @@ export default function MatchStatsPanel({ match }: { match: Wc26Match }) {
     .filter((s) => STAT_WHITELIST.includes(s.name))
     .sort((a, b) => STAT_WHITELIST.indexOf(a.name) - STAT_WHITELIST.indexOf(b.name));
 
+  // Lineups (a composed XI) are only meaningful for a match that has actually
+  // been played. For upcoming fixtures we show nothing here rather than imply a
+  // predicted lineup is real.
   const homeSquad = homeQ.data ?? [];
   const awaySquad = awayQ.data ?? [];
   const homeLineup =
-    homeSquad.length >= 11
+    decided && homeSquad.length >= 11
       ? composeTeamLineup(
           match.home_name,
           homeSquad,
@@ -159,7 +163,7 @@ export default function MatchStatsPanel({ match }: { match: Wc26Match }) {
         )
       : null;
   const awayLineup =
-    awaySquad.length >= 11
+    decided && awaySquad.length >= 11
       ? composeTeamLineup(
           match.away_name,
           awaySquad,
@@ -168,7 +172,7 @@ export default function MatchStatsPanel({ match }: { match: Wc26Match }) {
         )
       : null;
 
-  const lineupsLoading = homeQ.isLoading || awayQ.isLoading;
+  const lineupsLoading = decided && (homeQ.isLoading || awayQ.isLoading);
 
   return (
     <>

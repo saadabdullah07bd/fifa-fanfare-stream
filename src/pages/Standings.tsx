@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { useQueries } from "@tanstack/react-query";
 import { Seo } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,118 @@ function groupTitle(group: string | null | undefined, stage: string | null | und
 function stageTitle(stage: string | null | undefined) {
   const label = (stage ?? "").replace(/_/g, " ").trim();
   return label ? titleCase(label) : "";
+}
+
+/** Normalize a player name for fuzzy matching (strip accents, punctuation, case). */
+function normName(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+type SquadPlayer = { name: string; photo: string | null };
+
+/**
+ * Resolves real headshots for the top scorers by fetching each unique team's
+ * squad (real names + photos) from the `club` edge function — the same source
+ * the match lineups use — and matching scorer names to squad players. The feed
+ * itself carries no photos, so this is best-effort: unmatched players simply
+ * fall back to an initials avatar. Squads are cached a day server-side.
+ */
+function useScorerPhotos(scorers: Scorer[]): Map<string, string> {
+  const teams = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of scorers) if (s.team?.name) set.add(s.team.name);
+    return [...set];
+  }, [scorers]);
+
+  const results = useQueries({
+    queries: teams.map((name) => ({
+      queryKey: ["squad-photos", name],
+      staleTime: 24 * 3600_000,
+      gcTime: 24 * 3600_000,
+      queryFn: async () => {
+        const { data, error } = await supabase.functions.invoke("club", {
+          body: { action: "squad", name },
+        });
+        if (error) throw error;
+        return { team: name, squad: (data as { squad: SquadPlayer[] })?.squad ?? [] };
+      },
+    })),
+  });
+
+  return useMemo(() => {
+    const byPlayer = new Map<string, string>();
+    for (const r of results) {
+      const squad = r.data?.squad;
+      if (!squad) continue;
+      for (const p of squad) {
+        if (!p.photo) continue;
+        const key = normName(p.name);
+        if (key) byPlayer.set(key, p.photo);
+      }
+    }
+    return byPlayer;
+  }, [results]);
+}
+
+/** Resolve a scorer's headshot from the fetched photo map (exact, then surname). */
+function photoForScorer(name: string, photos: Map<string, string>): string | null {
+  const full = normName(name);
+  if (photos.has(full)) return photos.get(full)!;
+  // Fall back to a surname match (feeds often list "R. Lewandowski" vs full name).
+  const parts = full.split(" ");
+  const surname = parts[parts.length - 1];
+  if (surname && surname.length >= 3) {
+    for (const [key, url] of photos) {
+      const kp = key.split(" ");
+      if (kp[kp.length - 1] === surname) return url;
+    }
+  }
+  return null;
+}
+
+/** Player headshot with graceful initials fallback. */
+function PlayerAvatar({
+  name,
+  photo,
+  className = "",
+}: {
+  name: string;
+  photo: string | null;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const initials = name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  const showImg = photo && !failed;
+  return (
+    <span
+      className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-secondary/60 text-[11px] font-bold text-muted-foreground ring-1 ring-border ${className}`}
+      aria-hidden="true"
+    >
+      {showImg ? (
+        <img
+          src={photo!}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        initials
+      )}
+    </span>
+  );
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -292,6 +405,7 @@ export default function Standings() {
       ) : (
         <ScorersPanel
           scorers={filteredScorers}
+          allScorers={scorers}
           totalCount={scorers.length}
           scorersSource={scorersSource}
           query={scorerQuery}
@@ -420,10 +534,14 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
                 </span>
               </td>
               <td className="py-2.5">
-                <div className="flex items-center gap-2 min-w-0">
+                <Link
+                  to={`/team/${encodeURIComponent(r.team.name)}`}
+                  className="flex items-center gap-2 min-w-0 rounded-sm transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  title={`${r.team.name} — squad, tactics & history`}
+                >
                   <TeamFlag team={r.team} className="h-4 w-6" />
                   <span className="truncate font-medium">{r.team.name}</span>
-                </div>
+                </Link>
               </td>
               <td className="py-2.5 text-center text-muted-foreground">{r.played}</td>
               <td className="py-2.5 text-center">{r.won}</td>
@@ -448,44 +566,47 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
       {/* Mobile stacked list */}
       <ul className="divide-y divide-border/40 sm:hidden">
         {g.table.map((r) => (
-          <li
-            key={r.team.name}
-            className={`flex items-center gap-3 px-4 py-3 tabular-nums ${r.position <= 2 ? "bg-primary/[0.03]" : ""}`}
-          >
-            <span
-              className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                r.position <= 2
-                  ? "bg-primary/15 text-primary"
-                  : "bg-secondary/40 text-muted-foreground"
-              }`}
-              aria-label={`Position ${r.position}`}
+          <li key={r.team.name} className={`${r.position <= 2 ? "bg-primary/[0.03]" : ""}`}>
+            <Link
+              to={`/team/${encodeURIComponent(r.team.name)}`}
+              className="flex items-center gap-3 px-4 py-3 tabular-nums transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+              title={`${r.team.name} — squad, tactics & history`}
             >
-              {r.position}
-            </span>
-            <TeamFlag team={r.team} className="h-4 w-6" />
-
-            <div className="flex-1 min-w-0">
-              <p className="truncate text-sm font-semibold">{r.team.name}</p>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                P {r.played} · W {r.won} · D {r.draw} · L {r.lost} ·{" "}
-                <span className={r.gd > 0 ? "text-emerald-400" : r.gd < 0 ? "text-red-400" : ""}>
-                  GD {r.gd > 0 ? "+" : ""}
-                  {r.gd}
-                </span>
-              </p>
-              <div
-                className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-secondary/40"
-                aria-hidden="true"
+              <span
+                className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                  r.position <= 2
+                    ? "bg-primary/15 text-primary"
+                    : "bg-secondary/40 text-muted-foreground"
+                }`}
+                aria-label={`Position ${r.position}`}
               >
+                {r.position}
+              </span>
+              <TeamFlag team={r.team} className="h-4 w-6" />
+
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-sm font-semibold">{r.team.name}</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                  P {r.played} · W {r.won} · D {r.draw} · L {r.lost} ·{" "}
+                  <span className={r.gd > 0 ? "text-emerald-400" : r.gd < 0 ? "text-red-400" : ""}>
+                    GD {r.gd > 0 ? "+" : ""}
+                    {r.gd}
+                  </span>
+                </p>
                 <div
-                  className="h-full rounded-full bg-primary/70"
-                  style={{ width: `${Math.max(4, (r.points / topPoints) * 100)}%` }}
-                />
+                  className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-secondary/40"
+                  aria-hidden="true"
+                >
+                  <div
+                    className="h-full rounded-full bg-primary/70"
+                    style={{ width: `${Math.max(4, (r.points / topPoints) * 100)}%` }}
+                  />
+                </div>
               </div>
-            </div>
-            <span className="display shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-lg text-primary">
-              {r.points}
-            </span>
+              <span className="display shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-lg text-primary">
+                {r.points}
+              </span>
+            </Link>
           </li>
         ))}
       </ul>
@@ -497,12 +618,14 @@ function GroupCard({ group: g, index }: { group: Group; index: number }) {
 
 function ScorersPanel({
   scorers,
+  allScorers,
   totalCount,
   scorersSource,
   query,
   setQuery,
 }: {
   scorers: Scorer[];
+  allScorers: Scorer[];
   totalCount: number;
   scorersSource: string;
   query: string;
@@ -510,6 +633,7 @@ function ScorersPanel({
 }) {
   const [first, second, third, ...rest] = scorers;
   const maxGoals = Math.max(1, ...scorers.map((s) => s.goals));
+  const photos = useScorerPhotos(allScorers);
   const showAltSourceNote =
     scorersSource && !["WC", "WorldCupWiki", "Google"].includes(scorersSource);
 
@@ -561,7 +685,12 @@ function ScorersPanel({
           {/* Golden Boot leader — full-width hero (2nd & 3rd removed by request; they now sit in the leaderboard below). */}
           {first && (
             <div className="grid gap-4">
-              <PodiumCard scorer={first} place={1} maxGoals={maxGoals} />
+              <PodiumCard
+                scorer={first}
+                place={1}
+                maxGoals={maxGoals}
+                photo={photoForScorer(first.player.name, photos)}
+              />
             </div>
           )}
 
@@ -601,9 +730,18 @@ function ScorersPanel({
                     >
                       <td className="py-3 pl-4 text-muted-foreground">{i + 2}</td>
                       <td className="py-3">
-                        <div className="font-medium">{(s as Scorer).player.name}</div>
-                        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:hidden">
-                          {(s as Scorer).team.name}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <PlayerAvatar
+                            name={(s as Scorer).player.name}
+                            photo={photoForScorer((s as Scorer).player.name, photos)}
+                            className="h-8 w-8"
+                          />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{(s as Scorer).player.name}</div>
+                            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:hidden">
+                              {(s as Scorer).team.name}
+                            </div>
+                          </div>
                         </div>
                       </td>
                       <td className="hidden py-3 sm:table-cell">
@@ -636,10 +774,12 @@ function PodiumCard({
   scorer: s,
   place,
   maxGoals,
+  photo,
 }: {
   scorer: Scorer;
   place: 1 | 2 | 3;
   maxGoals: number;
+  photo?: string | null;
 }) {
   const styles = {
     1: {
@@ -682,12 +822,17 @@ function PodiumCard({
       </div>
 
       <div className="mt-4 flex items-center gap-3">
-        <TeamFlag team={s.team} className="h-8 w-12" />
+        <PlayerAvatar
+          name={s.player.name}
+          photo={photo ?? null}
+          className="h-14 w-14 text-sm sm:h-16 sm:w-16"
+        />
 
         <div className="min-w-0">
           <p className="display truncate text-xl leading-tight sm:text-2xl">{s.player.name}</p>
-          <p className="truncate text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-            {s.team.name}
+          <p className="mt-1 flex items-center gap-1.5 truncate text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+            <TeamFlag team={s.team} className="h-3.5 w-5" />
+            <span className="truncate">{s.team.name}</span>
           </p>
         </div>
       </div>

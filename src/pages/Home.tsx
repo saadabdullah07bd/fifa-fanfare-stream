@@ -29,7 +29,7 @@ const NEWS_FN = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/news-feed`;
 export default function Home() {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
-  const { data: liveData, isLoading: liveLoading } = useLiveMatches();
+  const { data: liveData } = useLiveMatches();
   const liveMatches = liveData?.matches ?? [];
 
   const { data: newsData, isLoading: newsLoading } = useQuery({
@@ -46,19 +46,24 @@ export default function Home() {
   const flashHeadline = newsData?.articles?.[0] ?? null;
 
   const hero: HeroMatch | null = useMemo(() => {
+    // A genuinely in-play match (real live data) always wins the hero slot.
     const liveNow = liveMatches.find((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status));
     if (liveNow) return fromLive(liveNow);
-    const upcoming = liveMatches.find((m) => m.status === "SCHEDULED" || m.status === "TIMED");
-    if (upcoming) return fromLive(upcoming);
+    // Otherwise feature the next fixture from our authoritative WC26 dataset —
+    // a real, named upcoming match (e.g. the France vs Spain semi-final) with a
+    // countdown, rather than an arbitrary live-API fixture we can't vouch for.
     const nowIso = new Date().toISOString();
     const nextWc =
-      WC26_MATCHES.filter((m) => m.date_utc && m.home_score == null && m.date_utc >= nowIso).sort(
-        (a, b) => (a.date_utc ?? "").localeCompare(b.date_utc ?? ""),
-      )[0] ??
+      WC26_MATCHES.filter(
+        (m) => m.date_utc && m.home_score == null && m.home_code && m.date_utc >= nowIso,
+      ).sort((a, b) => (a.date_utc ?? "").localeCompare(b.date_utc ?? ""))[0] ??
       WC26_MATCHES.filter((m) => m.date_utc).sort((a, b) =>
         (b.date_utc ?? "").localeCompare(a.date_utc ?? ""),
       )[0];
-    return nextWc ? fromWc(nextWc) : null;
+    if (nextWc) return fromWc(nextWc);
+    // Last resort: a scheduled live-API fixture.
+    const upcoming = liveMatches.find((m) => m.status === "SCHEDULED" || m.status === "TIMED");
+    return upcoming ? fromLive(upcoming) : null;
   }, [liveMatches]);
 
   const topScorer = useMemo(() => {
@@ -85,18 +90,15 @@ export default function Home() {
 
   const scoreboard = useMemo(() => {
     const live = liveMatches.filter((m) => ["IN_PLAY", "PAUSED", "LIVE"].includes(m.status));
-    // Most recently kicked-off finished match first, so the scoreboard always
-    // surfaces the latest result rather than a not-yet-played fixture.
-    const finished = liveMatches
-      .filter((m) => m.status === "FINISHED")
-      .sort((a, b) => (b.utc_date ?? "").localeCompare(a.utc_date ?? ""));
-    const upcoming = liveMatches
-      .filter((m) => m.status === "SCHEDULED" || m.status === "TIMED")
-      .sort((a, b) => (a.utc_date ?? "").localeCompare(b.utc_date ?? ""));
-    // Priority: live > latest finished > next upcoming.
-    const picked = [...live, ...finished, ...upcoming].slice(0, 2);
-    if (picked.length > 0) return picked.map(fromLive);
-    // Offline fallback: the two most recently played matches in the dataset.
+    // A live match is worth surfacing; otherwise the scoreboard shows the last
+    // two *played* games' scorecards (per request) — never a not-yet-played
+    // fixture, which would have no real scoreline.
+    if (live.length > 0) {
+      const finished = liveMatches
+        .filter((m) => m.status === "FINISHED")
+        .sort((a, b) => (b.utc_date ?? "").localeCompare(a.utc_date ?? ""));
+      return [...live, ...finished].slice(0, 2).map(fromLive);
+    }
     return WC26_MATCHES.filter((m) => m.home_score != null && m.date_utc)
       .sort((a, b) => (b.date_utc ?? "").localeCompare(a.date_utc ?? ""))
       .slice(0, 2)
@@ -177,13 +179,7 @@ export default function Home() {
           />
         )}
 
-        {scoreboard.length > 0 ? (
-          <ScoreboardTile matches={scoreboard} />
-        ) : liveLoading ? (
-          <SkeletonTile className="md:col-span-4 md:row-span-2" label="Loading scoreboard…" />
-        ) : (
-          <ScoreboardTile matches={scoreboard} />
-        )}
+        <ScoreboardTile matches={scoreboard} />
 
         {flashHeadline || !newsLoading ? (
           <FlashNewsTile article={flashHeadline} />
@@ -446,7 +442,7 @@ function ScoreboardTile({ matches }: { matches: HeroMatch[] }) {
           id="scoreboard-heading"
           className="display text-2xl tracking-wider text-foreground/70 sm:text-3xl"
         >
-          Scoreboard
+          Latest Scores
         </h2>
       </div>
 

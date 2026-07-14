@@ -69,7 +69,7 @@ export default function MobileSplash() {
         preload="auto"
         onEnded={dismiss}
         onError={dismiss}
-        className="h-full w-full object-cover pointer-events-none select-none"
+        className="h-full w-full object-contain pointer-events-none select-none"
       />
     </div>
   );

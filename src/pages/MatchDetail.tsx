@@ -289,7 +289,7 @@ export default function MatchDetail() {
                 homeGoals.map((g, i) => (
                   <li key={`h${i}`} className="flex items-start justify-end gap-2 text-right">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{g.player}</p>
+                      <p className="text-sm font-semibold leading-snug break-words">{g.player}</p>
                       {(g.type === "OG" || g.type === "PEN") && (
                         <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                           {g.type === "OG" ? "Own goal" : "Penalty"}
@@ -321,7 +321,7 @@ export default function MatchDetail() {
                       {g.injury ? `+${g.injury}` : ""}'
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{g.player}</p>
+                      <p className="text-sm font-semibold leading-snug break-words">{g.player}</p>
                       {(g.type === "OG" || g.type === "PEN") && (
                         <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                           {g.type === "OG" ? "Own goal" : "Penalty"}
@@ -378,8 +378,8 @@ export default function MatchDetail() {
                 <li className="text-right text-xs text-muted-foreground/60">—</li>
               ) : (
                 homeCards.map((c, i) => (
-                  <li key={`hc${i}`} className="flex items-center justify-end gap-2 text-right">
-                    <p className="truncate text-sm">{c.player}</p>
+                  <li key={`hc${i}`} className="flex items-start justify-end gap-2 text-right">
+                    <p className="text-sm leading-snug break-words">{c.player}</p>
                     <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
                       {c.minute}
                       {c.injury ? `+${c.injury}` : ""}'
@@ -394,13 +394,13 @@ export default function MatchDetail() {
                 <li className="text-xs text-muted-foreground/60">—</li>
               ) : (
                 awayCards.map((c, i) => (
-                  <li key={`ac${i}`} className="flex items-center justify-start gap-2 text-left">
+                  <li key={`ac${i}`} className="flex items-start justify-start gap-2 text-left">
                     <CardChip color={c.card} />
                     <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
                       {c.minute}
                       {c.injury ? `+${c.injury}` : ""}'
                     </span>
-                    <p className="truncate text-sm">{c.player}</p>
+                    <p className="text-sm leading-snug break-words">{c.player}</p>
                   </li>
                 ))
               )}
@@ -571,7 +571,7 @@ function TimelineRow({ ev }: { ev: TimelineEvent }) {
         {isHome && (
           <div className="ml-auto flex max-w-full items-start gap-2 rounded-2xl border border-border/60 bg-card/60 px-2.5 py-2 sm:px-3">
             <div className="min-w-0 text-right">
-              <p className="truncate text-sm font-semibold">{ev.player}</p>
+              <p className="text-sm font-semibold leading-snug break-words">{ev.player}</p>
               {subline && (
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                   {subline}
@@ -594,7 +594,7 @@ function TimelineRow({ ev }: { ev: TimelineEvent }) {
           <div className="mr-auto flex max-w-full items-start gap-2 rounded-2xl border border-border/60 bg-card/60 px-2.5 py-2 sm:px-3">
             <span className="shrink-0">{icon}</span>
             <div className="min-w-0 text-left">
-              <p className="truncate text-sm font-semibold">{ev.player}</p>
+              <p className="text-sm font-semibold leading-snug break-words">{ev.player}</p>
               {subline && (
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                   {subline}

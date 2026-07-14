@@ -511,3 +511,12 @@ export function bdShortDate(iso: string): string {
     month: "short",
   });
 }
+/**
+ * Returns the Bangladesh-local calendar day key (YYYY-MM-DD) for an ISO date.
+ * Used to group fixtures by the day users actually see them kick off — a match
+ * at 19:00 UTC is 1:00 AM the next day in Dhaka, so grouping by UTC day would
+ * mislabel it. `en-CA` yields ISO-ordered YYYY-MM-DD.
+ */
+export function bdDayKey(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-CA", { timeZone: DHAKA });
+}

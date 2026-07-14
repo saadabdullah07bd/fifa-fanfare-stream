@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MapPin, Trophy, CircleDot, ArrowUp } from "lucide-react";
 import { Seo } from "@/lib/seo";
-import { flagUrl, countryName, bdShortDate, bdTime } from "@/lib/flags";
+import { flagUrl, countryName, bdShortDate, bdTime, bdDayKey } from "@/lib/flags";
 import { WC26_MATCHES, type Wc26Match } from "@/data/wc26-matches";
 
 // Knockout stages ordered earliest → latest. Third-place playoff intentionally
@@ -213,7 +213,9 @@ function AllMatchesView({ matches, stage }: { matches: Wc26Match[]; stage: Stage
   const groups = useMemo(() => {
     const map = new Map<string, Wc26Match[]>();
     for (const m of filtered) {
-      const key = (m.date_utc ?? "").slice(0, 10);
+      // Group by the Bangladesh-local day so the date header matches the BD
+      // kick-off times shown on each card (a 19:00 UTC match is 1 AM next day).
+      const key = m.date_utc ? bdDayKey(m.date_utc) : "";
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(m);
     }
@@ -221,8 +223,8 @@ function AllMatchesView({ matches, stage }: { matches: Wc26Match[]; stage: Stage
   }, [filtered]);
 
   const focusKey = useMemo(() => {
-    const todayIso = new Date().toISOString().slice(0, 10);
-    const upcoming = groups.find(([day]) => day >= todayIso);
+    const todayBd = bdDayKey(new Date().toISOString());
+    const upcoming = groups.find(([day]) => day >= todayBd);
     return upcoming?.[0] ?? groups[groups.length - 1]?.[0] ?? null;
   }, [groups]);
 
@@ -261,7 +263,7 @@ function AllMatchesView({ matches, stage }: { matches: Wc26Match[]; stage: Stage
         >
           <div className="mb-3 flex items-center gap-3 px-1 sm:mb-4 sm:gap-4">
             <h2 className="display text-xl tracking-wider text-primary sm:text-3xl">
-              {bdShortDate(day + "T00:00:00Z")}
+              {bdShortDate(day + "T12:00:00Z")}
             </h2>
             <div className="h-px flex-1 bg-gradient-to-r from-primary/40 to-transparent" />
           </div>

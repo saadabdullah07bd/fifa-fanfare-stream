@@ -227,7 +227,6 @@ async function scrapeWorldCupWikiGoldenBoot(debug: any) {
       const country = cleanCountry(cells[2]);
       const goals = Number(cells[3].replace(/\D/g, ""));
       const assists = Number(cells[4].replace(/\D/g, ""));
-      const minutes = Number((cells[5] ?? "").replace(/\D/g, ""));
       if (!cells[1] || !Number.isFinite(goals)) continue;
       rows.push({
         player: { name: cells[1], nationality: country },
@@ -235,7 +234,9 @@ async function scrapeWorldCupWikiGoldenBoot(debug: any) {
         goals,
         assists: Number.isFinite(assists) ? assists : null,
         penalties: null,
-        played: Number.isFinite(minutes) && minutes > 0 ? minutes : null,
+        // This source's 6th column is minutes, not matches played — leaving it
+        // null so the UI shows "—" instead of a misleading matches-played count.
+        played: null,
       });
     }
   }
