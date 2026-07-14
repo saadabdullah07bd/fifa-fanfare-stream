@@ -65,10 +65,13 @@ type SquadPlayer = { name: string; photo: string | null };
 
 /**
  * Resolves real headshots for the top scorers by fetching each unique team's
- * squad (real names + photos) from the `club` edge function — the same source
- * the match lineups use — and matching scorer names to squad players. The feed
- * itself carries no photos, so this is best-effort: unmatched players simply
- * fall back to an initials avatar. Squads are cached a day server-side.
+ * squad (real names + photos) from the `club` edge function — the SAME
+ * `["squad", name]` cache the match lineups and team pages use, so a squad is
+ * fetched once per team and shared everywhere. The whole query cache is
+ * persisted to localStorage (see main.tsx PersistQueryClientProvider), so once
+ * a team's squad loads its headshots stay saved in-app for a day and reload
+ * instantly on return visits — even offline. The scorers feed carries no
+ * photos, so matching is best-effort: unmatched players fall back to initials.
  */
 function useScorerPhotos(scorers: Scorer[]): Map<string, string> {
   const teams = useMemo(() => {
@@ -79,7 +82,8 @@ function useScorerPhotos(scorers: Scorer[]): Map<string, string> {
 
   const results = useQueries({
     queries: teams.map((name) => ({
-      queryKey: ["squad-photos", name],
+      // Shared with MatchStatsPanel's useSquad — one persisted entry per team.
+      queryKey: ["squad", name],
       staleTime: 24 * 3600_000,
       gcTime: 24 * 3600_000,
       queryFn: async () => {
@@ -87,7 +91,7 @@ function useScorerPhotos(scorers: Scorer[]): Map<string, string> {
           body: { action: "squad", name },
         });
         if (error) throw error;
-        return { team: name, squad: (data as { squad: SquadPlayer[] })?.squad ?? [] };
+        return (data as { squad: SquadPlayer[] })?.squad ?? [];
       },
     })),
   });
@@ -95,7 +99,7 @@ function useScorerPhotos(scorers: Scorer[]): Map<string, string> {
   return useMemo(() => {
     const byPlayer = new Map<string, string>();
     for (const r of results) {
-      const squad = r.data?.squad;
+      const squad = r.data;
       if (!squad) continue;
       for (const p of squad) {
         if (!p.photo) continue;

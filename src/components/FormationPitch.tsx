@@ -34,12 +34,18 @@ function JerseyToken({ p, isHome }: { p: LineupPlayer; isHome: boolean }) {
   return (
     <motion.div
       variants={staggerChild}
+      whileHover={{ scale: 1.08, zIndex: 20 }}
       className="relative flex flex-col items-center gap-1"
       title={`${p.name}${p.number != null ? ` · #${p.number}` : ""}${p.pos ? ` · ${p.pos}` : ""}`}
     >
+      {/* soft grounding shadow so tokens read as standing on the turf */}
+      <span
+        aria-hidden="true"
+        className="absolute top-8 h-1.5 w-8 rounded-[100%] bg-black/40 blur-[3px] sm:top-10 sm:w-10"
+      />
       <div
-        className={`relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-secondary shadow-md ring-2 sm:h-11 sm:w-11 ${
-          isHome ? "ring-primary/70" : "ring-white/70"
+        className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-b from-secondary to-secondary/70 shadow-lg ring-2 sm:h-12 sm:w-12 ${
+          isHome ? "ring-primary" : "ring-white"
         }`}
       >
         {p.photo ? (
@@ -53,12 +59,17 @@ function JerseyToken({ p, isHome }: { p: LineupPlayer; isHome: boolean }) {
             }}
           />
         ) : null}
-        <span className="absolute inset-0 -z-10 grid place-items-center text-[9px] font-bold text-muted-foreground">
+        <span className="absolute inset-0 -z-10 grid place-items-center text-[10px] font-bold text-muted-foreground">
           {initials}
         </span>
+        {/* subtle inner sheen for a more three-dimensional token */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent"
+        />
         {/* Number badge, bottom-right of the headshot */}
         <span
-          className={`absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full text-[8px] font-black ring-1 sm:h-5 sm:w-5 sm:text-[10px] ${
+          className={`absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full text-[8px] font-black shadow-sm ring-1 sm:h-5 sm:w-5 sm:text-[10px] ${
             isHome
               ? "bg-primary text-primary-foreground ring-primary/40"
               : "bg-foreground text-background ring-foreground/30"
@@ -67,7 +78,7 @@ function JerseyToken({ p, isHome }: { p: LineupPlayer; isHome: boolean }) {
           {p.number ?? "–"}
         </span>
       </div>
-      <span className="max-w-[4.5rem] truncate text-center text-[9px] font-semibold uppercase tracking-wide text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:max-w-[5.5rem] sm:text-[10px]">
+      <span className="max-w-[4.5rem] truncate rounded-full bg-black/45 px-1.5 py-px text-center text-[9px] font-semibold uppercase tracking-wide text-white backdrop-blur-[1px] sm:max-w-[5.5rem] sm:text-[10px]">
         {surname}
       </span>
     </motion.div>
@@ -75,12 +86,28 @@ function JerseyToken({ p, isHome }: { p: LineupPlayer; isHome: boolean }) {
 }
 
 /**
- * Renders a starting XI on a broadcast-style turf graphic, positioned by
- * formation using the grid coordinates. Falls back to an even spread across
- * rows if grid data is missing for a player.
+ * Depth of each formation line from the team's own goal-line (0) to the
+ * halfway line (1). The keeper hugs the goal; the outfield lines fan out with
+ * a slightly compressed defence and an advanced front line, matching how real
+ * broadcast formation graphics are drawn (rather than evenly-spaced rows).
+ */
+function depthForRow(idx: number, rowCount: number): number {
+  if (rowCount <= 1) return 0.5;
+  if (idx === 0) return 0.08; // goalkeeper hugs the goal line
+  const outfield = rowCount - 1; // number of outfield lines
+  const t = outfield === 1 ? 0.5 : (idx - 1) / (outfield - 1); // 0..1 back→front
+  // Ease so the defensive line sits a touch deeper and attackers press high.
+  const eased = 0.28 + t * 0.66;
+  return Math.min(0.95, eased);
+}
+
+/**
+ * Renders a starting XI on a broadcast-style turf graphic, positioning each
+ * player by absolute percentage so the lines have realistic depth (keeper on
+ * the goal-line, forwards near halfway) instead of an even vertical spread.
  *
- * `flip` mirrors the team vertically so the two lineups face each other
- * (home attacks upward from the bottom, away attacks downward from the top).
+ * `flip` mirrors the team so the two lineups face each other — the home side
+ * attacks upward from the bottom half, the away side downward from the top.
  */
 export default function FormationPitch({
   startXI,
@@ -107,24 +134,41 @@ export default function FormationPitch({
     players.sort((a, b) => (parseGrid(a.grid)?.col ?? 0) - (parseGrid(b.grid)?.col ?? 0));
   }
   const orderedRows = Array.from(rows.entries()).sort(([a], [b]) => a - b);
-  // The home team's rows are reversed so row 1 (GK) sits at the bottom edge
-  // (their own goal); `flip` marks the away team (rows already top-down).
-  const finalRows = flip ? orderedRows : orderedRows.slice().reverse();
+  const rowCount = orderedRows.length;
 
   return (
     <motion.div
       variants={staggerParent}
       initial={reduced ? false : "initial"}
       animate="animate"
-      className="flex h-full w-full flex-col justify-between gap-2 px-2 py-3 sm:gap-3 sm:px-4"
+      className="relative h-full w-full"
     >
-      {finalRows.map(([rowNum, players]) => (
-        <div key={rowNum} className="flex items-start justify-evenly gap-1">
-          {players.map((p, i) => (
-            <JerseyToken key={p.id ?? `${rowNum}-${i}`} p={p} isHome={isHome} />
-          ))}
-        </div>
-      ))}
+      {orderedRows.map(([rowNum, players], idx) => {
+        const depth = depthForRow(idx, rowCount);
+        // Map depth (0 = own goal, 1 = halfway) into a safe band inside the
+        // half so tokens near the goal-line don't clip the pitch edge. Own goal
+        // sits at the outer edge of each half: the top half (away, flip)
+        // measures from the top, the bottom half (home) from the bottom.
+        const posFromOuter = 0.08 + depth * 0.84;
+        const yFrac = flip ? posFromOuter : 1 - posFromOuter;
+        const count = players.length;
+        return players.map((p, i) => {
+          // Spread across the width with margins; nudge wingers slightly wider
+          // than an even split so full lines don't look mechanically uniform.
+          const base = (i + 1) / (count + 1);
+          const spread = count > 2 ? (base - 0.5) * 1.12 + 0.5 : base;
+          const xFrac = Math.min(0.92, Math.max(0.08, spread));
+          return (
+            <div
+              key={p.id ?? `${rowNum}-${i}`}
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${xFrac * 100}%`, top: `${yFrac * 100}%` }}
+            >
+              <JerseyToken p={p} isHome={isHome} />
+            </div>
+          );
+        });
+      })}
     </motion.div>
   );
 }
