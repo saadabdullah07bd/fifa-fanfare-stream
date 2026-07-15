@@ -50,9 +50,11 @@ export default function LiveTV() {
     // Fetch available TV channels from Supabase.
     queryKey: ["channels"],
     queryFn: async () => {
+      // Explicit columns, not "*": `direct_url` can embed upstream Xtream
+      // credentials and is revoked from anon/authenticated, so "*" would fail.
       const { data, error } = await supabase
         .from("channels")
-        .select("*")
+        .select("id, category, stream_id, name, logo_url")
         .order("category")
         .order("name");
       if (error) throw new Error(error.message);

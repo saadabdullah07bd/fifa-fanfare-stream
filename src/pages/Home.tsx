@@ -7,6 +7,7 @@ import { Seo } from "@/lib/seo";
 import { useLiveMatches, type LiveMatch } from "@/components/LiveTicker";
 import { WC26_MATCHES, findWc26MatchByTeams, type Wc26Match } from "@/data/wc26-matches";
 import { bdTime, bdDate, bdShortDate, flagUrl, countryName, bestFifaCode } from "@/lib/flags";
+import { useLiveMinute } from "@/lib/live-clock";
 import wc26Emblem from "@/assets/wc26-trophy.png.asset.json";
 
 type Article = {
@@ -280,13 +281,14 @@ function useCountdown(iso: string | null) {
 function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
   const isLive = hero.status === "LIVE" || hero.status === "PAUSED";
   const isUpcoming = hero.status === "SCHEDULED";
+  const liveMinute = useLiveMinute(hero.minute, hero.status);
   const kickoff = hero.utcDate
     ? `${bdDate(hero.utcDate)} · ${bdTime(hero.utcDate)}`
     : hero.competition;
   const chipLabel = isLive
     ? hero.status === "PAUSED"
       ? "HALF TIME"
-      : `LIVE · ${hero.minute ?? 0}${hero.injury ? `+${hero.injury}` : ""}'`
+      : `LIVE · ${liveMinute ?? 0}${hero.injury ? `+${hero.injury}` : ""}'`
     : hero.status === "FINISHED"
       ? "FULL TIME"
       : "MATCHDAY";
