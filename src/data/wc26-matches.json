@@ -6064,19 +6064,34 @@
     "away_name": "Spain",
     "home_code": "FRA",
     "away_code": "ESP",
-    "home_score": null,
-    "away_score": null,
+    "home_score": 0,
+    "away_score": 2,
     "venue_name": "Dallas Stadium (AT&T Stadium)",
     "venue_city": "Arlington",
     "venue_country": "United States",
     "penalty_shootout": null,
     "extra_time": false,
-    "goals": [],
+    "goals": [
+      {
+        "player": "Mikel Oyarzabal",
+        "minute": 22,
+        "injury": null,
+        "type": "PEN",
+        "team": "Spain"
+      },
+      {
+        "player": "Pedro Porro",
+        "minute": 58,
+        "injury": null,
+        "type": "REGULAR",
+        "team": "Spain"
+      }
+    ],
     "yellow_cards": [],
     "red_cards": [],
-    "referee": "Clément Turpin",
-    "attendance": null,
-    "notes": "Upcoming match. Fixture scheduled."
+    "referee": "Iván Barton",
+    "attendance": 70176,
+    "notes": "Full time. Spain beat France 2-0 to reach the final."
   },
   {
     "match_no": 102,

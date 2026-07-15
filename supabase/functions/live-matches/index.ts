@@ -6,8 +6,9 @@
  *   - status: Optional filter for match status (e.g., LIVE, FINISHED).
  * Outputs: JSON object with matches and last updated timestamp.
  * External APIs:
- *   - Football-Data.org: Primary match source.
- *   - TheSportsDB: Fallback for World Cup 2026 fixtures.
+ *   - ESPN scoreboard JSON: Primary match source.
+ *   - Football-Data.org: Fallback match source.
+ *   - TheSportsDB: Last-resort fallback for World Cup 2026 fixtures.
  *
  * Note: this used to also "enrich" scores/minutes via a Firecrawl web-search
  * text scrape and a Gemini prompt asking an LLM to invent a live score as
@@ -16,7 +17,16 @@
  * match an unrelated article, prediction, or betting line. That combination
  * was the source of scores that didn't match reality (e.g. showing a result
  * for a match that hadn't kicked off yet). Only real provider data is used now.
+ *
+ * Source order: ESPN's public scoreboard JSON (primary) -> football-data.org ->
+ * TheSportsDB. ESPN is preferred because the `fifa.world` league feed is already
+ * scoped to the World Cup, needs no API key, carries a real per-match clock, and
+ * ships goal/card events in `competitions[0].details`. It is a structured feed,
+ * NOT an HTML scrape: do not replace it with one. A score here must always trace
+ * back to a provider field — never to text matched out of a web page.
  */
+
+import { ESPN_SCOREBOARD, espnDay, mapEspnScoreboard, sortMatches } from "../_shared/espn.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -26,6 +36,20 @@ const cors = {
 
 const FD = "https://api.football-data.org/v4";
 let cache: { at: number; body: unknown } | null = null;
+
+/**
+ * Primary source. The `fifa.world` feed is World Cup-only, so no competition
+ * filtering is needed. Throws on transport/HTTP failure so the caller falls
+ * through to football-data.org.
+ */
+async function fetchEspn(): Promise<any[]> {
+  // Range covers yesterday..tomorrow (UTC) so a match that kicked off before
+  // UTC midnight is still returned while it is in play.
+  const url = `${ESPN_SCOREBOARD}?dates=${espnDay(-1)}-${espnDay(1)}`;
+  const r = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!r.ok) throw new Error(`espn ${r.status}`);
+  return mapEspnScoreboard(await r.json());
+}
 
 // Cache-Control tuned for 50k concurrent viewers: 10s browser cache, 15s
 // shared CDN cache with stale-while-revalidate so a burst hitting a cold
@@ -38,18 +62,42 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   const token = Deno.env.get("FOOTBALL_DATA_API_TOKEN");
-  if (!token) {
-    return new Response(JSON.stringify({ error: "FOOTBALL_DATA_API_TOKEN missing" }), {
-      status: 500,
-      headers: { ...cors, "Content-Type": "application/json" },
-    });
-  }
 
   // 15s in-memory cache on the warm isolate (matches CDN s-maxage).
   if (cache && Date.now() - cache.at < 15_000) {
     return new Response(JSON.stringify(cache.body), {
       headers: { ...cors, "Content-Type": "application/json", ...CDN_CACHE_HEADERS },
     });
+  }
+
+  // Primary: ESPN. Keyless, World Cup-scoped, carries clock + goal events.
+  try {
+    const espn = await fetchEspn();
+    if (espn.length > 0) {
+      const body = {
+        matches: sortMatches(espn),
+        updated_at: new Date().toISOString(),
+        source: "espn",
+      };
+      cache = { at: Date.now(), body };
+      return new Response(JSON.stringify(body), {
+        headers: { ...cors, "Content-Type": "application/json", ...CDN_CACHE_HEADERS },
+      });
+    }
+  } catch (e) {
+    console.error("espn source failed, falling back", (e as Error).message);
+  }
+
+  // Fallbacks below need the football-data token; without it ESPN was the only
+  // shot, so report that rather than pretending there are no matches.
+  if (!token) {
+    return new Response(
+      JSON.stringify({ error: "ESPN unavailable and FOOTBALL_DATA_API_TOKEN missing" }),
+      {
+        status: 502,
+        headers: { ...cors, "Content-Type": "application/json" },
+      },
+    );
   }
 
   const url = new URL(req.url);
@@ -179,14 +227,7 @@ Deno.serve(async (req) => {
     return { ...m, minute, minute_source: "kickoff-fallback" };
   });
 
-  // Sort: live first, then scheduled today, then finished
-  const rank = (s: string) =>
-    ["IN_PLAY", "PAUSED", "LIVE"].includes(s) ? 0 : s === "SCHEDULED" || s === "TIMED" ? 1 : 2;
-  matches.sort(
-    (a: any, b: any) => rank(a.status) - rank(b.status) || a.utc_date.localeCompare(b.utc_date),
-  );
-
-  const body = { matches, updated_at: new Date().toISOString() };
+  const body = { matches: sortMatches(matches), updated_at: new Date().toISOString() };
   cache = { at: Date.now(), body };
 
   return new Response(JSON.stringify(body), {
