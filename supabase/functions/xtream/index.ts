@@ -295,10 +295,13 @@ Deno.serve(async (req) => {
       if (!catsRes.ok) return json({ error: `Xtream categories failed [${catsRes.status}]` }, 502);
       const cats = (await catsRes.json()) as Array<{ category_id: string; category_name: string }>;
 
-      // Keep only FIFA World Cup 2026 + beIN Sports categories (~30 channels).
-      // Everything else (cricket, general sports, etc.) is dropped on refresh.
-      const wcRe = /world.?cup|fifa.?world|wc.?2026|coupe.?du.?monde|mundial|fifa\s*26/i;
-      const beinRe = /\bbein\b|be\s*in\s*sport/i;
+      // Keep exactly two catalogue categories (~35 channels): "FIFA World Cup
+      // 2026" and "BEIN SPORTS MAX (FIFA)". Anchored on purpose — this server
+      // also carries "SPORTS | BEIN" (a huge general beIN dump) and
+      // "BEIN MOVIES", which the previous loose /bein/ match would have
+      // imported wholesale from the 10k+ channel list.
+      const wcRe = /^fifa\s*world\s*cup\s*2026$/i;
+      const beinRe = /^bein\s*sports?\s*max\b/i;
       const wanted = cats
         .map((c) => {
           const name = c.category_name ?? "";
@@ -417,7 +420,11 @@ async function getConfig(admin: ReturnType<typeof createClient>): Promise<Xtream
 async function proxyDirectUrl(req: Request, directUrl: string, ext: string) {
   const lower = directUrl.toLowerCase();
   const upstreamUrl =
-    ext === "m3u8" || lower.includes(".m3u8") ? directUrl : lower.includes(".ts") ? directUrl : directUrl;
+    ext === "m3u8" || lower.includes(".m3u8")
+      ? directUrl
+      : lower.includes(".ts")
+        ? directUrl
+        : directUrl;
 
   const headers = new Headers();
   const range = req.headers.get("range");
@@ -433,12 +440,19 @@ async function proxyDirectUrl(req: Request, directUrl: string, ext: string) {
   if (isPlaylist(upstreamUrl, contentType)) {
     responseHeaders.set("Content-Type", "application/vnd.apple.mpegurl");
     responseHeaders.set("Cache-Control", "public, max-age=1, s-maxage=2");
-    return new Response(await upstream.text(), { status: upstream.status, headers: responseHeaders });
+    return new Response(await upstream.text(), {
+      status: upstream.status,
+      headers: responseHeaders,
+    });
   }
 
   const type = upstream.headers.get("content-type");
   if (type) responseHeaders.set("content-type", type);
-  else responseHeaders.set("content-type", ext === "m3u8" ? "application/vnd.apple.mpegurl" : "video/mp2t");
+  else
+    responseHeaders.set(
+      "content-type",
+      ext === "m3u8" ? "application/vnd.apple.mpegurl" : "video/mp2t",
+    );
   responseHeaders.set("Cache-Control", "public, max-age=30, s-maxage=60, immutable");
   return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
 }

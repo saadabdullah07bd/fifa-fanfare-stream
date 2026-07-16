@@ -4,7 +4,6 @@ import Hls from "hls.js";
 import mpegts from "mpegts.js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Activity,
   Expand,
@@ -574,52 +573,17 @@ export default function LivePlayer({
     onNext,
   ]);
 
-  // --------------------------------------------------- mobile volume rocker
-  const isMobile = useIsMobile();
-  const dragRef = useRef<{ startY: number; startVol: number } | null>(null);
-  const [volPill, setVolPill] = useState<number | null>(null);
-  const volPillTimer = useRef<number | null>(null);
-  const onVolTouchStart = (e: React.TouchEvent) => {
-    const v = videoRef.current;
-    if (!v) return;
-    dragRef.current = { startY: e.touches[0].clientY, startVol: v.muted ? 0 : v.volume };
-    kick();
-  };
-  const onVolTouchMove = (e: React.TouchEvent) => {
-    const v = videoRef.current;
-    const d = dragRef.current;
-    if (!v || !d || !wrapRef.current) return;
-    const h = wrapRef.current.clientHeight || 1;
-    const next = Math.max(0, Math.min(1, d.startVol + (d.startY - e.touches[0].clientY) / h));
-    v.volume = next;
-    v.muted = next === 0;
-    setVolPill(next);
-    if (volPillTimer.current) window.clearTimeout(volPillTimer.current);
-    volPillTimer.current = window.setTimeout(() => setVolPill(null), 700);
-    e.preventDefault();
-  };
-  const onVolTouchEnd = () => {
-    dragRef.current = null;
-  };
-
-  // Desktop: click toggles play, double-click toggles fullscreen. Mobile:
-  // tap only reveals the controls (accidental pause is too easy otherwise).
-  const clickTimer = useRef<number | null>(null);
+  // Clicking/tapping the video surface only reveals the controls — it never
+  // toggles playback. Pause happens exclusively via the pause button (or
+  // Space/K on a keyboard). The old click-to-pause used a width-based mobile
+  // check, so a phone in landscape (~812px wide) was treated as desktop and
+  // every tap to show the overlay paused the stream. Double-click/double-tap
+  // still toggles fullscreen.
   const onSurfaceClick = () => {
     kick();
-    if (isMobile) return;
-    if (clickTimer.current) return; // part of a double click
-    clickTimer.current = window.setTimeout(() => {
-      clickTimer.current = null;
-      toggle();
-    }, 220);
   };
   const onSurfaceDoubleClick = () => {
-    if (clickTimer.current) {
-      window.clearTimeout(clickTimer.current);
-      clickTimer.current = null;
-    }
-    if (!isMobile) toggleFs();
+    toggleFs();
   };
 
   const qualityLabel = useMemo(() => {
@@ -654,45 +618,9 @@ export default function LivePlayer({
         }`}
       />
 
-      {/* Mobile: right-edge vertical drag = volume rocker */}
-      {isMobile && (
-        <div
-          onTouchStart={onVolTouchStart}
-          onTouchMove={onVolTouchMove}
-          onTouchEnd={onVolTouchEnd}
-          className="absolute inset-y-0 right-0 z-10 flex w-1/3 max-w-[140px] flex-col items-center justify-center"
-          style={{ touchAction: "none" }}
-          aria-label="Volume — drag up or down"
-          role="presentation"
-        >
-          <div className="pointer-events-none flex flex-col items-center gap-2 rounded-full bg-black/40 px-1.5 py-3 backdrop-blur-sm ring-1 ring-white/15">
-            {muted || volume === 0 ? (
-              <VolumeX className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />
-            ) : (
-              <Volume2 className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />
-            )}
-            <div className="relative h-20 w-1 overflow-hidden rounded-full bg-white/20">
-              <div
-                className="absolute inset-x-0 bottom-0 rounded-full bg-primary"
-                style={{ height: `${Math.round((muted ? 0 : volume) * 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      <AnimatePresence>
-        {volPill !== null && (
-          <motion.div
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 10 }}
-            className="pointer-events-none absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/70 px-3 py-2 text-xs font-bold text-white backdrop-blur"
-          >
-            {Math.round(volPill * 100)}%
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* No custom volume gesture on touch devices: the media element's
+          volume is left alone so the phone's hardware volume buttons control
+          the stream natively, like any other media app. */}
 
       {/* Buffering */}
       <AnimatePresence>
