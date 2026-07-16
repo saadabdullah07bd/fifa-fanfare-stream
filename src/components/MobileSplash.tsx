@@ -25,7 +25,8 @@ export default function MobileSplash() {
     if (dismissedRef.current) return;
     dismissedRef.current = true;
     setFading(true);
-    window.setTimeout(() => setVisible(false), 400);
+    // Matches the overlay's duration-500 so the fade completes before unmount.
+    window.setTimeout(() => setVisible(false), 500);
   }, []);
 
   useEffect(() => {
@@ -57,9 +58,18 @@ export default function MobileSplash() {
         fading ? "opacity-0" : "opacity-100"
       }`}
       onClick={dismiss}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
+          e.preventDefault();
+          dismiss();
+        }
+      }}
       role="button"
+      tabIndex={0}
       aria-label="Skip intro"
     >
+      {/* object-cover fills every screen edge-to-edge; the crop on mismatched
+          aspect ratios is intentional (no letterbox bars on any device). */}
       <video
         ref={videoRef}
         src="/splash.mp4"
@@ -69,7 +79,7 @@ export default function MobileSplash() {
         preload="auto"
         onEnded={dismiss}
         onError={dismiss}
-        className="h-full w-full object-contain pointer-events-none select-none"
+        className="h-full w-full object-cover pointer-events-none select-none"
       />
     </div>
   );
