@@ -49,12 +49,15 @@
   --color-usa: var(--usa);
   --color-mex: var(--mex);
   --color-can: var(--can);
-  --font-display: "Bebas Neue", "Anton", "Inter", ui-sans-serif, system-ui;
-  --font-sans: "Inter", "Noto Sans", ui-sans-serif, system-ui;
+  --font-display: "Bebas Neue", "Inter", ui-sans-serif, system-ui;
+  --font-sans: "Inter", ui-sans-serif, system-ui;
 }
 
 :root {
   --radius: 0.5rem;
+
+  /* Glass hairline used by the floating BottomTabs border. */
+  --glass-border: rgba(255, 255, 255, 0.16);
 
   /* Official FIFA World Cup 26 identity: black · white · trophy gold · trophy green */
   --background: #000000;
@@ -309,8 +312,12 @@ body {
 .glass-nav {
   background: rgba(10, 10, 10, 0.78);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  /* Bottom sheen hairline, matching the BottomTabs glass. */
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  /* Keep the sticky header out from under a notch (viewport-fit=cover). */
+  padding-top: env(safe-area-inset-top);
 }
 
 /* Hide native scrollbars while keeping scroll */
@@ -457,5 +464,20 @@ select {
   h3,
   .display {
     letter-spacing: 0.02em;
+  }
+}
+
+/* ============ TV / 10-foot viewing ============
+ * The whole layout is rem-based (max-w-7xl = 80rem, spacing in rem), so
+ * scaling the root font proportionally enlarges type, spacing and the
+ * centered containers on living-room screens — no per-page styles needed. */
+@media (min-width: 1920px) {
+  html {
+    font-size: 17px;
+  }
+}
+@media (min-width: 2560px) {
+  html {
+    font-size: 19px;
   }
 }

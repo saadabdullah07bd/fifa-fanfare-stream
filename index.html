@@ -2,19 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/favicon.png" />
-
-    <link rel="shortcut icon" type="image/png" href="/app-icon.png" />
+    <!-- app-icon.png (70 KB) everywhere; the 1.1 MB favicon.png is no longer
+         referenced. Fonts are self-hosted via @fontsource (main.tsx), so no
+         Google Fonts request. -->
+    <link rel="icon" type="image/png" href="/app-icon.png" />
     <link rel="apple-touch-icon" href="/app-icon.png" />
-    <meta name="theme-color" content="#0a0a0a" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans:wght@400;500;600;700;800&display=swap"
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
+    <!-- viewport-fit=cover makes env(safe-area-inset-*) real on iOS — the
+         bottom tabs and glass nav depend on those insets. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Watch FIFA World Cup 2026 Live Free — Semifinals & Final | Pitch26</title>
     <meta
       name="description"
