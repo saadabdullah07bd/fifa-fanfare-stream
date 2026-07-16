@@ -24,7 +24,7 @@ interface BottomTabsProps {
  * @param props.tabs - Array of tab configurations.
  * @param props.accentColor - The color used for the active indicator and highlights.
  */
-export function BottomTabs({ tabs, accentColor = "#e6b800" }: BottomTabsProps) {
+export function BottomTabs({ tabs, accentColor = "#d4af37" }: BottomTabsProps) {
   const location = useLocation();
   const { pathname, search } = location;
   const fromState = (location.state as { from?: string } | null)?.from;

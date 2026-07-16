@@ -183,6 +183,97 @@ body {
   background-attachment: fixed;
 }
 
+/* A second, slowly drifting glow layer floats above the static wash so the
+   whole app feels alive. Fixed + pointer-events none; the global
+   prefers-reduced-motion rule freezes the drift automatically. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 35% at 25% 30%, rgba(212, 175, 55, 0.07), transparent 70%),
+    radial-gradient(35% 40% at 75% 70%, rgba(31, 107, 70, 0.06), transparent 70%);
+  animation: ambient-drift 36s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes ambient-drift {
+  from {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(3%, 2%, 0) scale(1.08);
+  }
+}
+
+/* ============ Signature surfaces ============ */
+/* Layered gold halo for primary CTAs and live elements. */
+.glow-gold {
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 55, 0.35),
+    0 4px 24px -4px rgba(212, 175, 55, 0.45),
+    0 12px 48px -12px rgba(212, 175, 55, 0.35);
+}
+/* Pulsing red-gold ring for a genuinely live hero surface. */
+.glow-live {
+  animation: live-ring 2.4s ease-in-out infinite;
+}
+@keyframes live-ring {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(220, 38, 38, 0.55),
+      0 8px 42px -8px rgba(220, 38, 38, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(212, 175, 55, 0.55),
+      0 8px 42px -8px rgba(212, 175, 55, 0.5);
+  }
+}
+/* Slow stadium-light sweep across hero/header cards. */
+.hero-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.hero-sweep::after {
+  content: "";
+  position: absolute;
+  inset: -60% -30%;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 58%
+  );
+  animation: hero-sweep 7s ease-in-out infinite;
+}
+@keyframes hero-sweep {
+  0%,
+  55% {
+    transform: translateX(-70%);
+  }
+  100% {
+    transform: translateX(70%);
+  }
+}
+/* Hover lift + gold edge for plain (non-framer) cards. */
+.card-lift {
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+@media (hover: hover) {
+  .card-lift:hover {
+    transform: translateY(-3px);
+    border-color: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 14px 40px -14px rgba(212, 175, 55, 0.3);
+  }
+}
+
 /* ============ Live indicator ============ */
 .live-shimmer {
   position: relative;
@@ -318,6 +409,17 @@ body {
   box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
   /* Keep the sticky header out from under a notch (viewport-fit=cover). */
   padding-top: env(safe-area-inset-top);
+}
+
+/* Gold text selection, on-brand. */
+::selection {
+  background: rgba(212, 175, 55, 0.35);
+  color: #ffffff;
+}
+
+/* Smooth anchor/scroll-to-top; neutralized by the reduced-motion rule. */
+html {
+  scroll-behavior: smooth;
 }
 
 /* Hide native scrollbars while keeping scroll */

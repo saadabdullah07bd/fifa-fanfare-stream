@@ -308,7 +308,7 @@ function FixtureCard({ match: m }: { match: Wc26Match }) {
     <Link
       to={`/match/${m.match_no}`}
       aria-label={`${homeName} vs ${awayName} — ${stageLabel}`}
-      className="group relative block rounded-2xl border border-border bg-card p-3 transition-colors hover:border-primary/40 hover:bg-card/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-3xl sm:p-5"
+      className="group card-lift relative block rounded-2xl border border-border bg-card p-3 hover:bg-card/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-3xl sm:p-5"
     >
       <div className="flex items-stretch gap-3 sm:gap-4">
         {/* Kick-off / FT badge */}

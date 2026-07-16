@@ -300,7 +300,7 @@ function HeroTile({ hero, onWatch }: { hero: HeroMatch; onWatch: () => void }) {
     <Link
       to={hero.href}
       aria-label={`Open ${hero.homeName} vs ${hero.awayName} match details`}
-      className="group relative flex min-h-[380px] flex-col overflow-hidden rounded-3xl border border-border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:col-span-8 md:row-span-3 md:min-h-[540px]"
+      className={`group hero-sweep relative flex min-h-[380px] flex-col overflow-hidden rounded-3xl border border-border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:col-span-8 md:row-span-3 md:min-h-[540px] ${isLive ? "glow-live" : ""}`}
     >
       <img
         src={wc26Emblem.url}
@@ -757,4 +757,3 @@ function SkeletonTile({ className, label }: { className: string; label: string }
 /* ═══════════════════════════════════════════════════════════════════════════
  *  Helpers
  * ══════════════════════════════════════════════════════════════════════════ */
-

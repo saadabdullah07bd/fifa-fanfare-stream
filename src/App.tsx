@@ -304,7 +304,7 @@ export default function App() {
             <Link
               to="/live-tv"
               aria-label="Watch live"
-              className="hidden min-h-10 items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:inline-flex"
+              className="hidden min-h-10 items-center rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground glow-gold transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:inline-flex"
             >
               <span className="live-dot mr-2 align-middle" aria-hidden="true" />
               Watch
@@ -312,7 +312,7 @@ export default function App() {
             <Link
               to="/live-tv"
               aria-label="Watch live"
-              className="grid h-10 w-10 place-items-center rounded-md bg-primary text-primary-foreground shadow transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-md bg-primary text-primary-foreground glow-gold transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:hidden"
             >
               <Tv size={16} aria-hidden="true" />
             </Link>
@@ -327,7 +327,7 @@ export default function App() {
       </main>
 
       <SiteFooter />
-      <BottomTabs tabs={MOBILE_TABS} accentColor="#e6b800" />
+      <BottomTabs tabs={MOBILE_TABS} accentColor="#d4af37" />
     </div>
   );
 }

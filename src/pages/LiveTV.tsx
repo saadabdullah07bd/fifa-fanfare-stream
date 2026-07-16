@@ -118,7 +118,7 @@ export default function LiveTV() {
       />
 
       {/* Editorial header */}
-      <header className="relative overflow-hidden rounded-3xl border border-border bg-card/60 p-5 sm:p-7">
+      <header className="hero-sweep relative overflow-hidden rounded-3xl border border-border bg-card/60 p-5 sm:p-7">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-40"

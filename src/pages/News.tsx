@@ -80,7 +80,7 @@ export default function News() {
       />
 
       {/* Editorial header */}
-      <header className="relative overflow-hidden rounded-3xl border border-border bg-card/60 p-5 sm:p-8">
+      <header className="hero-sweep relative overflow-hidden rounded-3xl border border-border bg-card/60 p-5 sm:p-8">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-40"
@@ -303,7 +303,7 @@ function SecondaryCard({ article }: { article: Article }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`Read: ${article.title}`}
-      className="group relative flex min-h-[200px] items-end overflow-hidden rounded-3xl border border-border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="group card-lift relative flex min-h-[200px] items-end overflow-hidden rounded-3xl border border-border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       {article.image_url ? (
         <img
@@ -339,7 +339,7 @@ function ArticleCard({ article }: { article: Article }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`Read: ${article.title}`}
-      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card/50 transition hover:border-primary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="group card-lift flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden">
         {article.image_url ? (
