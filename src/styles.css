@@ -174,18 +174,13 @@
   }
 }
 
-/* ============ Ambient tri-nation glow (subtle, institutional) ============ */
+/* ============ Ambient tri-nation glow (subtle, institutional) ============
+ * All gradients live on the fixed ::before layer, NOT as body background with
+ * background-attachment: fixed — that forces a repaint on every scroll frame
+ * (notoriously janky on mobile). A fixed pseudo-element composites instead. */
 body {
-  background:
-    radial-gradient(900px 700px at 50% -10%, rgba(212, 175, 55, 0.14), transparent 60%),
-    radial-gradient(700px 600px at 100% 100%, rgba(31, 107, 70, 0.1), transparent 55%),
-    var(--color-background);
-  background-attachment: fixed;
+  background: var(--color-background);
 }
-
-/* A second, slowly drifting glow layer floats above the static wash so the
-   whole app feels alive. Fixed + pointer-events none; the global
-   prefers-reduced-motion rule freezes the drift automatically. */
 body::before {
   content: "";
   position: fixed;
@@ -193,18 +188,34 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(40% 35% at 25% 30%, rgba(212, 175, 55, 0.07), transparent 70%),
-    radial-gradient(35% 40% at 75% 70%, rgba(31, 107, 70, 0.06), transparent 70%);
+    radial-gradient(45% 40% at 55% 0%, rgba(212, 175, 55, 0.13), transparent 60%),
+    radial-gradient(35% 35% at 100% 100%, rgba(31, 107, 70, 0.09), transparent 55%),
+    radial-gradient(40% 35% at 25% 30%, rgba(212, 175, 55, 0.06), transparent 70%),
+    radial-gradient(35% 40% at 75% 70%, rgba(31, 107, 70, 0.05), transparent 70%);
   animation: ambient-drift 36s ease-in-out infinite alternate;
   will-change: transform;
 }
 @keyframes ambient-drift {
   from {
-    transform: translate3d(-3%, -2%, 0) scale(1);
+    transform: translate3d(-2%, -1%, 0) scale(1);
   }
   to {
-    transform: translate3d(3%, 2%, 0) scale(1.08);
+    transform: translate3d(2%, 1%, 0) scale(1.06);
   }
+}
+
+/* While a video is playing (LivePlayer mounts this class on <body>), pause
+   every decorative animation: the GPU belongs to the stream. */
+body.player-active::before {
+  animation: none;
+}
+body.player-active .hero-sweep::after,
+body.player-active .live-shimmer::after {
+  animation: none;
+  opacity: 0;
+}
+body.player-active .glow-live {
+  animation: none;
 }
 
 /* ============ Signature surfaces ============ */

@@ -355,9 +355,21 @@ export default function LivePlayer({
     };
   }, [channel.id, kick]);
 
+  // While the player is mounted, flag <body> so the decorative ambience
+  // (drifting glow, hero sweeps, shimmers) pauses via CSS. Those layers
+  // compete with video decode for the GPU and made the page feel laggy,
+  // especially on phones and TVs.
+  useEffect(() => {
+    document.body.classList.add("player-active");
+    return () => document.body.classList.remove("player-active");
+  }, []);
+
   // ------------------------------------------------ live edge + stats poll
+  // 2s cadence is plenty for a live-edge indicator, and skipping hidden tabs
+  // keeps background tabs from burning CPU.
   useEffect(() => {
     const id = window.setInterval(() => {
+      if (document.hidden) return;
       const v = videoRef.current;
       if (!v) return;
       const hls = hlsRef.current;
@@ -383,7 +395,7 @@ export default function LivePlayer({
           behindLiveSec: behind != null ? Math.round(behind) : null,
         });
       }
-    }, 1000);
+    }, 2000);
     return () => window.clearInterval(id);
   }, [showStats]);
 

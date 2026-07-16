@@ -57,31 +57,64 @@ async function getChannel(admin: ReturnType<typeof createClient>, streamId: stri
   return data as { stream_id: string; direct_url?: string | null } | null;
 }
 
-function mintSignedStreamUrls(supabaseUrl: string, streamId: string, directUrl?: string | null) {
+/**
+ * Panel capability probe, cached at module scope for 10 minutes. The current
+ * panel account only allows ["ts"] output — every .m3u8 request 405s upstream
+ * — so advertising an HLS fallbackUrl produced guaranteed-502 retry storms in
+ * the player. Only offer HLS when the account actually permits it.
+ */
+let formatsCache: { at: number; formats: string[] } | null = null;
+async function getAllowedFormats(cfg: XtreamConfig): Promise<string[]> {
+  if (formatsCache && Date.now() - formatsCache.at < 10 * 60_000) return formatsCache.formats;
+  try {
+    const r = await fetch(
+      `${cfg.host}/player_api.php?username=${encodeURIComponent(cfg.username)}&password=${encodeURIComponent(cfg.password)}`,
+    );
+    if (r.ok) {
+      const j = (await r.json()) as { user_info?: { allowed_output_formats?: string[] } };
+      const formats = j.user_info?.allowed_output_formats ?? ["ts"];
+      formatsCache = { at: Date.now(), formats };
+      return formats;
+    }
+  } catch {
+    /* fall through to conservative default */
+  }
+  return formatsCache?.formats ?? ["ts"];
+}
+
+async function mintSignedStreamUrls(
+  supabaseUrl: string,
+  streamId: string,
+  directUrl?: string | null,
+  allowedFormats: string[] = ["ts"],
+) {
   const edgeBase = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/xtream`;
   const lower = (directUrl ?? "").toLowerCase();
   const manualHls = !!directUrl && lower.includes(".m3u8");
   const manualTs = !!directUrl && lower.includes(".ts") && !manualHls;
-  const tPromise = signPayload({ type: "stream", streamId, exp: expiresAt() });
-  return tPromise.then((t) => {
-    if (manualHls) {
-      return {
-        url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`,
-        type: "hls" as const,
-      };
-    }
-    if (manualTs) {
-      return {
-        url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`,
-        type: "mpegts" as const,
-      };
-    }
+  const t = await signPayload({ type: "stream", streamId, exp: expiresAt() });
+  if (manualHls) {
+    return {
+      url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`,
+      type: "hls" as const,
+    };
+  }
+  if (manualTs) {
     return {
       url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`,
       type: "mpegts" as const,
-      fallbackUrl: `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`,
     };
-  });
+  }
+  const hlsAllowed = allowedFormats.includes("m3u8");
+  return {
+    url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`,
+    type: "mpegts" as const,
+    ...(hlsAllowed
+      ? {
+          fallbackUrl: `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`,
+        }
+      : {}),
+  };
 }
 
 const STREAM_TTL_SECONDS = 30 * 60;
@@ -149,15 +182,13 @@ Deno.serve(async (req) => {
       if (!channel) return json({ error: "Channel not found" }, 404);
 
       const directUrl = channel.direct_url ?? null;
+      let allowedFormats: string[] = ["ts"];
       if (!directUrl) {
-        const { data: cfg } = await admin
-          .from("xtream_config")
-          .select("id")
-          .eq("id", 1)
-          .maybeSingle();
+        const cfg = await getConfig(admin);
         if (!cfg) return json({ error: "No Xtream config" }, 400);
+        allowedFormats = await getAllowedFormats(cfg);
       }
-      return json(await mintSignedStreamUrls(supabaseUrl, streamId, directUrl));
+      return json(await mintSignedStreamUrls(supabaseUrl, streamId, directUrl, allowedFormats));
     }
 
     // Admin: add a manual channel that plays a direct m3u8/HLS/TS URL.
