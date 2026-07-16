@@ -295,27 +295,23 @@ Deno.serve(async (req) => {
       if (!catsRes.ok) return json({ error: `Xtream categories failed [${catsRes.status}]` }, 502);
       const cats = (await catsRes.json()) as Array<{ category_id: string; category_name: string }>;
 
-      const wcRe = /world.?cup|fifa|wc.?2026|coupe.?du.?monde|mundial/i;
-      const excludeRe = /bein/i;
-      const crRe = /cricket|ipl|t20|test match/i;
+      // Keep only FIFA World Cup 2026 + beIN Sports categories (~30 channels).
+      // Everything else (cricket, general sports, etc.) is dropped on refresh.
+      const wcRe = /world.?cup|fifa.?world|wc.?2026|coupe.?du.?monde|mundial|fifa\s*26/i;
+      const beinRe = /\bbein\b|be\s*in\s*sport/i;
       const wanted = cats
-        .map((c) => ({
-          id: c.category_id,
-          name: c.category_name,
-          category: excludeRe.test(c.category_name)
-            ? null
-            : wcRe.test(c.category_name)
-              ? "wc2026"
-              : crRe.test(c.category_name)
-                ? "cricket"
-                : null,
-        }))
+        .map((c) => {
+          const name = c.category_name ?? "";
+          const category = beinRe.test(name) ? "bein" : wcRe.test(name) ? "wc2026" : null;
+          return { id: c.category_id, name, category };
+        })
         .filter((c) => c.category !== null) as Array<{
         id: string;
         name: string;
-        category: "wc2026" | "cricket";
+        category: "wc2026" | "bein";
       }>;
 
+      // Wipe prior Xtream catalogue (preserve manual direct_url channels).
       await admin.from("channels").delete().is("direct_url", null);
       let total = 0;
       for (const cat of wanted) {
@@ -339,7 +335,12 @@ Deno.serve(async (req) => {
           total += rows.length;
         }
       }
-      return json({ ok: true, categories: wanted.length, channels: total });
+      return json({
+        ok: true,
+        categories: wanted.length,
+        channels: total,
+        matched: wanted.map((c) => ({ name: c.name, category: c.category })),
+      });
     }
 
     return json({ error: "Unknown action" }, 400);

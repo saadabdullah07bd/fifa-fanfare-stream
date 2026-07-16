@@ -1,17 +1,38 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useIsAdmin } from "@/hooks/useAuth";
 import { Seo } from "@/lib/seo";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Bell, LogOut, Radio, RefreshCw, Server, Tv } from "lucide-react";
 
 /**
- * Settings page — user account controls and, for admins, shared Xtream
- * server credentials and the default Live TV channel selector.
+ * Settings page — user notification prefs and, for admins, Xtream controls
+ * with a portal-based channel picker (avoids clipped native <select> menus).
  */
 
 type Channel = { id: string; category: string; stream_id: string; name: string };
+
+const CATEGORY_LABEL: Record<string, string> = {
+  wc2026: "FIFA World Cup 2026",
+  bein: "beIN Sports",
+  cricket: "Cricket",
+  other: "Other",
+};
+
+function categoryLabel(c: string) {
+  return CATEGORY_LABEL[c] ?? c;
+}
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -62,7 +83,6 @@ export default function Settings() {
     navigate("/", { replace: true });
   };
 
-  // Xtream server credentials + current default channel (admin-only fetch).
   const { data: cfg, refetch } = useQuery({
     queryKey: ["xtream-cfg"],
     queryFn: async () => {
@@ -75,7 +95,6 @@ export default function Settings() {
     enabled: admin,
   });
 
-  // Full channel list — used by the default-channel selector below.
   const { data: channels = [] } = useQuery({
     queryKey: ["channels-admin"],
     queryFn: async () => {
@@ -89,6 +108,17 @@ export default function Settings() {
     },
     enabled: admin,
   });
+
+  const channelsByCategory = useMemo(() => {
+    const map = new Map<string, Channel[]>();
+    for (const c of channels) {
+      const key = c.category || "other";
+      const arr = map.get(key) ?? [];
+      arr.push(c);
+      map.set(key, arr);
+    }
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [channels]);
 
   const [host, setHost] = useState("");
   const [username, setUsername] = useState("");
@@ -152,13 +182,14 @@ export default function Settings() {
       if (error) throw new Error(error.message);
       return data as { categories: number; channels: number };
     },
-    onSuccess: (r) =>
-      toast.success(`Loaded ${r.channels} channels across ${r.categories} categories`),
+    onSuccess: async (r) => {
+      toast.success(`Loaded ${r.channels} channels (${r.categories} categories)`);
+      await qc.invalidateQueries({ queryKey: ["channels-admin"] });
+      await qc.invalidateQueries({ queryKey: ["channels"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  // Persist the default channel via edge function. Invalidates the
-  // public "default-channel" query so LiveTV picks it up immediately.
   const saveDefault = useMutation({
     mutationFn: async (streamId: string) => {
       const { data, error } = await supabase.functions.invoke("xtream", {
@@ -175,19 +206,33 @@ export default function Settings() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const fieldClass =
+    "w-full rounded-xl border border-border/80 bg-background/70 px-3.5 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20";
+  const cardClass = "rounded-2xl border border-border/70 bg-card/50 p-5 shadow-sm backdrop-blur-sm";
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:py-12">
       <Seo title="Settings — Pitch26" />
-      <h1 className="display text-5xl">Settings</h1>
-      {admin && <p className="mt-2 text-muted-foreground">Shared Xtream server controls.</p>}
+      <header className="mb-8">
+        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-primary">Account</p>
+        <h1 className="display mt-1 text-4xl sm:text-5xl">Settings</h1>
+        {admin && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Admin controls for Live TV — World Cup 2026 &amp; beIN Sports only.
+          </p>
+        )}
+      </header>
 
       {ready && authed && (
-        <section className="mt-8 rounded-lg border border-border bg-card/40 p-4">
-          <h2 className="display text-2xl">Notifications</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <section className={`${cardClass} space-y-4`}>
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-primary" />
+            <h2 className="display text-2xl">Notifications</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
             Choose which push alerts you receive on this device.
           </p>
-          <label className="mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-md border border-border bg-background/40 px-4 py-3">
+          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-border/60 bg-background/40 px-4 py-3.5">
             <span className="text-sm font-medium">Match events (goals, kickoffs, full-time)</span>
             <input
               type="checkbox"
@@ -196,7 +241,7 @@ export default function Settings() {
               className="h-4 w-4 accent-primary"
             />
           </label>
-          <label className="mt-2 flex cursor-pointer items-center justify-between gap-4 rounded-md border border-border bg-background/40 px-4 py-3">
+          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-border/60 bg-background/40 px-4 py-3.5">
             <span className="text-sm font-medium">News headlines</span>
             <input
               type="checkbox"
@@ -213,107 +258,132 @@ export default function Settings() {
               (notifMatch === (notifPrefs?.notif_match_events ?? true) &&
                 notifNews === (notifPrefs?.notif_news ?? true))
             }
-            className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
+            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
           >
             {saveNotif.isPending ? "Saving…" : "Save notifications"}
           </button>
         </section>
       )}
 
-      {!admin && authed && (
-        <button
-          onClick={signOut}
-          className="mt-6 rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground"
-        >
-          Sign out
-        </button>
-      )}
-
       {admin && (
-        <>
+        <div className="mt-8 space-y-6">
           {cfg && (
-            <div className="mt-6 rounded-lg border border-border bg-card/40 p-4">
-              <p className="text-xs uppercase tracking-wider text-primary">Xtream connected</p>
-              <p className="mt-1 font-semibold">{cfg.host}</p>
-              <p className="text-sm text-muted-foreground">User: {cfg.username}</p>
-              <button
-                onClick={() => refresh.mutate()}
-                disabled={refresh.isPending}
-                className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
-              >
-                {refresh.isPending ? "Fetching…" : "Refresh channels"}
-              </button>
-            </div>
+            <section className={cardClass}>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
+                    <Server className="h-3.5 w-3.5" /> Xtream connected
+                  </div>
+                  <p className="mt-2 break-all font-semibold">{cfg.host}</p>
+                  <p className="text-sm text-muted-foreground">User: {cfg.username}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {channels.length} channels in catalogue
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => refresh.mutate()}
+                  disabled={refresh.isPending}
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refresh.isPending ? "animate-spin" : ""}`} />
+                  {refresh.isPending ? "Refreshing…" : "Refresh channels"}
+                </button>
+              </div>
+            </section>
           )}
 
-          {/* Default channel selector — shown once channels are loaded. */}
-          {channels.length > 0 && (
-            <div className="mt-6 rounded-lg border border-border bg-card/40 p-4">
+          <section className={`${cardClass} space-y-4`}>
+            <div className="flex items-center gap-2">
+              <Tv className="h-4 w-4 text-primary" />
               <h2 className="display text-2xl">Default Live TV channel</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Choose which channel auto-plays for every viewer on the Live TV page.
-              </p>
-              <select
-                value={defaultStreamId}
-                onChange={(e) => setDefaultStreamId(e.target.value)}
-                className="mt-3 w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
-              >
-                <option value="">Auto (TSN 1 if available)</option>
-                {channels.map((c) => (
-                  <option key={c.id} value={c.stream_id}>
-                    {c.name} — {c.category}
-                  </option>
-                ))}
-              </select>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => saveDefault.mutate(defaultStreamId)}
-                  disabled={
-                    saveDefault.isPending || defaultStreamId === (cfg?.default_stream_id ?? "")
-                  }
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
-                >
-                  {saveDefault.isPending ? "Saving…" : "Save default"}
-                </button>
-                {cfg?.default_stream_id && (
-                  <button
-                    onClick={() => {
-                      setDefaultStreamId("");
-                      saveDefault.mutate("");
-                    }}
-                    disabled={saveDefault.isPending}
-                    className="rounded-md border border-border px-4 py-2 text-sm font-bold uppercase tracking-wider text-muted-foreground hover:text-destructive disabled:opacity-50"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
             </div>
-          )}
+            <p className="text-sm text-muted-foreground">
+              Featured channel on the Live TV page. Menu opens above the page so it never gets
+              clipped.
+            </p>
+            <Select
+              value={defaultStreamId || "__auto__"}
+              onValueChange={(v) => setDefaultStreamId(v === "__auto__" ? "" : v)}
+            >
+              <SelectTrigger className="h-12 w-full rounded-xl border-border/80 bg-background/70 px-3.5 text-left text-sm">
+                <SelectValue placeholder="Auto (first available)" />
+              </SelectTrigger>
+              <SelectContent
+                position="popper"
+                sideOffset={6}
+                className="z-[200] max-h-72 w-[var(--radix-select-trigger-width)] overflow-y-auto rounded-xl border-border bg-popover p-1 shadow-xl"
+              >
+                <SelectItem value="__auto__" className="rounded-lg py-2.5">
+                  Auto (first available)
+                </SelectItem>
+                {channelsByCategory.map(([cat, list]) => (
+                  <SelectGroup key={cat}>
+                    <SelectLabel className="px-2 py-2 text-[10px] font-bold uppercase tracking-widest text-primary">
+                      {categoryLabel(cat)}
+                    </SelectLabel>
+                    {list.map((c) => (
+                      <SelectItem key={c.id} value={c.stream_id} className="rounded-lg py-2.5">
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => saveDefault.mutate(defaultStreamId)}
+                disabled={
+                  saveDefault.isPending || defaultStreamId === (cfg?.default_stream_id ?? "")
+                }
+                className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
+              >
+                {saveDefault.isPending ? "Saving…" : "Save default"}
+              </button>
+              {cfg?.default_stream_id && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDefaultStreamId("");
+                    saveDefault.mutate("");
+                  }}
+                  disabled={saveDefault.isPending}
+                  className="rounded-xl border border-border px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-muted-foreground hover:text-destructive disabled:opacity-50"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </section>
 
           <form
             onSubmit={(e) => {
               e.preventDefault();
               save.mutate();
             }}
-            className="mt-8 space-y-3"
+            className={`${cardClass} space-y-3`}
           >
-            <h2 className="display text-2xl">
-              {cfg ? "Update Xtream server" : "Add Xtream server"}
-            </h2>
+            <div className="flex items-center gap-2">
+              <Radio className="h-4 w-4 text-primary" />
+              <h2 className="display text-2xl">
+                {cfg ? "Update Xtream server" : "Add Xtream server"}
+              </h2>
+            </div>
             <input
               required
               placeholder="http://your-server.example:8080"
               value={host}
               onChange={(e) => setHost(e.target.value)}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+              className={fieldClass}
             />
             <input
               required
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+              className={fieldClass}
             />
             <input
               type="password"
@@ -321,11 +391,12 @@ export default function Settings() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required={!cfg}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+              className={fieldClass}
             />
             <button
+              type="submit"
               disabled={save.isPending}
-              className="rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
+              className="rounded-xl bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
             >
               {save.isPending ? "Saving…" : "Save server"}
             </button>
@@ -336,7 +407,7 @@ export default function Settings() {
               e.preventDefault();
               addManual.mutate();
             }}
-            className="mt-8 space-y-3 rounded-lg border border-border bg-card/40 p-4"
+            className={`${cardClass} space-y-3`}
           >
             <h2 className="display text-2xl">Add manual channel</h2>
             <p className="text-sm text-muted-foreground">
@@ -344,11 +415,11 @@ export default function Settings() {
             </p>
             <input
               required
-              placeholder="Channel name (e.g. TSN 1)"
+              placeholder="Channel name (e.g. beIN Sports 1)"
               value={manualName}
               onChange={(e) => setManualName(e.target.value)}
               maxLength={128}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+              className={fieldClass}
             />
             <input
               required
@@ -356,33 +427,39 @@ export default function Settings() {
               value={manualUrl}
               onChange={(e) => setManualUrl(e.target.value)}
               maxLength={1024}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
+              className={fieldClass}
             />
-            <select
-              value={manualCategory}
-              onChange={(e) => setManualCategory(e.target.value)}
-              className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
-            >
-              <option value="wc2026">World Cup 2026</option>
-              <option value="cricket">Cricket</option>
-              <option value="other">Other</option>
-            </select>
+            <Select value={manualCategory} onValueChange={setManualCategory}>
+              <SelectTrigger className="h-12 w-full rounded-xl border-border/80 bg-background/70 px-3.5 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent
+                position="popper"
+                className="z-[200] rounded-xl border-border bg-popover shadow-xl"
+              >
+                <SelectItem value="wc2026">FIFA World Cup 2026</SelectItem>
+                <SelectItem value="bein">beIN Sports</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
             <button
+              type="submit"
               disabled={addManual.isPending}
-              className="rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
+              className="rounded-xl bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
             >
               {addManual.isPending ? "Adding…" : "Add channel"}
             </button>
           </form>
-        </>
+        </div>
       )}
 
-      {admin && (
+      {authed && (
         <button
+          type="button"
           onClick={signOut}
-          className="mt-12 text-xs uppercase tracking-wider text-muted-foreground hover:text-destructive"
+          className="mt-10 inline-flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-destructive"
         >
-          Sign out
+          <LogOut className="h-3.5 w-3.5" /> Sign out
         </button>
       )}
     </div>

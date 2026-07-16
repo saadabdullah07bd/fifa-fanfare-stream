@@ -260,10 +260,11 @@ export default function LiveTV() {
       const picked = channels.find((c) => c.stream_id === defaultStreamId);
       if (picked) return picked;
     }
-    const tsn1 =
-      channels.find((c) => /\btsn\s*1\b/i.test(c.name) && !is4k(c.name)) ??
-      channels.find((c) => /\btsn\s*1\b/i.test(c.name));
-    return tsn1 ?? channels.find((c) => !is4k(c.name)) ?? channels[0] ?? null;
+    const prefer =
+      channels.find((c) => /\bbein\b/i.test(c.name) && !is4k(c.name)) ??
+      channels.find((c) => /world.?cup|fifa/i.test(c.name) && !is4k(c.name)) ??
+      channels.find((c) => !is4k(c.name));
+    return prefer ?? channels[0] ?? null;
   }, [channels, defaultStreamId]);
 
   const play = (c: Channel) => {
@@ -275,6 +276,31 @@ export default function LiveTV() {
     await supabase.auth.signOut();
     navigate("/", { replace: true });
   };
+
+  const groups = useMemo(() => {
+    const order = ["wc2026", "bein", "other"];
+    const map = new Map<string, Channel[]>();
+    for (const c of channels) {
+      const key = c.category || "other";
+      const arr = map.get(key) ?? [];
+      arr.push(c);
+      map.set(key, arr);
+    }
+    return [...map.entries()].sort(([a], [b]) => {
+      const ia = order.indexOf(a);
+      const ib = order.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+  }, [channels]);
+
+  const groupTitle = (cat: string) =>
+    cat === "wc2026"
+      ? "FIFA World Cup 2026"
+      : cat === "bein"
+        ? "beIN Sports"
+        : cat === "cricket"
+          ? "Cricket"
+          : "More channels";
 
   const totalVisible = channels.length;
 
@@ -412,12 +438,17 @@ export default function LiveTV() {
           No channels match your search.
         </div>
       ) : (
-        <ChannelRow
-          title="FIFA World Cup 2026"
-          items={channels}
-          onPlay={play}
-          activeId={active?.id ?? null}
-        />
+        <div className="space-y-10">
+          {groups.map(([cat, items]) => (
+            <ChannelRow
+              key={cat}
+              title={groupTitle(cat)}
+              items={items}
+              onPlay={play}
+              activeId={active?.id ?? null}
+            />
+          ))}
+        </div>
       )}
 
       <div className="mt-8 flex justify-center border-t border-border/50 pt-8">
@@ -778,6 +809,7 @@ function ModernPlayer({
   return (
     <div
       ref={wrapRef}
+      data-player
       onMouseMove={kick}
       onTouchStart={kick}
       style={{ cursor: showUI ? "" : "none" }}

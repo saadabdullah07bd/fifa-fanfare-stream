@@ -1,19 +1,10 @@
 /**
- * Lightweight deterrents against download-manager browser extensions.
+ * Playback deterrents: download-manager extension scan + lightweight
+ * F12 / Inspect / view-source blocking in production builds.
  *
- * Historical note: earlier versions blocked devtools via `debugger;` traps,
- * F12/Ctrl+Shift+I keybindings and heuristics on window size. Those were
- * removed because:
- *   - They are trivially bypassed (remote debugger, `--auto-open-devtools`).
- *   - They break legitimate users on ultrawide monitors, screen readers,
- *     password managers and keyboard-first workflows.
- *   - Stream protection is enforced properly at the edge via signed,
- *     time-limited HMAC tokens (see supabase/functions/xtream/index.ts).
- *
- * What remains is a passive DOM scan for markers that popular download
- * helpers (IDM, FDM, Video DownloadHelper) inject into the page. When one
- * is detected we stop playback and show a friendly message. Right-click is
- * intentionally NOT blocked.
+ * These shortcuts are a deterrent, not absolute DRM — remote debugging and
+ * `--auto-open-devtools` can still bypass them. Real stream protection lives
+ * in signed Xtream HMAC tokens.
  */
 
 let installed = false;
@@ -25,9 +16,7 @@ function showBlock(reason: string) {
     el.id = "tamper-block";
     document.body.appendChild(el);
   }
-  // Use textContent + createElement — never innerHTML — to keep this
-  // resistant to accidental XSS if `reason` ever becomes dynamic.
-  el.innerHTML = "";
+  el.replaceChildren();
   const wrap = document.createElement("div");
   wrap.style.maxWidth = "560px";
   const h1 = document.createElement("h1");
@@ -39,7 +28,7 @@ function showBlock(reason: string) {
   p.style.lineHeight = "1.5";
   p.textContent =
     `This session was paused because ${reason}. ` +
-    `Please disable the extension and reload the page.`;
+    `Please close developer tools / disable the extension and reload the page.`;
   wrap.appendChild(h1);
   wrap.appendChild(p);
   el.appendChild(wrap);
@@ -72,7 +61,6 @@ function detectDownloadHelpers() {
       }
     }
   };
-  // A single throttled observer is enough — no busy setInterval.
   new MutationObserver(() => scan()).observe(document.documentElement, {
     childList: true,
     subtree: true,
@@ -80,12 +68,60 @@ function detectDownloadHelpers() {
   scan();
 }
 
+function blockDevtoolsShortcuts() {
+  const blockKey = (e: KeyboardEvent) => {
+    const key = e.key?.toLowerCase?.() ?? "";
+    const ctrl = e.ctrlKey || e.metaKey;
+    const shift = e.shiftKey;
+    // F12, Ctrl+Shift+I/J/C, Ctrl+U (view source), Ctrl+Shift+K (Firefox console)
+    if (
+      key === "f12" ||
+      (ctrl && shift && (key === "i" || key === "j" || key === "c" || key === "k")) ||
+      (ctrl && key === "u")
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  };
+  window.addEventListener("keydown", blockKey, true);
+
+  // Block right-click "Inspect" on media surfaces (still allow elsewhere for accessibility).
+  document.addEventListener(
+    "contextmenu",
+    (e) => {
+      const t = e.target as HTMLElement | null;
+      if (t?.closest?.("video, .video-shell, [data-player]")) {
+        e.preventDefault();
+      }
+    },
+    true,
+  );
+
+  // Heuristic: docked DevTools shrinks the outer window vs screen.
+  let warned = false;
+  const checkDock = () => {
+    const widthGap = window.outerWidth - window.innerWidth;
+    const heightGap = window.outerHeight - window.innerHeight;
+    if (widthGap > 160 || heightGap > 160) {
+      if (!warned) {
+        warned = true;
+        showBlock("developer tools appear to be open");
+      }
+    } else {
+      warned = false;
+      document.getElementById("tamper-block")?.classList.remove("on");
+    }
+  };
+  window.setInterval(checkDock, 1200);
+}
+
 /**
- * Installs a passive DOM watcher for common download-helper browser
- * extensions. No-op in development.
+ * Installs playback guards. No-op in development so local debugging still works.
  */
 export function installTamperGuard() {
   if (installed || import.meta.env.DEV) return;
   installed = true;
   detectDownloadHelpers();
+  blockDevtoolsShortcuts();
 }

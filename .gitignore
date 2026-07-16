@@ -21,6 +21,10 @@ supabase/.temp/
 public/push-config.json
 .deploy-*.json
 .mcp-args-*.json
+xtream-b64-*.txt
+xtream-part-*.json
+xtream-tool-call.json
+FIFA_World_Cup_2026_Complete_Match_Database.xlsx
 
 # Wrangler / Cloudflare
 .wrangler/
