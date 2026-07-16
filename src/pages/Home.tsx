@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, PlayCircle, Zap, Trophy, MapPin, Radio, Clock } from "lucide-react";
 import { Seo } from "@/lib/seo";
-import { useLiveMatches, type LiveMatch } from "@/components/LiveTicker";
+import { useLiveMatches, type LiveMatch } from "@/hooks/useLiveMatches";
 import { WC26_MATCHES, findWc26MatchByTeams, type Wc26Match } from "@/data/wc26-matches";
 import { bdTime, bdDate, bdShortDate, flagUrl, countryName, bestFifaCode } from "@/lib/flags";
 import { useLiveMinute } from "@/lib/live-clock";
@@ -758,9 +758,3 @@ function SkeletonTile({ className, label }: { className: string; label: string }
  *  Helpers
  * ══════════════════════════════════════════════════════════════════════════ */
 
-function abbr(name: string): string {
-  const clean = name.trim();
-  if (clean.length <= 4) return clean.toUpperCase();
-  const first = clean.split(/\s+/)[0];
-  return (first.length <= 4 ? first : clean.slice(0, 3)).toUpperCase();
-}

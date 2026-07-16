@@ -14,7 +14,7 @@ import { useIsAdmin } from "@/hooks/useAuth";
 
 // Home loads eagerly (the landing route); every other page is code-split so
 // the initial JS bundle stays small on slower mobile connections. Heavy deps
-// (hls.js/mpegts on LiveTV, recharts on Standings) now load only when needed.
+// (hls.js/mpegts on LiveTV) now load only when needed.
 import Home from "@/pages/Home";
 const Fixtures = lazy(() => import("@/pages/Fixtures"));
 const News = lazy(() => import("@/pages/News"));
