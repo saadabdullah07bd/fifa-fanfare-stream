@@ -6,11 +6,18 @@
  *   - kind: "standings" | "scorers" | "all" (default: "standings")
  *   - debug: "1" to include scraping metadata.
  * Outputs: JSON object with requested statistics and tournament status.
- * External APIs:
- *   - Football-Data.org: Primary standings and basic scorers.
- *   - WorldCupWiki: Scraped Golden Boot data for 2026.
- *   - Wikipedia: Scraped qualification scorers from various confederations.
+ * Sources:
+ *   - Bundled wc26-matches.json: primary Golden Boot (real tournament goals).
+ *   - WorldCupWiki / Wikipedia scrapes: keyless fallbacks.
+ *
+ * football-data.org was removed 2026-07-16 with its API key: the free tier
+ * carried no WC26 standings or scorers, so those calls only ever errored.
+ * Group tables are not derivable from the bundled dataset (it has no group
+ * letters), so kind=standings now returns an empty list the UI already
+ * handles with its "no group data" state.
  */
+
+import wc26 from "../_shared/wc26-matches.json" assert { type: "json" };
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -18,17 +25,50 @@ const cors = {
   "Access-Control-Allow-Methods": "GET, OPTIONS",
 };
 
-const FD = "https://api.football-data.org/v4";
 const cache = new Map<string, { at: number; body: unknown }>();
 const TTL = 60_000;
 
+/**
+ * Golden Boot computed from the bundled dataset's real goal records.
+ * Team attribution per player is a majority vote across that player's goal
+ * rows, which rides out isolated team-tag errors in the source data.
+ */
+function scorersFromDataset() {
+  const codeByTeam = new Map<string, string>();
+  for (const m of wc26 as any[]) {
+    if (m.home_name && m.home_code) codeByTeam.set(m.home_name, m.home_code);
+    if (m.away_name && m.away_code) codeByTeam.set(m.away_name, m.away_code);
+  }
+  const tally = new Map<string, { goals: number; penalties: number; teams: Map<string, number> }>();
+  for (const m of wc26 as any[]) {
+    for (const g of m.goals ?? []) {
+      if (!g?.player || g.type === "OG") continue;
+      const t = tally.get(g.player) ?? { goals: 0, penalties: 0, teams: new Map() };
+      t.goals += 1;
+      if (g.type === "PEN") t.penalties += 1;
+      const team = g.team ?? null;
+      if (team) t.teams.set(team, (t.teams.get(team) ?? 0) + 1);
+      tally.set(g.player, t);
+    }
+  }
+  return [...tally.entries()]
+    .map(([player, t]) => {
+      const team = [...t.teams.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      return {
+        player: { name: player, nationality: team },
+        team: { name: team, tla: team ? (codeByTeam.get(team) ?? null) : null, crest: null },
+        goals: t.goals,
+        assists: null,
+        penalties: t.penalties || null,
+        played: null,
+      };
+    })
+    .sort((a, b) => b.goals - a.goals)
+    .slice(0, 20);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
-
-  const token = Deno.env.get("FOOTBALL_DATA_API_TOKEN");
-  if (!token) {
-    return json({ error: "FOOTBALL_DATA_API_TOKEN missing" }, 500);
-  }
 
   const url = new URL(req.url);
   let bodyKind = "";
@@ -41,45 +81,18 @@ Deno.serve(async (req) => {
     }
   }
   const kind = (url.searchParams.get("kind") ?? bodyKind) || "standings";
-  const cacheKey = `v7:${kind}`;
+  const cacheKey = `v8:${kind}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.at < TTL) return json(cached.body);
 
   try {
-    const headers = { "X-Auth-Token": token };
-    const fetchJson = async (path: string) => {
-      const r = await fetch(`${FD}${path}`, { headers });
-      if (!r.ok) throw new Error(`football-data ${r.status} ${await r.text()}`);
-      return r.json();
-    };
-
     const body: Record<string, unknown> = {};
 
     if (kind === "standings" || kind === "all") {
-      const s = await fetchJson("/competitions/WC/standings");
-      body.standings = (s.standings ?? []).map((g: any) => ({
-        group: g.group,
-        stage: g.stage,
-        type: g.type,
-        table: (g.table ?? []).map((row: any) => ({
-          position: row.position,
-          team: {
-            name: row.team?.name,
-            tla: row.team?.tla,
-            crest: row.team?.crest,
-          },
-          played: row.playedGames,
-          won: row.won,
-          draw: row.draw,
-          lost: row.lost,
-          points: row.points,
-          gf: row.goalsFor,
-          ga: row.goalsAgainst,
-          gd: row.goalDifference,
-          form: row.form,
-        })),
-      }));
-      body.season = s.season ?? null;
+      // No keyed provider carries WC26 group tables and the bundled dataset
+      // has no group letters; the UI shows its empty state for this.
+      body.standings = [];
+      body.season = null;
     }
 
     if (kind === "scorers" || kind === "all") {
@@ -87,67 +100,31 @@ Deno.serve(async (req) => {
       let source = "";
       const debug: any = { pages: {} };
 
-      try {
-        const web = await scrapeWorldCupWikiGoldenBoot(debug);
-        if (web.length) {
-          scorers = web;
-          source = "WorldCupWiki";
+      // Primary: the bundled dataset (real, verified tournament goals).
+      scorers = scorersFromDataset();
+      if (scorers.length) source = "wc26-dataset";
+
+      if (!scorers.length) {
+        try {
+          const web = await scrapeWorldCupWikiGoldenBoot(debug);
+          if (web.length) {
+            scorers = web;
+            source = "WorldCupWiki";
+          }
+        } catch (e) {
+          debug.worldCupWikiError = (e as Error).message;
         }
-      } catch (e) {
-        debug.worldCupWikiError = (e as Error).message;
       }
 
       if (!scorers.length) {
         try {
-          const r = await fetchJson(`/competitions/WC/scorers?limit=20`);
-          const list = r.scorers ?? [];
-          debug.fdWcFound = list.length;
-          if (list.length) {
-            source = "WC";
-            scorers = list.map((x: any) => ({
-              player: { name: x.player?.name, nationality: x.player?.nationality },
-              team: { name: x.team?.name, tla: x.team?.tla, crest: x.team?.crest },
-              goals: x.goals,
-              assists: x.assists,
-              penalties: x.penalties,
-              played: x.playedMatches,
-            }));
-          }
-        } catch (e) {
-          debug.fdWcError = (e as Error).message;
-        }
-      }
-
-      try {
-        if (!scorers.length) {
           const wiki = await scrapeAllConfederationScorers(debug);
           if (wiki.length) {
             scorers = wiki;
             source = "Wikipedia WCQ";
           }
-        }
-      } catch (e) {
-        debug.wikiError = (e as Error).message;
-      }
-
-      if (!scorers.length) {
-        try {
-          const r = await fetchJson(`/competitions/WCQ/scorers?limit=20`);
-          const list = r.scorers ?? [];
-          debug.fdFound = list.length;
-          if (list.length) {
-            source = "football-data WCQ";
-            scorers = list.map((x: any) => ({
-              player: { name: x.player?.name, nationality: x.player?.nationality },
-              team: { name: x.team?.name, tla: x.team?.tla, crest: x.team?.crest },
-              goals: x.goals,
-              assists: x.assists,
-              penalties: x.penalties,
-              played: x.playedMatches,
-            }));
-          }
         } catch (e) {
-          debug.fdError = (e as Error).message;
+          debug.wikiError = (e as Error).message;
         }
       }
 

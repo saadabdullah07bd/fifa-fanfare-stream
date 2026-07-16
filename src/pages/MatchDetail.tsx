@@ -6,7 +6,6 @@ import { bdTime, bdDate, countryName, flagUrl } from "@/lib/flags";
 import { getWc26Match } from "@/data/wc26-matches";
 import { toast } from "sonner";
 import { springSoft, useCountUp } from "@/lib/motion";
-import MatchStatsPanel from "@/components/MatchStatsPanel";
 
 /** Animated score digit — counts up from 0 on mount, snaps if reduced-motion. */
 function ScoreValue({ value }: { value: number }) {
@@ -359,9 +358,10 @@ export default function MatchDetail() {
         </section>
       )}
 
-      {/* Match stats (from real scoreline/events) + lineups composed from each
-          nation's real squad with player headshots. Available for every match. */}
-      <MatchStatsPanel match={m} />
+      {/* Lineups/stats (MatchStatsPanel) were removed 2026-07-16 with the
+          API-Football key — its free tier rate limit couldn't serve real
+          traffic. Goals, cards and the timeline above come from the bundled
+          dataset and need no API. */}
 
       {/* Cards summary (also under timeline for scanability) */}
       {allCards.length > 0 && (

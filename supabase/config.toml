@@ -6,17 +6,9 @@ verify_jwt = false
 [functions.news-feed]
 verify_jwt = false
 
-[functions.match-detail]
-verify_jwt = false
-
-[functions.match-stats]
-verify_jwt = false
-
 [functions.xtream]
 verify_jwt = false
 
 [functions.standings]
 verify_jwt = false
 
-[functions.club]
-verify_jwt = false

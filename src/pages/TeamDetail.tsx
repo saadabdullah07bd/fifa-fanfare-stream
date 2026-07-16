@@ -1,13 +1,12 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Trophy, Users, Shirt, History, ChevronLeft } from "lucide-react";
+import { Trophy, History, ChevronLeft } from "lucide-react";
 import { Seo } from "@/lib/seo";
-import { supabase } from "@/integrations/supabase/client";
 import { flagUrl } from "@/lib/flags";
 import { WC26_MATCHES } from "@/data/wc26-matches";
 import historyData from "@/data/wc-history.json";
-import { staggerParent, staggerChild, springSoft, useReducedMotionSafe } from "@/lib/motion";
+import { springSoft, useReducedMotionSafe } from "@/lib/motion";
 
 type WcRecord = {
   appearances: number;
@@ -17,108 +16,6 @@ type WcRecord = {
   bestYears?: string;
   note?: string;
 };
-
-type SquadPlayer = {
-  id: number;
-  name: string;
-  age: number | null;
-  number: number | null;
-  position: string | null;
-  photo: string | null;
-};
-
-type Coach = {
-  id: number | null;
-  name: string | null;
-  photo: string | null;
-};
-
-type NationalOverview = {
-  available: boolean;
-  team: { id: number; name: string; code: string | null; logo: string | null } | null;
-  squad: SquadPlayer[];
-  formation: string | null;
-  coach: Coach | null;
-};
-
-const POSITION_ORDER = ["Goalkeeper", "Defender", "Midfielder", "Attacker"] as const;
-
-/** Player card with headshot and graceful initials fallback. */
-function PlayerCard({ p }: { p: SquadPlayer }) {
-  const initials = p.name
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  return (
-    <motion.div
-      variants={staggerChild}
-      className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/60 bg-card/60 p-3"
-    >
-      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-secondary ring-1 ring-border">
-        {p.photo ? (
-          <img
-            src={p.photo}
-            alt={p.name}
-            loading="lazy"
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : null}
-        <span className="absolute inset-0 -z-10 grid place-items-center text-xs font-bold text-muted-foreground">
-          {initials}
-        </span>
-      </div>
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold">{p.name}</p>
-        <p className="text-xs text-muted-foreground">
-          {p.number != null ? `#${p.number} · ` : ""}
-          {p.position ?? ""}
-          {p.age != null ? ` · ${p.age}y` : ""}
-        </p>
-      </div>
-    </motion.div>
-  );
-}
-
-/** Manager/head-coach card with headshot and graceful initials fallback. */
-function ManagerCard({ coach }: { coach: Coach }) {
-  const name = coach.name ?? "Unknown";
-  const initials = name
-    .split(" ")
-    .map((w) => w[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  return (
-    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
-      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-secondary ring-1 ring-border">
-        {coach.photo ? (
-          <img
-            src={coach.photo}
-            alt={name}
-            loading="lazy"
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : null}
-        <span className="absolute inset-0 -z-10 grid place-items-center text-sm font-bold text-muted-foreground">
-          {initials}
-        </span>
-      </div>
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Head coach</p>
-        <p className="mt-1 truncate text-lg font-semibold">{name}</p>
-      </div>
-    </div>
-  );
-}
 
 /** Small stat tile for the WC record strip. */
 function RecordTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -150,19 +47,9 @@ export default function TeamDetail() {
       : undefined;
   const flag = flagUrl(code, 160);
 
-  // Squad + tactics via the club edge function (API-Football, cached server-side).
-  const { data: nat, isLoading: natLoading } = useQuery<NationalOverview>({
-    queryKey: ["national", decoded],
-    enabled: decoded.length >= 3,
-    staleTime: 60 * 60_000,
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("club", {
-        body: { action: "national", name: decoded },
-      });
-      if (error) throw error;
-      return data as NationalOverview;
-    },
-  });
+  // Squad/tactics/coach were removed 2026-07-16 with the API-Football key —
+  // its free tier was too rate-limited to serve real traffic. The page runs
+  // entirely on the bundled dataset + Wikipedia (keyless) now.
 
   // Wikipedia summary for the About section.
   const { data: wiki } = useQuery({
@@ -189,20 +76,13 @@ export default function TeamDetail() {
     },
   });
 
-  const squadByPos = new Map<string, SquadPlayer[]>();
-  for (const p of nat?.squad ?? []) {
-    const k = p.position ?? "Other";
-    if (!squadByPos.has(k)) squadByPos.set(k, []);
-    squadByPos.get(k)!.push(p);
-  }
-
   const played = teamMatches.filter((m) => m.home_score != null && m.away_score != null);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 pb-16 sm:py-8">
       <Seo
-        title={`${decoded} — squad, tactics & World Cup history | Pitch26`}
-        description={`${decoded} at the 2026 FIFA World Cup — full squad with player photos, tactics, results and World Cup history on Pitch26.`}
+        title={`${decoded} — results & World Cup history | Pitch26`}
+        description={`${decoded} at the 2026 FIFA World Cup — fixtures, results and World Cup history on Pitch26.`}
         path={`/team/${encodeURIComponent(decoded)}`}
       />
 
@@ -254,69 +134,6 @@ export default function TeamDetail() {
           {record.note && <p className="mt-2 text-sm text-muted-foreground">{record.note}</p>}
         </section>
       )}
-
-      {/* Tactics — only shown when we actually have coach or formation data
-          (or are still loading), so the section never renders empty. */}
-      {(natLoading || nat?.formation || nat?.coach?.name) && (
-        <section className="mt-8" aria-labelledby="tactics">
-          <h2 id="tactics" className="flex items-center gap-2 display text-2xl text-primary">
-            <Shirt size={20} aria-hidden="true" /> Manager &amp; tactics
-          </h2>
-          <div className="mt-3 flex flex-wrap gap-3">
-            {(natLoading || nat?.formation) && (
-              <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Formation
-                </p>
-                <p className="display mt-1 text-3xl text-foreground">
-                  {natLoading ? "…" : nat?.formation}
-                </p>
-              </div>
-            )}
-            {natLoading ? (
-              <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Head coach
-                </p>
-                <p className="mt-1 text-lg font-semibold">…</p>
-              </div>
-            ) : nat?.coach?.name ? (
-              <ManagerCard coach={nat.coach} />
-            ) : null}
-          </div>
-        </section>
-      )}
-
-      {/* Squad */}
-      <section className="mt-8" aria-labelledby="squad">
-        <h2 id="squad" className="flex items-center gap-2 display text-2xl text-primary">
-          <Users size={20} aria-hidden="true" /> Squad
-        </h2>
-        {natLoading && (
-          <p className="mt-3 text-sm text-muted-foreground">Loading squad & player photos…</p>
-        )}
-        {POSITION_ORDER.map((pos) => {
-          const players = squadByPos.get(pos);
-          if (!players?.length) return null;
-          return (
-            <div key={pos} className="mt-5">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                {pos}s
-              </h3>
-              <motion.div
-                variants={staggerParent}
-                initial={reduced ? false : "initial"}
-                animate="animate"
-                className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3"
-              >
-                {players.map((p) => (
-                  <PlayerCard key={p.id} p={p} />
-                ))}
-              </motion.div>
-            </div>
-          );
-        })}
-      </section>
 
       {/* 2026 campaign */}
       {played.length > 0 && (
