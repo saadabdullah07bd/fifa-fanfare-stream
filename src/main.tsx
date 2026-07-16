@@ -67,7 +67,7 @@ ReactDOM.createRoot(root).render(
       <HelmetProvider>
         <PersistQueryClientProvider
           client={queryClient}
-          persistOptions={{ persister, maxAge: 24 * 3600_000, buster: "v1" }}
+          persistOptions={{ persister, maxAge: 24 * 3600_000, buster: "v2" }}
         >
           <BrowserRouter>
             <App />

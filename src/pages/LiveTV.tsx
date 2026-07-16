@@ -19,8 +19,13 @@ export default function LiveTV() {
     isError,
     error,
   } = useQuery({
-    // Fetch available TV channels from Supabase.
+    // Fetch available TV channels from Supabase. Always revalidate on mount:
+    // the query cache is persisted to localStorage for 24h and the global
+    // defaults disable mount/focus refetching, so without this the page kept
+    // showing a stale catalogue after the channel list changed server-side.
     queryKey: ["channels"],
+    staleTime: 60_000,
+    refetchOnMount: "always",
     queryFn: async () => {
       // Explicit columns, not "*": `direct_url` can embed upstream Xtream
       // credentials and is revoked from anon/authenticated, so "*" would fail.
@@ -39,6 +44,7 @@ export default function LiveTV() {
   // Admin-selected default channel. Falls back to a beIN/WC heuristic if unset.
   const { data: defaultStreamId } = useQuery({
     queryKey: ["default-channel"],
+    refetchOnMount: "always",
     queryFn: async () => {
       const { data } = await supabase
         .from("app_settings")
