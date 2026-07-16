@@ -1,44 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Seo } from "@/lib/seo";
-import Hls from "hls.js";
-import mpegts from "mpegts.js";
-import { toast } from "sonner";
-import {
-  Tv,
-  Play,
-  Pause,
-  Radio,
-  Volume2,
-  VolumeX,
-  Maximize,
-  Minimize,
-  Loader2,
-  PictureInPicture2,
-  LogOut,
-  RotateCw,
-  Expand,
-  Shrink,
-} from "lucide-react";
-
-type Channel = {
-  id: string;
-  category: string;
-  stream_id: string;
-  name: string;
-  logo_url: string | null;
-};
-
-const is4k = (name: string) => /\b(4k|uhd)\b/i.test(name);
+import LivePlayer, { categoryLabel, is4k, type Channel } from "@/components/LivePlayer";
+import { Tv, Play, Radio, Loader2, LogOut } from "lucide-react";
 
 /**
- * Live TV streaming page for World Cup and sports channels.
+ * Live TV streaming page for World Cup and beIN sports channels. Playback
+ * itself lives entirely in <LivePlayer/>; this page owns the catalogue.
  */
-
 export default function LiveTV() {
   const navigate = useNavigate();
   const {
@@ -64,8 +36,7 @@ export default function LiveTV() {
     },
   });
 
-  // Admin-selected default channel. Falls back to TSN 1 heuristic if unset.
-  // Cached for 60s in react-query; the edge function also sets s-maxage=60.
+  // Admin-selected default channel. Falls back to a beIN/WC heuristic if unset.
   const { data: defaultStreamId } = useQuery({
     queryKey: ["default-channel"],
     queryFn: async () => {
@@ -80,181 +51,37 @@ export default function LiveTV() {
   });
 
   const [active, setActive] = useState<Channel | null>(null);
-  const [reloadNonce, setReloadNonce] = useState(0);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
-  // HLS/MPEGTS stream initialization and playback logic.
-  useEffect(() => {
-    if (!active) return;
-    let cancelled = false;
-    let rafId = 0;
-    const waitForVideo = () =>
-      new Promise<HTMLVideoElement>((resolve) => {
-        const tick = () => {
-          if (cancelled) return;
-          if (videoRef.current) resolve(videoRef.current);
-          else rafId = requestAnimationFrame(tick);
-        };
-        tick();
-      });
-    let hls: Hls | undefined;
-    let mts: ReturnType<typeof mpegts.createPlayer> | undefined;
-    let safety = 0;
-    let boundVideo: HTMLVideoElement | null = null;
-    let onProgress: (() => void) | null = null;
-    let onCanPlay: (() => void) | null = null;
-    (async () => {
-      const v = await waitForVideo();
-      if (cancelled) return;
-      boundVideo = v;
-      const { data, error } = await supabase.functions.invoke("xtream", {
-        body: { action: "stream_url", streamId: active.stream_id },
-      });
-      if (cancelled) return;
-      if (error) throw new Error(error.message);
-      const { url, type, fallbackUrl } = data as {
-        url: string;
-        type?: "mpegts" | "hls";
-        fallbackUrl?: string;
-      };
-      // Default: sound on at 50% (not muted).
-      v.muted = false;
-      v.volume = 0.5;
-      v.removeAttribute("src");
-      v.load();
-      // Wait until the browser has ~3s of media buffered before starting playback.
-      // This avoids the perceived "stuck loading" from a blind setTimeout.
-      const MIN_BUFFER_SEC = 3;
-      let started = false;
-      const startPlay = () => {
-        // Try with sound; if the browser blocks unmuted autoplay, fall back to muted.
-        v.play().catch(() => {
-          v.muted = true;
-          v.play().catch(() => toast.error("Tap play to start the live stream."));
-        });
-      };
-      const tryStart = () => {
-        if (started) return;
-        const b = v.buffered;
-        const ahead = b.length ? b.end(b.length - 1) - v.currentTime : 0;
-        if (ahead >= MIN_BUFFER_SEC || v.readyState >= 4) {
-          started = true;
-          startPlay();
-        }
-      };
-      onProgress = () => tryStart();
-      onCanPlay = () => tryStart();
-      v.addEventListener("progress", onProgress);
-      v.addEventListener("canplaythrough", onCanPlay);
-      // Safety net: start after 4s regardless so the user is never stuck.
-      safety = window.setTimeout(() => {
-        started = true;
-        startPlay();
-      }, 4000);
-      const playVideo = () => {
-        window.clearTimeout(safety);
-        tryStart();
-      };
-      // For an mpegts stream, prefer the HLS fallback (.m3u8) whenever the
-      // browser can't do MSE live playback (notably iOS Safari) or when hls.js
-      // is available — a raw .ts URL won't play natively there. This is what
-      // let the stream fail silently on some devices.
-      const canMpegts = type === "mpegts" && mpegts.getFeatureList().mseLivePlayback;
-      const useHlsForMpegts = type === "mpegts" && !canMpegts && !!fallbackUrl;
+  const groups = useMemo(() => {
+    const order = ["wc2026", "bein", "other"];
+    const map = new Map<string, Channel[]>();
+    for (const c of channels) {
+      const key = c.category || "other";
+      const arr = map.get(key) ?? [];
+      arr.push(c);
+      map.set(key, arr);
+    }
+    return [...map.entries()].sort(([a], [b]) => {
+      const ia = order.indexOf(a);
+      const ib = order.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+  }, [channels]);
 
-      if (canMpegts) {
-        mts = mpegts.createPlayer(
-          { type: "mpegts", isLive: true, url },
-          {
-            // Buffered playback — trade ~3s of latency for smooth frames.
-            enableStashBuffer: true,
-            stashInitialSize: 384, // KB pre-roll before decoding
-            liveBufferLatencyChasing: false, // don't skip ahead when buffer grows
-            liveSync: false,
-            lazyLoad: false,
-            autoCleanupSourceBuffer: true,
-            autoCleanupMaxBackwardDuration: 30,
-            autoCleanupMinBackwardDuration: 15,
-          },
-        );
-        mts.on(mpegts.Events.ERROR, (_event: unknown, detail: unknown) => {
-          console.error("Live stream error", detail);
-          if (fallbackUrl && Hls.isSupported() && !hls) {
-            try {
-              mts?.pause();
-              mts?.unload();
-              mts?.detachMediaElement();
-              mts?.destroy();
-            } catch {
-              /* ignore */
-            }
-            hls = new Hls({
-              enableWorker: true,
-              lowLatencyMode: false,
-              liveSyncDurationCount: 4, // ~4 segments (≈8-12s) buffered ahead
-              liveMaxLatencyDurationCount: 10,
-              maxBufferLength: 30,
-              backBufferLength: 30,
-            });
-            hls.loadSource(fallbackUrl);
-            hls.attachMedia(v);
-            void playVideo();
-            return;
-          }
-          toast.error("This channel is not sending playable video right now.");
-        });
-        mts.attachMediaElement(v);
-        mts.load();
-      } else if (Hls.isSupported() && !url.endsWith(".mp4")) {
-        // Use the HLS playlist: the .m3u8 fallback for an mpegts stream, else
-        // the url itself (already an HLS source).
-        const hlsSrc = useHlsForMpegts ? fallbackUrl! : url;
-        hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: false,
-          liveSyncDurationCount: 4,
-          liveMaxLatencyDurationCount: 10,
-          maxBufferLength: 30,
-          backBufferLength: 30,
-        });
-        hls.on(Hls.Events.ERROR, (_event, hlsData) => {
-          console.error("HLS stream error", hlsData);
-          if (hlsData.fatal) toast.error("This channel is not sending playable video right now.");
-        });
-        hls.loadSource(hlsSrc);
-        hls.attachMedia(v);
-      } else {
-        // Native playback (Safari can play HLS m3u8 directly). Prefer the HLS
-        // fallback over a raw .ts url the browser can't decode.
-        v.src = useHlsForMpegts ? fallbackUrl! : url;
-      }
-      void playVideo();
-    })().catch((e) => toast.error((e as Error).message));
-    return () => {
-      cancelled = true;
-      if (rafId) cancelAnimationFrame(rafId);
-      if (boundVideo && onProgress) boundVideo.removeEventListener("progress", onProgress);
-      if (boundVideo && onCanPlay) boundVideo.removeEventListener("canplaythrough", onCanPlay);
-      if (safety) window.clearTimeout(safety);
-      hls?.destroy();
-      try {
-        mts?.pause();
-        mts?.unload();
-        mts?.detachMediaElement();
-        mts?.destroy();
-      } catch {
-        /* ignore */
-      }
-    };
-  }, [active, reloadNonce]);
+  // Flat list in the on-screen order, for prev/next channel zapping.
+  const flat = useMemo(() => groups.flatMap(([, items]) => items), [groups]);
+  const zap = (dir: 1 | -1) => {
+    if (!active || flat.length === 0) return;
+    const i = flat.findIndex((c) => c.id === active.id);
+    const next = flat[(i + dir + flat.length) % flat.length];
+    setActive(next);
+  };
 
-  // Featured channel logic — used for the "start watching" hero button and
-  // channel selection heuristics. Playback does NOT start until the user
-  // explicitly picks a channel (autoplay is intentionally disabled).
+  // Featured channel — used for the "start watching" hero button. Playback
+  // does NOT start until the user explicitly picks a channel.
   //   1. Admin-selected default (from app_settings)
-  //   2. TSN 1 non-4K
-  //   3. Any non-4K channel
-  //   4. First channel available
+  //   2. beIN non-4K, then World Cup non-4K, then any non-4K
+  //   3. First channel available
   const heroChannel = useMemo(() => {
     if (defaultStreamId) {
       const picked = channels.find((c) => c.stream_id === defaultStreamId);
@@ -276,33 +103,6 @@ export default function LiveTV() {
     await supabase.auth.signOut();
     navigate("/", { replace: true });
   };
-
-  const groups = useMemo(() => {
-    const order = ["wc2026", "bein", "other"];
-    const map = new Map<string, Channel[]>();
-    for (const c of channels) {
-      const key = c.category || "other";
-      const arr = map.get(key) ?? [];
-      arr.push(c);
-      map.set(key, arr);
-    }
-    return [...map.entries()].sort(([a], [b]) => {
-      const ia = order.indexOf(a);
-      const ib = order.indexOf(b);
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-    });
-  }, [channels]);
-
-  const groupTitle = (cat: string) =>
-    cat === "wc2026"
-      ? "FIFA World Cup 2026"
-      : cat === "bein"
-        ? "beIN Sports"
-        : cat === "cricket"
-          ? "Cricket"
-          : "More channels";
-
-  const totalVisible = channels.length;
 
   return (
     <motion.div
@@ -354,11 +154,11 @@ export default function LiveTV() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            <ModernPlayer
-              videoRef={videoRef}
+            <LivePlayer
               channel={active}
               onClose={() => setActive(null)}
-              onReload={() => setReloadNonce((n) => n + 1)}
+              onPrev={() => zap(-1)}
+              onNext={() => zap(1)}
             />
           </motion.div>
         ) : isLoading ? (
@@ -433,16 +233,12 @@ export default function LiveTV() {
         <div className="rounded-3xl border border-border bg-card/40 p-6 text-sm text-muted-foreground">
           No channels yet. The site admin needs to connect the Xtream server from Settings.
         </div>
-      ) : totalVisible === 0 ? (
-        <div className="rounded-3xl border border-border bg-card/40 p-10 text-center text-sm text-muted-foreground">
-          No channels match your search.
-        </div>
       ) : (
         <div className="space-y-10">
           {groups.map(([cat, items]) => (
             <ChannelRow
               key={cat}
-              title={groupTitle(cat)}
+              title={categoryLabel(cat)}
               items={items}
               onPlay={play}
               activeId={active?.id ?? null}
@@ -509,7 +305,7 @@ function ChannelCard({
   onPlay: (c: Channel) => void;
   isActive: boolean;
 }) {
-  const catLabel = "FIFA World Cup 2026";
+  const catLabel = categoryLabel(c.category);
   return (
     <motion.button
       onClick={() => onPlay(c)}
@@ -558,11 +354,6 @@ function ChannelCard({
 
 function ChannelLogo({ url, name }: { url: string | null; name: string }) {
   const [ok, setOk] = useState(!!url);
-  /**
-   * Custom video player component with controls and fullscreen support.
-   */
-
-  // HLS/MPEGTS stream initialization and playback logic.
   useEffect(() => {
     setOk(!!url);
   }, [url]);
@@ -588,509 +379,5 @@ function ChannelLogo({ url, name }: { url: string | null; name: string }) {
       onError={() => setOk(false)}
       className="max-h-[85%] max-w-[85%] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
     />
-  );
-}
-
-function ModernPlayer({
-  videoRef,
-  channel,
-  onClose,
-  onReload,
-}: {
-  videoRef: React.RefObject<HTMLVideoElement | null>;
-  channel: Channel;
-  onClose: () => void;
-  onReload: () => void;
-}) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [fill, setFill] = useState(false);
-  const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(0.5);
-  const [buffering, setBuffering] = useState(true);
-  const [fullscreen, setFullscreen] = useState(false);
-  const [showUI, setShowUI] = useState(true);
-  const hideTimer = useRef<number | null>(null);
-
-  // HLS/MPEGTS stream initialization and playback logic.
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onWaiting = () => setBuffering(true);
-    const onPlaying = () => setBuffering(false);
-    const onVolume = () => {
-      setMuted(v.muted);
-      setVolume(v.volume);
-    };
-    v.addEventListener("play", onPlay);
-    v.addEventListener("pause", onPause);
-    v.addEventListener("waiting", onWaiting);
-    v.addEventListener("playing", onPlaying);
-    v.addEventListener("volumechange", onVolume);
-    return () => {
-      v.removeEventListener("play", onPlay);
-      v.removeEventListener("pause", onPause);
-      v.removeEventListener("waiting", onWaiting);
-      v.removeEventListener("playing", onPlaying);
-      v.removeEventListener("volumechange", onVolume);
-    };
-  }, [videoRef, channel.id]);
-
-  // HLS/MPEGTS stream initialization and playback logic.
-  useEffect(() => {
-    const onFs = () => setFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onFs);
-    return () => document.removeEventListener("fullscreenchange", onFs);
-  }, []);
-
-  const kick = () => {
-    setShowUI(true);
-    if (hideTimer.current) window.clearTimeout(hideTimer.current);
-    hideTimer.current = window.setTimeout(() => setShowUI(false), 2600);
-  };
-  // HLS/MPEGTS stream initialization and playback logic.
-  useEffect(() => {
-    kick();
-    return () => {
-      if (hideTimer.current) window.clearTimeout(hideTimer.current);
-    };
-  }, [channel.id]);
-
-  const toggle = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) v.play();
-    else v.pause();
-  };
-  const toggleMute = () => {
-    const v = videoRef.current;
-    if (v) v.muted = !v.muted;
-  };
-  const setVol = (val: number) => {
-    const v = videoRef.current;
-    if (v) {
-      v.volume = val;
-      v.muted = val === 0;
-    }
-  };
-  const toggleFs = async () => {
-    if (!wrapRef.current) return;
-    if (document.fullscreenElement) {
-      try {
-        (screen.orientation as any)?.unlock?.();
-      } catch {
-        /* ignore */
-      }
-      await document.exitFullscreen();
-    } else {
-      await wrapRef.current.requestFullscreen();
-      // Force landscape on mobile devices for better viewing.
-      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-      if (isMobile) {
-        try {
-          await (screen.orientation as any)?.lock?.("landscape");
-        } catch {
-          /* not supported */
-        }
-      }
-    }
-  };
-  const togglePip = async () => {
-    const v = videoRef.current as any;
-    if (!v) return;
-    try {
-      if ((document as any).pictureInPictureElement) await (document as any).exitPictureInPicture();
-      else await v.requestPictureInPicture();
-    } catch {
-      /* not supported */
-    }
-  };
-
-  // Keyboard shortcuts (Space/K play, M mute, F fullscreen, arrows volume/seek, Esc close)
-  // HLS/MPEGTS stream initialization and playback logic.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
-      const v = videoRef.current;
-      if (!v) return;
-      switch (e.key.toLowerCase()) {
-        case " ":
-        case "k":
-          e.preventDefault();
-          toggle();
-          kick();
-          break;
-        case "m":
-          e.preventDefault();
-          v.muted = !v.muted;
-          kick();
-          break;
-        case "f":
-          e.preventDefault();
-          toggleFs();
-          kick();
-          break;
-        case "p":
-          e.preventDefault();
-          togglePip();
-          kick();
-          break;
-        case "arrowup":
-          e.preventDefault();
-          setVol(Math.min(1, v.volume + 0.1));
-          kick();
-          break;
-        case "arrowdown":
-          e.preventDefault();
-          setVol(Math.max(0, v.volume - 0.1));
-          kick();
-          break;
-        case "arrowright":
-          e.preventDefault();
-          try {
-            v.currentTime += 10;
-          } catch {
-            /* live */
-          }
-          kick();
-          break;
-        case "arrowleft":
-          e.preventDefault();
-          try {
-            v.currentTime -= 10;
-          } catch {
-            /* live */
-          }
-          kick();
-          break;
-        case "escape":
-          if (!document.fullscreenElement) onClose();
-          break;
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channel.id]);
-
-  const isMobile = useIsMobile();
-
-  // Right-side vertical drag = volume rocker (mobile).
-  const dragRef = useRef<{ startY: number; startVol: number } | null>(null);
-  const [volPill, setVolPill] = useState<number | null>(null);
-  const volPillTimer = useRef<number | null>(null);
-  const onVolTouchStart = (e: React.TouchEvent) => {
-    const v = videoRef.current;
-    if (!v) return;
-    dragRef.current = { startY: e.touches[0].clientY, startVol: v.muted ? 0 : v.volume };
-    kick();
-  };
-  const onVolTouchMove = (e: React.TouchEvent) => {
-    const v = videoRef.current;
-    const d = dragRef.current;
-    if (!v || !d || !wrapRef.current) return;
-    const h = wrapRef.current.clientHeight || 1;
-    const dy = d.startY - e.touches[0].clientY; // up = positive
-    const next = Math.max(0, Math.min(1, d.startVol + dy / h));
-    v.volume = next;
-    v.muted = next === 0;
-    setVolPill(next);
-    if (volPillTimer.current) window.clearTimeout(volPillTimer.current);
-    volPillTimer.current = window.setTimeout(() => setVolPill(null), 700);
-    e.preventDefault();
-  };
-  const onVolTouchEnd = () => {
-    dragRef.current = null;
-  };
-
-  return (
-    <div
-      ref={wrapRef}
-      data-player
-      onMouseMove={kick}
-      onTouchStart={kick}
-      style={{ cursor: showUI ? "" : "none" }}
-      className="live-player group relative overflow-hidden rounded-2xl border border-primary/30 bg-black shadow-[0_30px_80px_-20px_rgba(var(--primary-rgb),0.35)] outline-none focus:outline-none focus-visible:outline-none [&:fullscreen]:h-screen [&:fullscreen]:w-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none"
-      tabIndex={-1}
-    >
-      <video
-        ref={videoRef}
-        playsInline
-        controlsList="nodownload noremoteplayback noplaybackrate"
-        disablePictureInPicture={false}
-        onContextMenu={(e) => e.preventDefault()}
-        onClick={() => {
-          kick();
-        }}
-        style={{ cursor: showUI ? "pointer" : "none" }}
-        className={`aspect-video h-full w-full bg-black outline-none focus:outline-none focus-visible:outline-none group-[:fullscreen]:h-full ${fill ? "object-cover group-[:fullscreen]:object-cover" : "object-contain group-[:fullscreen]:object-contain"}`}
-      />
-
-      {/* Right-side vertical volume rocker (mobile only). Hit zone spans the
-          player's full height/right third — a fixed top/bottom inset used to
-          leave almost no usable area on the short aspect-video box mobile
-          starts in (before fullscreen), which made the gesture feel missing. */}
-      {isMobile && (
-        <div
-          onTouchStart={onVolTouchStart}
-          onTouchMove={onVolTouchMove}
-          onTouchEnd={onVolTouchEnd}
-          className="absolute inset-y-0 right-0 z-10 flex w-1/3 max-w-[140px] flex-col items-center justify-center"
-          style={{ touchAction: "none" }}
-          aria-label="Volume — drag up or down"
-          role="presentation"
-        >
-          <div className="pointer-events-none flex flex-col items-center gap-2 rounded-full bg-black/40 px-1.5 py-3 backdrop-blur-sm ring-1 ring-white/15">
-            {muted || volume === 0 ? (
-              <VolumeX className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />
-            ) : (
-              <Volume2 className="h-3.5 w-3.5 text-white/85" aria-hidden="true" />
-            )}
-            <div className="relative h-20 w-1 overflow-hidden rounded-full bg-white/20">
-              <div
-                className="absolute inset-x-0 bottom-0 rounded-full bg-primary"
-                style={{ height: `${Math.round((muted ? 0 : volume) * 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      <AnimatePresence>
-        {volPill !== null && (
-          <motion.div
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 10 }}
-            className="pointer-events-none absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/70 px-3 py-2 text-xs font-bold text-white backdrop-blur"
-          >
-            {Math.round(volPill * 100)}%
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {buffering && (
-          <motion.div
-            key="buf"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="pointer-events-none absolute inset-0 grid place-items-center bg-black/30 backdrop-blur-[2px]"
-          >
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showUI && (
-          <motion.div
-            key="top"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/85 via-black/40 to-transparent p-3 sm:p-4"
-          >
-            <div className="pointer-events-auto flex min-w-0 items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-lg">
-                <span className="live-dot" aria-hidden="true" /> Live
-              </span>
-              <div className="min-w-0">
-                <p
-                  className="display truncate text-base leading-tight text-white sm:text-lg"
-                  title={channel.name}
-                >
-                  {channel.name}
-                </p>
-                <p className="truncate text-[10px] uppercase tracking-[0.2em] text-white/60">
-                  FIFA World Cup 2026
-                </p>
-              </div>
-              {is4k(channel.name) && (
-                <span className="hidden rounded bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[10px] font-black tracking-wider text-black sm:inline-block">
-                  4K UHD
-                </span>
-              )}
-            </div>
-
-            <div className="pointer-events-auto flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                title="Close player (Esc)"
-                aria-label="Close player"
-                className="inline-flex h-10 min-w-10 items-center gap-1.5 rounded-full bg-white/10 px-3 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:h-9"
-              >
-                <LogOut className="h-4 w-4 rotate-180" aria-hidden="true" />
-                <span className="hidden sm:inline">Change channel</span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {!playing && !buffering && (
-          <motion.button
-            key="center"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            onClick={toggle}
-            className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_0_0_8px_rgba(var(--primary-rgb),0.15),0_20px_60px_-10px_rgba(var(--primary-rgb),0.6)] transition hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
-            aria-label="Play"
-          >
-            <Play className="h-9 w-9 fill-current" aria-hidden="true" />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showUI && (
-          <motion.div
-            key="bot"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 sm:p-4"
-          >
-            <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 p-1 backdrop-blur-md sm:gap-2 sm:p-1.5">
-              <PlayerBtn
-                onClick={toggle}
-                label={playing ? "Pause (K)" : "Play (K)"}
-                title={playing ? "Pause (K)" : "Play (K)"}
-              >
-                {playing ? (
-                  <Pause className="h-4 w-4 fill-current" aria-hidden="true" />
-                ) : (
-                  <Play className="h-4 w-4 fill-current" aria-hidden="true" />
-                )}
-              </PlayerBtn>
-              <PlayerBtn
-                onClick={toggleMute}
-                label={muted ? "Unmute (M)" : "Mute (M)"}
-                title={muted ? "Unmute (M)" : "Mute (M)"}
-              >
-                {muted || volume === 0 ? (
-                  <VolumeX className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <Volume2 className="h-4 w-4" aria-hidden="true" />
-                )}
-              </PlayerBtn>
-              {(() => {
-                const v = muted ? 0 : volume;
-                const pct = Math.round(v * 100);
-                return (
-                  <div className="volume-slider group/vol hidden items-center pl-1 pr-2 sm:flex">
-                    <input
-                      type="range"
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      value={v}
-                      onChange={(e) => setVol(parseFloat(e.target.value))}
-                      style={{ ["--vol" as any]: `${pct}%` }}
-                      className="modern-range h-1.5 w-20 cursor-pointer appearance-none rounded-full transition-all group-hover/vol:w-32 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      aria-label="Volume"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={pct}
-                    />
-                  </div>
-                );
-              })()}
-
-              <span aria-hidden="true" className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
-
-              <span className="hidden items-center gap-1.5 rounded-full bg-destructive/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white sm:inline-flex">
-                <span className="live-dot" aria-hidden="true" /> Live
-              </span>
-
-              <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-                <PlayerBtn
-                  onClick={() => {
-                    toast.message("Reloading stream…");
-                    onReload();
-                    kick();
-                  }}
-                  label="Reload stream"
-                  title="Reload stream"
-                >
-                  <RotateCw className="h-4 w-4" aria-hidden="true" />
-                </PlayerBtn>
-                <PlayerBtn
-                  onClick={() => {
-                    setFill((f) => !f);
-                    kick();
-                  }}
-                  label={fill ? "Fit to screen" : "Fill screen"}
-                  title={fill ? "Fit to screen" : "Fill screen"}
-                  active={fill}
-                >
-                  {fill ? (
-                    <Shrink className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <Expand className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </PlayerBtn>
-                <PlayerBtn
-                  onClick={togglePip}
-                  label="Picture in picture (P)"
-                  title="Picture in picture (P)"
-                  className="hidden sm:grid"
-                >
-                  <PictureInPicture2 className="h-4 w-4" aria-hidden="true" />
-                </PlayerBtn>
-                <PlayerBtn
-                  onClick={toggleFs}
-                  label={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
-                  title={fullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
-                >
-                  {fullscreen ? (
-                    <Minimize className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <Maximize className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </PlayerBtn>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function PlayerBtn({
-  children,
-  onClick,
-  label,
-  title,
-  active,
-  className = "",
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  label: string;
-  title?: string;
-  active?: boolean;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      title={title ?? label}
-      className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-white transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-        active ? "bg-primary/80" : "bg-white/5"
-      } ${className}`}
-    >
-      {children}
-    </button>
   );
 }
