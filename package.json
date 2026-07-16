@@ -7,9 +7,9 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "predev": "node scripts/generate-sitemap.mjs",
+    "predev": "node scripts/generate-sitemap.mjs && node scripts/generate-push-config.mjs",
     "dev": "vite dev",
-    "prebuild": "node scripts/generate-sitemap.mjs",
+    "prebuild": "node scripts/generate-sitemap.mjs && node scripts/generate-push-config.mjs",
     "build": "vite build",
     "start": "node server.mjs",
     "hostinger:build": "npm install && npm run build",

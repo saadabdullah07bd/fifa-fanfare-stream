@@ -17,6 +17,10 @@ dist-ssr
 *.local
 .env
 .env.*
+supabase/.temp/
+public/push-config.json
+.deploy-*.json
+.mcp-args-*.json
 
 # Wrangler / Cloudflare
 .wrangler/

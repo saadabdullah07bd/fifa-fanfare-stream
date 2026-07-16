@@ -88,7 +88,7 @@ export default function OnboardingModal() {
     const idNum = Math.abs(
       [...t.code].reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 5381),
     );
-    const { error } = await supabase
+    const { error: profileError } = await supabase
       .from("profiles")
       .update({
         favorite_club_id: idNum,
@@ -97,11 +97,16 @@ export default function OnboardingModal() {
         onboarded_at: new Date().toISOString(),
       })
       .eq("id", userId);
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
+    if (profileError) {
+      setSaving(false);
+      toast.error(profileError.message);
       return;
     }
+    await supabase.from("favorites").upsert(
+      { user_id: userId, team_code: t.code },
+      { onConflict: "user_id,team_code" },
+    );
+    setSaving(false);
     // Cache the team code locally for immediate UI updates.
     try {
       window.localStorage.setItem("fav_team_code", t.code);

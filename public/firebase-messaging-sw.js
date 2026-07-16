@@ -7,13 +7,34 @@
 importScripts("https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging-compat.js");
 
-const CONFIG_URL = new URL("/functions/v1/client-config", self.location.origin);
+async function resolveClientConfigUrl() {
+  try {
+    const res = await fetch("/push-config.json", { cache: "no-store" });
+    if (res.ok) {
+      const cfg = await res.json();
+      if (cfg?.clientConfigUrl) return cfg.clientConfigUrl;
+    }
+  } catch {
+    /* fall through */
+  }
+  return new URL("/functions/v1/client-config", self.location.origin).href;
+}
 
 async function boot() {
   try {
-    const res = await fetch(CONFIG_URL, {
+    const configUrl = await resolveClientConfigUrl();
+    let pushCfg = {};
+    try {
+      const pc = await fetch("/push-config.json", { cache: "no-store" });
+      if (pc.ok) pushCfg = await pc.json();
+    } catch {
+      /* noop */
+    }
+    const headers = { "Content-Type": "application/json" };
+    if (pushCfg.supabaseAnonKey) headers.apikey = pushCfg.supabaseAnonKey;
+    const res = await fetch(configUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: "{}",
     });
     const cfg = await res.json();

@@ -2,7 +2,10 @@
  * Dedupe key = "final:<match_id>". Runs every ~5 min via pg_cron. */
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { assertCronSecret } from "../_shared/cron-auth.ts";
 import { fcmSendToTokens } from "../_shared/fcm.ts";
+import { FINISHED_DB_STATUSES } from "../_shared/match-status.ts";
+import { matchPageUrl } from "../_shared/match-url.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -11,11 +14,11 @@ const supabase = createClient(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  if (cronSecret && req.headers.get("x-cron-secret") !== cronSecret) {
-    return new Response(JSON.stringify({ error: "forbidden" }), {
-      status: 403,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+  const denied = assertCronSecret(req);
+  if (denied) {
+    return new Response(denied.body, {
+      status: denied.status,
+      headers: { ...corsHeaders, ...Object.fromEntries(denied.headers) },
     });
   }
 
@@ -25,7 +28,7 @@ Deno.serve(async (req) => {
     const { data: finished } = await supabase
       .from("matches")
       .select("id, home_team_code, away_team_code, home_score, away_score, status, date_utc")
-      .in("status", ["FINISHED", "FT", "AWARDED"])
+      .in("status", [...FINISHED_DB_STATUSES])
       .gte("date_utc", cutoff);
 
     let sent = 0;
@@ -68,10 +71,12 @@ Deno.serve(async (req) => {
         .in("user_id", targets);
       if (!tokens?.length) continue;
 
+      const pageUrl = matchPageUrl(m);
+
       const results = await fcmSendToTokens(
         tokens.map((t) => t.token),
         { title, body },
-        { type: "final", match_id: m.id, url: `/match/${m.id}` },
+        { type: "final", match_id: m.id, url: pageUrl },
       );
       const tokenToUser = new Map(tokens.map((t) => [t.token, t.user_id]));
       const successUsers = new Set<string>();

@@ -575,6 +575,13 @@ export type Database = {
         };
         Returns: boolean;
       };
+      upsert_push_token: {
+        Args: {
+          p_token: string;
+          p_platform: Database["public"]["Enums"]["push_platform"];
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       app_role: "admin" | "user";

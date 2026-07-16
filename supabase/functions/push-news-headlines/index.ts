@@ -2,6 +2,7 @@
  * Dedupe key = "news:<news_id>". Runs every ~10 min via pg_cron. */
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { assertCronSecret } from "../_shared/cron-auth.ts";
 import { fcmSendToTokens } from "../_shared/fcm.ts";
 
 const supabase = createClient(
@@ -11,11 +12,11 @@ const supabase = createClient(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  if (cronSecret && req.headers.get("x-cron-secret") !== cronSecret) {
-    return new Response(JSON.stringify({ error: "forbidden" }), {
-      status: 403,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+  const denied = assertCronSecret(req);
+  if (denied) {
+    return new Response(denied.body, {
+      status: denied.status,
+      headers: { ...corsHeaders, ...Object.fromEntries(denied.headers) },
     });
   }
 

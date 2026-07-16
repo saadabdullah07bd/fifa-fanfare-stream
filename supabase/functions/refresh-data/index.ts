@@ -12,6 +12,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { normalizeDbMatchStatus } from "../_shared/match-status.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -108,12 +109,7 @@ Deno.serve(async (req) => {
       if (res.ok) {
         const { matches } = (await res.json()) as { matches: Array<any> };
         const matchRows = matches.map((m) => {
-          const status =
-            m.status === "IN_PLAY" || m.status === "PAUSED"
-              ? "live"
-              : m.status === "FINISHED"
-                ? "finished"
-                : "scheduled";
+          const status = normalizeDbMatchStatus(m.status);
           return {
             external_id: `fd_${m.id}`,
             stage: (m.stage || "GROUP_STAGE").toLowerCase().replace(/_/g, "-"),

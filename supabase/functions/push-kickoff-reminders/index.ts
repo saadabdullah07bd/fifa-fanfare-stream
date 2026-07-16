@@ -2,7 +2,9 @@
  * Runs every ~5 minutes via pg_cron. Dedupe key = "kickoff:<match_id>". */
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { assertCronSecret } from "../_shared/cron-auth.ts";
 import { fcmSendToTokens } from "../_shared/fcm.ts";
+import { matchPageUrl } from "../_shared/match-url.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -12,13 +14,11 @@ const supabase = createClient(
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // Simple cron-secret guard: pg_cron passes a Bearer token in the body/header.
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  const auth = req.headers.get("x-cron-secret") || "";
-  if (cronSecret && auth !== cronSecret) {
-    return new Response(JSON.stringify({ error: "forbidden" }), {
-      status: 403,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+  const denied = assertCronSecret(req);
+  if (denied) {
+    return new Response(denied.body, {
+      status: denied.status,
+      headers: { ...corsHeaders, ...Object.fromEntries(denied.headers) },
     });
   }
 
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       .select("id, date_utc, home_team_code, away_team_code, status")
       .gte("date_utc", start.toISOString())
       .lt("date_utc", end.toISOString())
-      .neq("status", "FINISHED");
+      .eq("status", "scheduled");
 
     let sent = 0;
     for (const m of matches ?? []) {
@@ -75,10 +75,12 @@ Deno.serve(async (req) => {
       const title = "⚽ Match starting soon";
       const body = `${m.home_team_code} vs ${m.away_team_code} kicks off in ${mins} min`;
 
+      const pageUrl = matchPageUrl(m);
+
       const results = await fcmSendToTokens(
         tokens.map((t) => t.token),
         { title, body },
-        { type: "kickoff", match_id: m.id, url: `/match/${m.id}` },
+        { type: "kickoff", match_id: m.id, url: pageUrl },
       );
 
       const tokenToUser = new Map(tokens.map((t) => [t.token, t.user_id]));

@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useIsAdmin } from "@/hooks/useAuth";
+import { useAuth, useIsAdmin } from "@/hooks/useAuth";
 import { Seo } from "@/lib/seo";
 import { toast } from "sonner";
 
@@ -15,8 +15,47 @@ type Channel = { id: string; category: string; stream_id: string; name: string }
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { user, ready, authed } = useAuth();
   const { admin } = useIsAdmin();
   const qc = useQueryClient();
+
+  const { data: notifPrefs, refetch: refetchNotif } = useQuery({
+    queryKey: ["notif-prefs", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("notif_match_events, notif_news")
+        .eq("id", user!.id)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ?? { notif_match_events: true, notif_news: true };
+    },
+    enabled: !!user,
+  });
+
+  const [notifMatch, setNotifMatch] = useState(true);
+  const [notifNews, setNotifNews] = useState(true);
+
+  useEffect(() => {
+    if (!notifPrefs) return;
+    setNotifMatch(notifPrefs.notif_match_events ?? true);
+    setNotifNews(notifPrefs.notif_news ?? true);
+  }, [notifPrefs]);
+
+  const saveNotif = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ notif_match_events: notifMatch, notif_news: notifNews })
+        .eq("id", user!.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: async () => {
+      toast.success("Notification preferences saved");
+      await refetchNotif();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -142,7 +181,46 @@ export default function Settings() {
       <h1 className="display text-5xl">Settings</h1>
       {admin && <p className="mt-2 text-muted-foreground">Shared Xtream server controls.</p>}
 
-      {!admin && (
+      {ready && authed && (
+        <section className="mt-8 rounded-lg border border-border bg-card/40 p-4">
+          <h2 className="display text-2xl">Notifications</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose which push alerts you receive on this device.
+          </p>
+          <label className="mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-md border border-border bg-background/40 px-4 py-3">
+            <span className="text-sm font-medium">Match events (goals, kickoffs, full-time)</span>
+            <input
+              type="checkbox"
+              checked={notifMatch}
+              onChange={(e) => setNotifMatch(e.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+          </label>
+          <label className="mt-2 flex cursor-pointer items-center justify-between gap-4 rounded-md border border-border bg-background/40 px-4 py-3">
+            <span className="text-sm font-medium">News headlines</span>
+            <input
+              type="checkbox"
+              checked={notifNews}
+              onChange={(e) => setNotifNews(e.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => saveNotif.mutate()}
+            disabled={
+              saveNotif.isPending ||
+              (notifMatch === (notifPrefs?.notif_match_events ?? true) &&
+                notifNews === (notifPrefs?.notif_news ?? true))
+            }
+            className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50"
+          >
+            {saveNotif.isPending ? "Saving…" : "Save notifications"}
+          </button>
+        </section>
+      )}
+
+      {!admin && authed && (
         <button
           onClick={signOut}
           className="mt-6 rounded-md bg-primary px-4 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground"
@@ -238,11 +316,11 @@ export default function Settings() {
               className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
             />
             <input
-              required
               type="password"
-              placeholder="Password"
+              placeholder={cfg ? "Password (leave blank to keep current)" : "Password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required={!cfg}
               className="w-full rounded-md border border-border bg-input px-3 py-3 text-sm"
             />
             <button

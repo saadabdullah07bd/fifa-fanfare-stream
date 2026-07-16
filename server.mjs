@@ -1,7 +1,7 @@
 import { createReadStream, existsSync } from "node:fs";
 import { stat } from "node:fs/promises";
 import { createServer } from "node:http";
-import { extname, join, normalize } from "node:path";
+import { extname, join, normalize, resolve, sep } from "node:path";
 
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || "0.0.0.0";
@@ -25,10 +25,16 @@ const MIME_TYPES = {
   ".woff2": "font/woff2",
 };
 
+const DIST_ROOT = resolve(DIST_DIR);
+
 function safePath(urlPath) {
   const decoded = decodeURIComponent(urlPath.split("?")[0]);
   const cleaned = normalize(decoded).replace(/^(\.\.[/\\])+/, "");
-  return join(DIST_DIR, cleaned);
+  const target = resolve(DIST_ROOT, cleaned.startsWith(sep) ? cleaned.slice(1) : cleaned);
+  if (target !== DIST_ROOT && !target.startsWith(DIST_ROOT + sep)) {
+    return null;
+  }
+  return target;
 }
 
 async function fileExists(path) {
@@ -48,6 +54,11 @@ if (!existsSync(DIST_DIR)) {
 createServer(async (req, res) => {
   const reqPath = req.url || "/";
   let target = safePath(reqPath === "/" ? "/index.html" : reqPath);
+  if (!target) {
+    res.statusCode = 403;
+    res.end("Forbidden");
+    return;
+  }
   let fallbackToIndex = false;
   const wantsFile = extname(reqPath.split("?")[0]) !== "";
 
@@ -58,7 +69,7 @@ createServer(async (req, res) => {
       return;
     }
     fallbackToIndex = true;
-    target = join(DIST_DIR, "index.html");
+    target = resolve(DIST_ROOT, "index.html");
   }
 
   const type = MIME_TYPES[extname(target).toLowerCase()] || "application/octet-stream";

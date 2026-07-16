@@ -99,9 +99,14 @@ export default function LiveTV() {
       });
     let hls: Hls | undefined;
     let mts: ReturnType<typeof mpegts.createPlayer> | undefined;
+    let safety = 0;
+    let boundVideo: HTMLVideoElement | null = null;
+    let onProgress: (() => void) | null = null;
+    let onCanPlay: (() => void) | null = null;
     (async () => {
       const v = await waitForVideo();
       if (cancelled) return;
+      boundVideo = v;
       const { data, error } = await supabase.functions.invoke("xtream", {
         body: { action: "stream_url", streamId: active.stream_id },
       });
@@ -137,10 +142,12 @@ export default function LiveTV() {
           startPlay();
         }
       };
-      v.addEventListener("progress", tryStart);
-      v.addEventListener("canplaythrough", tryStart);
+      onProgress = () => tryStart();
+      onCanPlay = () => tryStart();
+      v.addEventListener("progress", onProgress);
+      v.addEventListener("canplaythrough", onCanPlay);
       // Safety net: start after 4s regardless so the user is never stuck.
-      const safety = window.setTimeout(() => {
+      safety = window.setTimeout(() => {
         started = true;
         startPlay();
       }, 4000);
@@ -226,6 +233,9 @@ export default function LiveTV() {
     return () => {
       cancelled = true;
       if (rafId) cancelAnimationFrame(rafId);
+      if (boundVideo && onProgress) boundVideo.removeEventListener("progress", onProgress);
+      if (boundVideo && onCanPlay) boundVideo.removeEventListener("canplaythrough", onCanPlay);
+      if (safety) window.clearTimeout(safety);
       hls?.destroy();
       try {
         mts?.pause();

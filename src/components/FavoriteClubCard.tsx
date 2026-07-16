@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Calendar, Trophy, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { bdDate, bdTime } from "@/lib/flags";
+import { findWc26MatchByTeams } from "@/data/wc26-matches";
 
 type Profile = { favorite_club_name: string | null; favorite_club_logo: string | null };
 type Team = {
@@ -28,10 +29,15 @@ type Match = {
 };
 
 /**
- * Normalizes match ID for routing, prioritizing external_id without the 'fd_' prefix.
+ * Resolve a match detail link using the static WC26 workbook when possible.
  */
-function matchRouteId(m: { external_id: string | null; id: string }) {
-  return (m.external_id ?? "").replace(/^fd_/, "") || m.id;
+function matchHref(m: Match, nameFor: (c: string) => string) {
+  const wc = findWc26MatchByTeams(
+    nameFor(m.home_team_code),
+    nameFor(m.away_team_code),
+    m.date_utc,
+  );
+  return wc ? `/match/${wc.match_no}` : "/fixtures";
 }
 
 /**
@@ -173,6 +179,7 @@ export default function FavoriteClubCard() {
   const nameFor = (c: string) => teamsByCode.get(c)?.name ?? c;
   const flagFor = (c: string) =>
     teamsByCode.get(c)?.flag_url ?? (team?.code === c ? team.flag_url : null);
+  const linkFor = (m: Match) => matchHref(m, nameFor);
 
   return (
     <motion.section
@@ -223,7 +230,7 @@ export default function FavoriteClubCard() {
                 {next.map((m) => (
                   <li key={m.id}>
                     <Link
-                      to={`/match/${matchRouteId(m)}`}
+                      to={linkFor(m)}
                       className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background/50 px-3 py-2 text-sm transition hover:border-primary"
                     >
                       <div className="flex min-w-0 items-center gap-2">

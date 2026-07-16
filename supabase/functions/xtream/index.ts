@@ -32,6 +32,58 @@ type SignedPayload = {
   exp: number;
 };
 
+async function requireSignedInUser(
+  req: Request,
+  supabaseUrl: string,
+  anonKey: string,
+): Promise<{ userId: string } | Response> {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  if (!token) return json({ error: "Not signed in" }, 401);
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data: userData } = await userClient.auth.getUser();
+  if (!userData.user) return json({ error: "Invalid session" }, 401);
+  return { userId: userData.user.id };
+}
+
+async function getChannel(admin: ReturnType<typeof createClient>, streamId: string) {
+  const { data } = await admin
+    .from("channels")
+    .select("stream_id, direct_url")
+    .eq("stream_id", streamId)
+    .maybeSingle();
+  return data as { stream_id: string; direct_url?: string | null } | null;
+}
+
+function mintSignedStreamUrls(supabaseUrl: string, streamId: string, directUrl?: string | null) {
+  const edgeBase = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/xtream`;
+  const lower = (directUrl ?? "").toLowerCase();
+  const manualHls = !!directUrl && lower.includes(".m3u8");
+  const manualTs = !!directUrl && lower.includes(".ts") && !manualHls;
+  const tPromise = signPayload({ type: "stream", streamId, exp: expiresAt() });
+  return tPromise.then((t) => {
+    if (manualHls) {
+      return {
+        url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`,
+        type: "hls" as const,
+      };
+    }
+    if (manualTs) {
+      return {
+        url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`,
+        type: "mpegts" as const,
+      };
+    }
+    return {
+      url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`,
+      type: "mpegts" as const,
+      fallbackUrl: `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`,
+    };
+  });
+}
+
 const STREAM_TTL_SECONDS = 30 * 60;
 
 // Prefer the dedicated signing secret; fall back to service role only if the
@@ -85,36 +137,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Public: mint a signed URL for a given channel stream.
+    // Authenticated: mint a signed URL for a given channel stream.
     if (action === "stream_url") {
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const auth = await requireSignedInUser(req, supabaseUrl, anonKey);
+      if (auth instanceof Response) return auth;
+
       const streamId = String(body.streamId || "");
       if (!streamId) return json({ error: "streamId required" }, 400);
-      const { data: channel } = await admin
-        .from("channels")
-        .select("stream_id, direct_url")
-        .eq("stream_id", streamId)
-        .maybeSingle();
+      const channel = await getChannel(admin, streamId);
       if (!channel) return json({ error: "Channel not found" }, 404);
-      // Manual channel: play the admin-provided m3u8/ts URL directly.
-      const directUrl = (channel as { direct_url?: string | null }).direct_url ?? null;
-      if (directUrl) {
-        const lower = directUrl.toLowerCase();
-        const type = lower.includes(".m3u8") ? "hls" : lower.includes(".ts") ? "mpegts" : "hls";
-        return json({ url: directUrl, type });
+
+      const directUrl = channel.direct_url ?? null;
+      if (!directUrl) {
+        const { data: cfg } = await admin
+          .from("xtream_config")
+          .select("id")
+          .eq("id", 1)
+          .maybeSingle();
+        if (!cfg) return json({ error: "No Xtream config" }, 400);
       }
-      const { data: cfg } = await admin
-        .from("xtream_config")
-        .select("id")
-        .eq("id", 1)
-        .maybeSingle();
-      if (!cfg) return json({ error: "No Xtream config" }, 400);
-      const edgeBase = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/xtream`;
-      const t = await signPayload({ type: "stream", streamId, exp: expiresAt() });
-      return json({
-        url: `${edgeBase}/stream/${encodeURIComponent(streamId)}.ts?t=${encodeURIComponent(t)}`,
-        type: "mpegts",
-        fallbackUrl: `${edgeBase}/stream/${encodeURIComponent(streamId)}.m3u8?t=${encodeURIComponent(t)}`,
-      });
+      return json(await mintSignedStreamUrls(supabaseUrl, streamId, directUrl));
     }
 
     // Admin: add a manual channel that plays a direct m3u8/HLS/TS URL.
@@ -195,10 +238,27 @@ Deno.serve(async (req) => {
       if (!/^https?:\/\//.test(host) || host.length > 512)
         return json({ error: "Invalid host" }, 400);
       if (!username || username.length > 128) return json({ error: "Invalid username" }, 400);
-      if (!password || password.length > 256) return json({ error: "Invalid password" }, 400);
-      const { error } = await admin
+
+      const { data: existing } = await admin
         .from("xtream_config")
-        .upsert({ id: 1, host, username, password, updated_at: new Date().toISOString() });
+        .select("password")
+        .eq("id", 1)
+        .maybeSingle();
+      const nextPassword =
+        password && password.length <= 256
+          ? password
+          : existing?.password
+            ? String(existing.password)
+            : "";
+      if (!nextPassword) return json({ error: "Invalid password" }, 400);
+
+      const { error } = await admin.from("xtream_config").upsert({
+        id: 1,
+        host,
+        username,
+        password: nextPassword,
+        updated_at: new Date().toISOString(),
+      });
       if (error) return json({ error: error.message }, 500);
       return json({ ok: true });
     }
@@ -256,7 +316,7 @@ Deno.serve(async (req) => {
         category: "wc2026" | "cricket";
       }>;
 
-      await admin.from("channels").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await admin.from("channels").delete().is("direct_url", null);
       let total = 0;
       for (const cat of wanted) {
         const sRes = await fetch(`${base}&action=get_live_streams&category_id=${cat.id}`);
@@ -310,6 +370,11 @@ async function handleStreamProxy(req: Request, admin: ReturnType<typeof createCl
     if (!payload || payload.type !== "stream" || payload.streamId !== streamId)
       return json({ error: "Invalid stream link" }, 403);
 
+    const channel = await getChannel(admin, streamId);
+    if (channel?.direct_url) {
+      return await proxyDirectUrl(req, channel.direct_url, ext);
+    }
+
     const cfg = await getConfig(admin);
     if (!cfg) return json({ error: "No Xtream config" }, 400);
     const upstreamUrl = buildUpstreamUrl(cfg, `${streamId}.${ext}`);
@@ -345,6 +410,36 @@ async function getConfig(admin: ReturnType<typeof createClient>): Promise<Xtream
     .eq("id", 1)
     .maybeSingle();
   return data as XtreamConfig | null;
+}
+
+/** Proxy a manual channel's upstream URL without exposing it to the client. */
+async function proxyDirectUrl(req: Request, directUrl: string, ext: string) {
+  const lower = directUrl.toLowerCase();
+  const upstreamUrl =
+    ext === "m3u8" || lower.includes(".m3u8") ? directUrl : lower.includes(".ts") ? directUrl : directUrl;
+
+  const headers = new Headers();
+  const range = req.headers.get("range");
+  if (range) headers.set("range", range);
+
+  const upstream = await fetch(upstreamUrl, { headers });
+  if (!upstream.ok || !upstream.body) {
+    return json({ error: `Stream upstream failed [${upstream.status}]` }, 502);
+  }
+
+  const contentType = upstream.headers.get("content-type") ?? "";
+  const responseHeaders = new Headers(cors);
+  if (isPlaylist(upstreamUrl, contentType)) {
+    responseHeaders.set("Content-Type", "application/vnd.apple.mpegurl");
+    responseHeaders.set("Cache-Control", "public, max-age=1, s-maxage=2");
+    return new Response(await upstream.text(), { status: upstream.status, headers: responseHeaders });
+  }
+
+  const type = upstream.headers.get("content-type");
+  if (type) responseHeaders.set("content-type", type);
+  else responseHeaders.set("content-type", ext === "m3u8" ? "application/vnd.apple.mpegurl" : "video/mp2t");
+  responseHeaders.set("Cache-Control", "public, max-age=30, s-maxage=60, immutable");
+  return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
 }
 
 async function proxyUpstream(

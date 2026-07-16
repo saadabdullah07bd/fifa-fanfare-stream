@@ -3,7 +3,10 @@
  * Dedupe key = "goal:<match_id>:<home>-<away>". */
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { assertCronSecret } from "../_shared/cron-auth.ts";
 import { fcmSendToTokens } from "../_shared/fcm.ts";
+import { LIVE_DB_STATUSES } from "../_shared/match-status.ts";
+import { matchPageUrl } from "../_shared/match-url.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -12,20 +15,19 @@ const supabase = createClient(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  if (cronSecret && req.headers.get("x-cron-secret") !== cronSecret) {
-    return new Response(JSON.stringify({ error: "forbidden" }), {
-      status: 403,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+  const denied = assertCronSecret(req);
+  if (denied) {
+    return new Response(denied.body, {
+      status: denied.status,
+      headers: { ...corsHeaders, ...Object.fromEntries(denied.headers) },
     });
   }
 
   try {
-    // Live-ish matches only: status IN_PLAY / LIVE / HT / PAUSED etc.
     const { data: live } = await supabase
       .from("matches")
-      .select("id, home_team_code, away_team_code, home_score, away_score, status, minute")
-      .in("status", ["IN_PLAY", "LIVE", "HT", "PAUSED", "HALFTIME"]);
+      .select("id, home_team_code, away_team_code, home_score, away_score, status, minute, date_utc")
+      .in("status", [...LIVE_DB_STATUSES]);
 
     let sent = 0;
     for (const m of live ?? []) {
@@ -56,11 +58,15 @@ Deno.serve(async (req) => {
       if (home === prevHome && away === prevAway) continue;
       // First time we're seeing this match & score is 0-0 → nothing to announce.
       if (!snap && home === 0 && away === 0) continue;
+      const total = home + away;
+      const prevTotal = prevHome + prevAway;
+      if (total <= prevTotal) continue;
 
       const scoringSide = home > prevHome ? m.home_team_code : m.away_team_code;
       const dedupeKey = `goal:${m.id}:${home}-${away}`;
       const title = `⚽ GOAL! ${scoringSide}`;
       const body = `${m.home_team_code} ${home} – ${away} ${m.away_team_code}${m.minute ? `  ·  ${m.minute}'` : ""}`;
+      const pageUrl = matchPageUrl(m);
 
       const { data: favs } = await supabase
         .from("favorites")
@@ -95,7 +101,7 @@ Deno.serve(async (req) => {
       const results = await fcmSendToTokens(
         tokens.map((t) => t.token),
         { title, body },
-        { type: "goal", match_id: m.id, url: `/match/${m.id}` },
+        { type: "goal", match_id: m.id, url: pageUrl },
       );
 
       const tokenToUser = new Map(tokens.map((t) => [t.token, t.user_id]));

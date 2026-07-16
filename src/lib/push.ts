@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAppConfig } from "@/lib/appConfig";
 import { getFirebaseMessaging } from "@/lib/firebase";
 
+let foregroundListenerAttached = false;
+
 /**
  * Register (or refresh) the current browser's Firebase Cloud Messaging token
  * for the signed-in user, and start listening for foreground pushes.
@@ -41,18 +43,19 @@ export async function registerWebPush(userId: string): Promise<void> {
     });
     if (!token) return;
 
-    await supabase
-      .from("push_tokens")
-      .upsert(
-        { user_id: userId, token, platform: "web", last_seen_at: new Date().toISOString() },
-        { onConflict: "token" },
-      );
-
-    onMessage(messaging, (payload) => {
-      const title = payload.notification?.title ?? payload.data?.title ?? "Pitch26";
-      const body = payload.notification?.body ?? payload.data?.body ?? "";
-      toast(title, { description: body });
+    await supabase.rpc("upsert_push_token", {
+      p_token: token,
+      p_platform: "web",
     });
+
+    if (!foregroundListenerAttached) {
+      onMessage(messaging, (payload) => {
+        const title = payload.notification?.title ?? payload.data?.title ?? "Pitch26";
+        const body = payload.notification?.body ?? payload.data?.body ?? "";
+        toast(title, { description: body });
+      });
+      foregroundListenerAttached = true;
+    }
   } catch (err) {
     console.warn("registerWebPush failed:", err);
   }
