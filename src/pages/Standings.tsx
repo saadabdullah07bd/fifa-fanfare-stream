@@ -49,48 +49,6 @@ function stageTitle(stage: string | null | undefined) {
   return label ? titleCase(label) : "";
 }
 
-// Scorer headshots were removed 2026-07-16 with the API-Football key (rate-limited
-// free tier). PlayerAvatar falls back to initials.
-
-/** Player headshot with graceful initials fallback. */
-function PlayerAvatar({
-  name,
-  photo,
-  className = "",
-}: {
-  name: string;
-  photo: string | null;
-  className?: string;
-}) {
-  const [failed, setFailed] = useState(false);
-  const initials = name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  const showImg = photo && !failed;
-  return (
-    <span
-      className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-secondary/60 text-[11px] font-bold text-muted-foreground ring-1 ring-border ${className}`}
-      aria-hidden="true"
-    >
-      {showImg ? (
-        <img
-          src={photo!}
-          alt=""
-          loading="lazy"
-          className="h-full w-full object-cover"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        initials
-      )}
-    </span>
-  );
-}
-
 const SOURCE_LABELS: Record<string, string> = {
   WCQ: "World Cup Qualifying",
   CL: "UEFA Champions League",
@@ -613,7 +571,7 @@ function ScorersPanel({
           {/* Golden Boot leader — full-width hero (2nd & 3rd removed by request; they now sit in the leaderboard below). */}
           {first && (
             <div className="grid gap-4">
-              <PodiumCard scorer={first} place={1} maxGoals={maxGoals} photo={null} />
+              <PodiumCard scorer={first} place={1} maxGoals={maxGoals} />
             </div>
           )}
 
@@ -653,17 +611,10 @@ function ScorersPanel({
                     >
                       <td className="py-3 pl-4 text-muted-foreground">{i + 2}</td>
                       <td className="py-3">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <PlayerAvatar
-                            name={(s as Scorer).player.name}
-                            photo={null}
-                            className="h-8 w-8"
-                          />
-                          <div className="min-w-0">
-                            <div className="truncate font-medium">{(s as Scorer).player.name}</div>
-                            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:hidden">
-                              {(s as Scorer).team.name}
-                            </div>
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{(s as Scorer).player.name}</div>
+                          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:hidden">
+                            {(s as Scorer).team.name}
                           </div>
                         </div>
                       </td>
@@ -697,12 +648,10 @@ function PodiumCard({
   scorer: s,
   place,
   maxGoals,
-  photo,
 }: {
   scorer: Scorer;
   place: 1 | 2 | 3;
   maxGoals: number;
-  photo?: string | null;
 }) {
   const styles = {
     1: {
@@ -744,20 +693,12 @@ function PodiumCard({
         <span className="display text-3xl text-primary">#{place}</span>
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
-        <PlayerAvatar
-          name={s.player.name}
-          photo={photo ?? null}
-          className="h-14 w-14 text-sm sm:h-16 sm:w-16"
-        />
-
-        <div className="min-w-0">
-          <p className="display truncate text-xl leading-tight sm:text-2xl">{s.player.name}</p>
-          <p className="mt-1 flex items-center gap-1.5 truncate text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-            <TeamFlag team={s.team} className="h-3.5 w-5" />
-            <span className="truncate">{s.team.name}</span>
-          </p>
-        </div>
+      <div className="mt-4 min-w-0">
+        <p className="display truncate text-xl leading-tight sm:text-2xl">{s.player.name}</p>
+        <p className="mt-1 flex items-center gap-1.5 truncate text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+          <TeamFlag team={s.team} className="h-3.5 w-5" />
+          <span className="truncate">{s.team.name}</span>
+        </p>
       </div>
 
       <div className="mt-4 flex items-end justify-between">

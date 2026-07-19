@@ -190,6 +190,32 @@ export default function LivePlayer({
         startPlay();
       }, 4000);
 
+      /**
+       * mpegts.js's ERROR event has no `fatal` flag (unlike hls.js) — an IO
+       * hiccup and a truly dead upstream look identical at the moment they
+       * fire. Rather than blocking the view on every blip, wait a grace
+       * period and only surface the overlay if the video actually stopped
+       * advancing. A flaky upstream (this account's IPTV panel allows a
+       * single connection and reconnects can stutter) recovers on its own
+       * within that window far more often than not — the "channel is
+       * working, but there's a stuck Try Again overlay" bug was this: a
+       * one-off error latching a permanent error state even though the
+       * stream kept playing right behind it.
+       */
+      const scheduleFatalCheck = (message: string) => {
+        const startTime = v.currentTime;
+        window.setTimeout(() => {
+          if (cancelled) return;
+          const advanced = v.currentTime > startTime + 0.5;
+          if (advanced && !v.paused) {
+            console.warn("Transient stream error recovered on its own:", message);
+            return;
+          }
+          setFatalError(message);
+          setBuffering(false);
+        }, 4000);
+      };
+
       /** hls.js tuned for 4K live: never cap the level to element size. */
       const makeHls = () =>
         new Hls({
@@ -234,8 +260,7 @@ export default function LivePlayer({
             hls.recoverMediaError();
           } else {
             console.error("HLS fatal error", d);
-            setFatalError("This channel is not sending playable video right now.");
-            setBuffering(false);
+            scheduleFatalCheck("This channel is not sending playable video right now.");
           }
         });
         hls.loadSource(src);
@@ -275,8 +300,7 @@ export default function LivePlayer({
             attachHls(fallbackUrl);
             return;
           }
-          setFatalError("This channel is not sending playable video right now.");
-          setBuffering(false);
+          scheduleFatalCheck("This channel is not sending playable video right now.");
         });
         mts.attachMediaElement(v);
         mts.load();
@@ -322,7 +346,14 @@ export default function LivePlayer({
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
     const onWaiting = () => setBuffering(true);
-    const onPlaying = () => setBuffering(false);
+    const onPlaying = () => {
+      setBuffering(false);
+      // The browser just confirmed real playback — any error overlay still
+      // showing is stale (a transient error the stream already recovered
+      // from), so drop it rather than leave a stuck "Try again" screen over
+      // a channel that is, in fact, working.
+      setFatalError(null);
+    };
     const onVolume = () => {
       setMuted(v.muted);
       setVolume(v.volume);
