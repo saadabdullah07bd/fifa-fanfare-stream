@@ -54,9 +54,27 @@ function useSession() {
 
 /**
  * Wrapper component to protect routes that require authentication.
+ *
+ * `ready`/`authed` are passed in from the App-level `useSession()` call
+ * rather than fetched here. RequireAuth used to call useSession() itself,
+ * which re-ran the async supabase.auth.getSession() round trip from scratch
+ * on every single navigation to /live-tv or /settings — because this
+ * component unmounts and remounts fresh each time the route changes. Each
+ * navigation showed a blank "Loading…" flash before the real page appeared,
+ * which read as "the first tap didn't work" (the second tap landed after
+ * the flash had already resolved on its own). App never unmounts, so
+ * hoisting the session check there means it resolves once and every later
+ * navigation to a protected route renders instantly.
  */
-function RequireAuth({ children }: { children: ReactNode }) {
-  const { ready, authed } = useSession();
+function RequireAuth({
+  children,
+  ready,
+  authed,
+}: {
+  children: ReactNode;
+  ready: boolean;
+  authed: boolean;
+}) {
   const location = useLocation();
   if (!ready) return <div className="p-12 text-center text-muted-foreground">Loading…</div>;
   if (!authed) return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
@@ -196,7 +214,7 @@ function RouteFallback() {
  * snapping. Keyed on the top-level path segment so param changes within a page
  * (e.g. /match/1 → /match/2) don't retrigger a full page transition.
  */
-function AnimatedRoutes() {
+function AnimatedRoutes({ session }: { session: { ready: boolean; authed: boolean } }) {
   const location = useLocation();
   const key = "/" + (location.pathname.split("/")[1] ?? "");
   return (
@@ -210,7 +228,7 @@ function AnimatedRoutes() {
           <Route
             path="/live-tv"
             element={
-              <RequireAuth>
+              <RequireAuth ready={session.ready} authed={session.authed}>
                 <LiveTV />
               </RequireAuth>
             }
@@ -221,7 +239,7 @@ function AnimatedRoutes() {
           <Route
             path="/settings"
             element={
-              <RequireAuth>
+              <RequireAuth ready={session.ready} authed={session.authed}>
                 <Settings />
               </RequireAuth>
             }
@@ -241,6 +259,7 @@ function AnimatedRoutes() {
  */
 export default function App() {
   const { admin } = useIsAdmin();
+  const session = useSession();
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       {/* Skip to content link for keyboard/screen-reader users */}
@@ -322,7 +341,7 @@ export default function App() {
 
       <main id="main-content" className="flex-1 pb-safe-tabs lg:pb-0">
         <Suspense fallback={<RouteFallback />}>
-          <AnimatedRoutes />
+          <AnimatedRoutes session={session} />
         </Suspense>
       </main>
 

@@ -72,6 +72,16 @@ export function BottomTabs({ tabs, accentColor = "#d4af37" }: BottomTabsProps) {
   const pointerOwnerRef = useRef<HTMLElement | null>(null);
   const previewIndexRef = useRef<number | null>(null);
   const suppressClickRef = useRef(false);
+  // Set on every pointerup, regardless of whether it triggered a navigation.
+  // onClick always fires immediately after pointerup for a tap/click, but by
+  // then this component may not have re-rendered with the new route yet, so
+  // its own activeIndex/safeActive closures can still read the OLD tab as
+  // "active." Without this flag, onClick would independently re-decide
+  // whether to navigate using that stale value and could fire a second,
+  // redundant navigate() a moment after onPointerFinish's already-correct
+  // one (which uses a ref, not stale render state) — the plausible cause of
+  // "first tap didn't do anything, second tap worked."
+  const pointerHandledRef = useRef(false);
 
   // Measure and track the width of each tab cell for animation positioning.
   useLayoutEffect(() => {
@@ -150,6 +160,7 @@ export function BottomTabs({ tabs, accentColor = "#d4af37" }: BottomTabsProps) {
     setPreviewIndex(null);
     previewIndexRef.current = null;
     setDragX(null);
+    pointerHandledRef.current = true;
     if (targetIndex !== activeIndex && targetIndex >= 0) {
       navigate(tabs[targetIndex].to);
     }
@@ -235,6 +246,16 @@ export function BottomTabs({ tabs, accentColor = "#d4af37" }: BottomTabsProps) {
               onContextMenu={(e) => e.preventDefault()}
               onClick={(e) => {
                 e.preventDefault();
+                // A tap/mouse-click always fires pointerdown+pointerup before
+                // this click event — onPointerFinish already made the
+                // correct navigation decision from fresh refs. Only fall
+                // through to this handler's own (potentially stale) check
+                // for non-pointer activation, e.g. Enter/Space on a focused
+                // tab via keyboard or assistive tech.
+                if (pointerHandledRef.current) {
+                  pointerHandledRef.current = false;
+                  return;
+                }
                 if (suppressClickRef.current) {
                   suppressClickRef.current = false;
                   return;

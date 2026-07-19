@@ -172,6 +172,35 @@
     letter-spacing: 0.01em;
     text-transform: uppercase;
   }
+
+  /* ============ Copy / selection deterrent ============
+   * Text selection, iOS long-press callout (copy/save-image), and drag are
+   * disabled site-wide. This is a deterrent against casual copying, not real
+   * DRM — anyone with devtools open can still read the DOM. Form controls are
+   * explicitly exempted: without this, typing still works but users could
+   * not select existing text in a field to correct or replace it, which
+   * would break the Settings IPTV/config forms and any search boxes. Opt an
+   * element back in with class="selectable" if a future feature needs
+   * copyable text (an API key display, for example). */
+  html {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  .selectable {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+  img,
+  video {
+    -webkit-user-drag: none;
+    user-drag: none;
+  }
 }
 
 /* ============ Ambient tri-nation glow (subtle, institutional) ============

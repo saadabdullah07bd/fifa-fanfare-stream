@@ -9,7 +9,6 @@ import {
   Expand,
   Keyboard,
   Loader2,
-  LogOut,
   Maximize,
   Minimize,
   Pause,
@@ -841,8 +840,8 @@ export default function LivePlayer({
               )}
             </div>
 
-            <div className="pointer-events-auto flex items-center gap-2">
-              {(onPrev || onNext) && (
+            {(onPrev || onNext) && (
+              <div className="pointer-events-auto flex items-center gap-2">
                 <span className="hidden items-center gap-1 sm:inline-flex">
                   <PlayerBtn onClick={() => onPrev?.()} label="Previous channel (PgUp)">
                     <SkipBack className="h-4 w-4" aria-hidden="true" />
@@ -851,18 +850,8 @@ export default function LivePlayer({
                     <SkipForward className="h-4 w-4" aria-hidden="true" />
                   </PlayerBtn>
                 </span>
-              )}
-              <button
-                type="button"
-                onClick={onClose}
-                title="Close player (Esc)"
-                aria-label="Close player"
-                className="inline-flex h-10 min-w-10 items-center gap-1.5 rounded-full bg-white/10 px-3 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:h-9"
-              >
-                <LogOut className="h-4 w-4 rotate-180" aria-hidden="true" />
-                <span className="hidden sm:inline">Change channel</span>
-              </button>
-            </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

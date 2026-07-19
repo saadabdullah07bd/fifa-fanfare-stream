@@ -45,14 +45,27 @@ function showBlock(reason: string) {
 }
 
 function detectDownloadHelpers() {
+  // Known DOM signatures various download-manager extensions (IDM, FlashGot,
+  // ADM, Free Download Manager, ...) inject when they recognize a media
+  // element on the page — typically a floating "Download this video" button
+  // or toolbar overlaid near the <video>. This is necessarily a moving
+  // target (extensions change their markup) and only catches DOM-injection
+  // style detection, not an extension sniffing network traffic directly —
+  // that happens below the page entirely and no client-side JS can see or
+  // stop it. This is a deterrent, not a guarantee.
   const markers = [
     "idmmzmark",
     "idm-mark",
+    "idm-download",
+    "IDMOptionsDialog",
     "flashgot",
     "adm-download-helper",
     "video-downloader",
     "dvh-container",
+    "ideb-container", // IDM's inline video-hover download bar
+    "fdm-container", // Free Download Manager
   ];
+  const attrs = ["data-idm", "data-fdm", "data-flashgot"];
   const scan = () => {
     for (const id of markers) {
       if (document.getElementById(id) || document.querySelector(`[class*="${id}"]`)) {
@@ -60,10 +73,21 @@ function detectDownloadHelpers() {
         return;
       }
     }
+    for (const attr of attrs) {
+      if (document.querySelector(`[${attr}]`)) {
+        showBlock("a download-manager extension was detected");
+        return;
+      }
+    }
   };
+  // Some extensions add attributes to an EXISTING element (e.g. tagging the
+  // <video> itself) rather than inserting a new one, so watch attribute
+  // mutations too, not just new nodes.
   new MutationObserver(() => scan()).observe(document.documentElement, {
     childList: true,
     subtree: true,
+    attributes: true,
+    attributeFilter: [...attrs, "class"],
   });
   scan();
 }
@@ -86,14 +110,16 @@ function blockDevtoolsShortcuts() {
   };
   window.addEventListener("keydown", blockKey, true);
 
-  // Block right-click "Inspect" on media surfaces (still allow elsewhere for accessibility).
+  // Block the right-click menu site-wide (its "Copy"/"Inspect"/"Save video
+  // as" entries are exactly what this deterrent is for) — except on form
+  // controls, where right-click "Paste" is a normal, expected way to fill in
+  // e.g. the Settings IPTV password field.
   document.addEventListener(
     "contextmenu",
     (e) => {
       const t = e.target as HTMLElement | null;
-      if (t?.closest?.("video, .video-shell, [data-player]")) {
-        e.preventDefault();
-      }
+      if (t?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+      e.preventDefault();
     },
     true,
   );
