@@ -6191,19 +6191,90 @@
     "away_name": "England",
     "home_code": "FRA",
     "away_code": "ENG",
-    "home_score": null,
-    "away_score": null,
+    "home_score": 4,
+    "away_score": 6,
     "venue_name": "Miami Stadium (Hard Rock Stadium)",
     "venue_city": "Miami Gardens",
     "venue_country": "United States",
     "penalty_shootout": null,
     "extra_time": false,
-    "goals": [],
+    "goals": [
+      {
+        "player": "Declan Rice",
+        "minute": 3,
+        "injury": null,
+        "type": "REGULAR",
+        "team": "England"
+      },
+      {
+        "player": "Ezri Konsa",
+        "minute": 18,
+        "injury": null,
+        "type": "REGULAR",
+        "team": "England"
+      },
+      {
+        "player": "Bukayo Saka",
+        "minute": 37,
+        "injury": null,
+        "type": "REGULAR",
+        "team": "England"
+      },
+      {
+        "player": "Bukayo Saka",
+        "minute": 45,
+        "injury": 1,
+        "type": "REGULAR",
+        "team": "England"
+      },
+      {
+        "player": "Kylian Mbappe",
+        "minute": 48,
+        "injury": null,
+        "type": "REGULAR",
+        "team": "France"
+      },
+      {
+        "player": "Bradley Barcola",
+        "minute": 54,
+        "injury": null,
+        "type": "REGULAR",
+        "team": "France"
+      },
+      {
+        "player": "Kylian Mbappe",
+        "minute": 66,
+        "injury": null,
+        "type": "REGULAR",
+        "team": "France"
+      },
+      {
+        "player": "Bukayo Saka",
+        "minute": 87,
+        "injury": null,
+        "type": "PEN",
+        "team": "England"
+      },
+      {
+        "player": "Ousmane Dembele",
+        "minute": 90,
+        "injury": 6,
+        "type": "REGULAR",
+        "team": "France"
+      },
+      {
+        "player": "Jude Bellingham",
+        "minute": 90,
+        "injury": 8,
+        "type": "REGULAR",
+        "team": "England"
+      }
+    ],
     "yellow_cards": [],
     "red_cards": [],
     "referee": "Jesús Valenzuela",
-    "attendance": null,
-    "notes": "Upcoming match. Fixture scheduled."
+    "attendance": 64478,
+    "notes": "Full time. England beat France 6-4 in a 10-goal thriller for third place — the most goals in a World Cup match since 1982. Bukayo Saka scored a hat-trick; Kylian Mbappe became the tournament's all-time leading scorer."
   },
   {
     "match_no": 104,
