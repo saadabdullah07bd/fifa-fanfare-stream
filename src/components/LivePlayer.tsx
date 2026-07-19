@@ -35,6 +35,14 @@ export type Channel = {
 
 export const is4k = (name: string) => /\b(4k|uhd)\b/i.test(name);
 
+/** Subset of mpegts.js's MSEPlayerMediaInfo actually used for codec checks. */
+type MpegtsMediaInfo = {
+  videoCodec?: string;
+  audioCodec?: string;
+  hasVideo?: boolean;
+  hasAudio?: boolean;
+};
+
 export const categoryLabel = (cat: string) =>
   cat === "bein" ? "beIN Sports Max" : "FIFA World Cup 2026";
 
@@ -285,6 +293,36 @@ export default function LivePlayer({
             autoCleanupMinBackwardDuration: 15,
           },
         );
+        // mpegts.js can DEMUX H.265/HEVC video and AC-3/EC-3 audio out of the
+        // MPEG-TS multiplex, but actually DECODING either depends on the
+        // browser having that codec — most don't (HEVC and Dolby AC-3 are
+        // licensed codecs most browser vendors don't ship, though the same
+        // device's native OS media stack usually does, which is why a native
+        // app like Televizo plays a channel a browser can't). When that
+        // happens the browser silently drops the unsupported track instead
+        // of erroring, so without this check the user just sees "video with
+        // no sound" or "audio with no picture" and no explanation.
+        let codecCheckDone = false;
+        mts.on(mpegts.Events.MEDIA_INFO, (mediaInfo: MpegtsMediaInfo) => {
+          if (cancelled || codecCheckDone) return;
+          codecCheckDone = true;
+          const videoCodec = mediaInfo.videoCodec ?? "";
+          const audioCodec = mediaInfo.audioCodec ?? "";
+          const videoIsHevc = /^(hvc1|hev1)/i.test(videoCodec);
+          const videoUnsupported =
+            mediaInfo.hasVideo && videoIsHevc && !mpegts.getFeatureList().mseH265Playback;
+          const audioIsAc3 = /^(ac-3|ec-3)/i.test(audioCodec);
+          if (videoUnsupported) {
+            setFatalError(
+              "This channel's video uses H.265/HEVC, which this browser can't decode. Try Safari or Edge, or watch it in a dedicated IPTV app.",
+            );
+            setBuffering(false);
+          } else if (mediaInfo.hasAudio && audioIsAc3) {
+            toast.message(
+              "This channel's audio format (Dolby AC-3) isn't supported here — video will play without sound.",
+            );
+          }
+        });
         mts.on(mpegts.Events.ERROR, (_event: unknown, detail: unknown) => {
           console.error("Live stream error", detail);
           if (fallbackUrl && Hls.isSupported() && !hls) {
@@ -785,9 +823,6 @@ export default function LivePlayer({
             className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/85 via-black/40 to-transparent p-3 sm:p-4"
           >
             <div className="pointer-events-auto flex min-w-0 items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-lg">
-                <span className="live-dot" aria-hidden="true" /> Live
-              </span>
               <div className="min-w-0">
                 <p
                   className="display truncate text-base leading-tight text-white sm:text-lg"

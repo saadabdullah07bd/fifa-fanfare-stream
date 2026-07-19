@@ -461,7 +461,16 @@ async function proxyDirectUrl(req: Request, directUrl: string, ext: string) {
   const range = req.headers.get("range");
   if (range) headers.set("range", range);
 
-  const upstream = await fetch(upstreamUrl, { headers });
+  // Wire the client's own abort signal into the upstream fetch. Without this,
+  // a client disconnect (channel switch, tab close, network drop) does not
+  // close the upstream TCP connection — it just keeps streaming into a void
+  // until Deno eventually reclaims it. On an IPTV account limited to a
+  // single concurrent connection, an orphaned upstream fetch blocks every
+  // subsequent stream request (including the client's own next channel)
+  // until that reclaim happens, which is exactly the kind of intermittent
+  // "audio but no video" / "video but no audio" corruption a truncated,
+  // contended TS multiplex produces.
+  const upstream = await fetch(upstreamUrl, { headers, signal: req.signal });
   if (!upstream.ok || !upstream.body) {
     return json({ error: `Stream upstream failed [${upstream.status}]` }, 502);
   }
@@ -499,7 +508,10 @@ async function proxyUpstream(
   const range = req.headers.get("range");
   if (range) headers.set("range", range);
 
-  const upstream = await fetch(upstreamUrl, { headers });
+  // See the comment in proxyDirectUrl: wiring the client's abort signal is
+  // what actually releases this account's single upstream connection slot
+  // promptly when the client disconnects or switches channels.
+  const upstream = await fetch(upstreamUrl, { headers, signal: req.signal });
   if (!upstream.ok || !upstream.body)
     return json({ error: `Stream upstream failed [${upstream.status}]` }, 502);
 

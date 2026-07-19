@@ -473,11 +473,13 @@ body::-webkit-scrollbar {
 .live-player:fullscreen::backdrop {
   background: #000;
 }
+/* Sizing and object-fit (fill vs fit) are owned entirely by LivePlayer's own
+ * Tailwind classes (h-full/w-full + the fill-toggle object-cover/contain,
+ * including the group-[:fullscreen]: variants). This block used to also
+ * hardcode width/height/object-fit here, which fought the Fill Screen
+ * button — contain always won in fullscreen no matter what the user chose. */
 .live-player:fullscreen video,
 .live-player:-webkit-full-screen video {
-  width: 100vw;
-  height: 100vh;
-  object-fit: contain;
   border: 0 !important;
   outline: 0 !important;
 }
